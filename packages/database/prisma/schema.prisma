@@ -851,6 +851,55 @@ model ProductQuestion {
 }
 
 // ============================================================================
+// Integration center
+// ============================================================================
+
+enum IntegrationStatus {
+  not_configured
+  ready
+  error
+}
+
+enum IntegrationLogLevel {
+  info
+  warning
+  error
+}
+
+/// Connection to an external channel. The adapter code lives in the API; this row only
+/// holds state and AES-256-GCM encrypted credentials (never returned by the API).
+model Integration {
+  id                   String            @id @default(uuid(7)) @db.Uuid
+  code                 String            @unique
+  isEnabled            Boolean           @default(false)
+  encryptedCredentials String?
+  settings             Json              @default("{}")
+  status               IntegrationStatus @default(not_configured)
+  lastCheckedAt        DateTime?
+  lastSyncAt           DateTime?
+  lastError            String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  logs IntegrationLog[]
+}
+
+model IntegrationLog {
+  id            String              @id @default(uuid(7)) @db.Uuid
+  integrationId String              @db.Uuid
+  level         IntegrationLogLevel
+  action        String
+  message       String
+  productId     String?             @db.Uuid
+  details       Json?
+  createdAt     DateTime            @default(now())
+
+  integration Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([integrationId, createdAt])
+}
+
+// ============================================================================
 // Invoices & documents
 // ============================================================================
 

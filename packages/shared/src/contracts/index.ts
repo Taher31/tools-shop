@@ -6,7 +6,10 @@ import type { Permission } from '../auth/permissions';
 import type {
   AttributeType,
   CouponType,
+  IntegrationLogLevel,
+  IntegrationStatus,
   InvoiceType,
+  MarketplaceSyncStatus,
   PaymentStatus,
   ProductStatus,
   QuestionStatus,
@@ -827,4 +830,46 @@ export interface InvoiceView extends InvoiceSummary {
   taxIncluded: boolean;
   totalInWords: string;
   note: string | null;
+}
+
+/* ---------------------------------------------------------- integrations */
+
+export interface IntegrationCredentialField {
+  key: string;
+  label: string;
+  secret: boolean;
+  required: boolean;
+  /** Whether a value is stored. Secret values are never returned. */
+  configured: boolean;
+  /** Non-secret values are shown as-is; secrets only as a masked hint. */
+  preview: string | null;
+}
+
+export interface IntegrationView {
+  code: string;
+  name: string;
+  description: string;
+  /** push: we send products to the channel; pull: the channel reads our feed. */
+  kind: 'push' | 'pull';
+  /** False until the channel's official API spec and credentials are available. */
+  available: boolean;
+  /** Honest note about what is and is not implemented for this channel. */
+  notes: string;
+  isEnabled: boolean;
+  status: IntegrationStatus;
+  credentialFields: IntegrationCredentialField[];
+  feedUrl: string | null;
+  lastCheckedAt: string | null;
+  lastSyncAt: string | null;
+  lastError: string | null;
+  listings: Record<MarketplaceSyncStatus, number>;
+}
+
+export interface IntegrationLogView {
+  id: string;
+  level: IntegrationLogLevel;
+  action: string;
+  message: string;
+  productId: string | null;
+  createdAt: string;
 }

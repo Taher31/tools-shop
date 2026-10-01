@@ -145,7 +145,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: Receipt,
         permission: 'invoice.read',
       },
-      { href: '/admin/integrations', label: 'مرکز اتصال‌ها', icon: Plug, phase: 2 },
+      {
+        href: '/admin/integrations',
+        label: 'مرکز اتصال‌ها',
+        icon: Plug,
+        permission: 'integration.read',
+      },
       { href: '/admin/ai', label: 'مرکز هوش مصنوعی', icon: Bot, phase: 3 },
       { href: '/admin/reports', label: 'گزارش‌ها و تحلیل', icon: BarChart3, phase: 4 },
     ],

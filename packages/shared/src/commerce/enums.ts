@@ -145,3 +145,22 @@ export const INVOICE_TYPE_LABELS: Record<InvoiceType, string> = {
   sale: 'فاکتور فروش',
   credit_note: 'اعلامیه برگشت از فروش',
 };
+
+export const INTEGRATION_STATUSES = ['not_configured', 'ready', 'error'] as const;
+export type IntegrationStatus = (typeof INTEGRATION_STATUSES)[number];
+export const INTEGRATION_STATUS_LABELS: Record<IntegrationStatus, string> = {
+  not_configured: 'تنظیم نشده',
+  ready: 'آماده',
+  error: 'خطا',
+};
+
+export const INTEGRATION_LOG_LEVELS = ['info', 'warning', 'error'] as const;
+export type IntegrationLogLevel = (typeof INTEGRATION_LOG_LEVELS)[number];
+
+export const MARKETPLACE_SYNC_STATUS_LABELS: Record<MarketplaceSyncStatus, string> = {
+  not_synced: 'همگام نشده',
+  pending: 'در صف',
+  synced: 'همگام',
+  failed: 'خطا',
+  disabled: 'غیرفعال',
+};

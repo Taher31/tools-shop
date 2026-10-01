@@ -16,6 +16,8 @@ import {
   USAGE_TYPE_LABELS,
   USAGE_TYPES,
   type UsageType,
+  MARKETPLACE_SYNC_STATUS_LABELS,
+  type MarketplaceSyncStatus,
 } from '@toolshop/shared';
 import {
   Alert,
@@ -107,6 +109,12 @@ const emptyVariant = (): VariantRow => ({
   weightGrams: '',
   isActive: true,
 });
+
+const CHANNEL_NAMES: Record<string, string> = {
+  torob: 'ترب',
+  digikala: 'دیجی‌کالا',
+  mock_marketplace: 'مارکت‌پلیس آزمایشی',
+};
 
 function toFormValues(product: AdminProductDetail | null): FormValues {
   return {
@@ -982,9 +990,23 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
             <Section title="همگام‌سازی بازارها">
               <ul className="space-y-1 text-sm">
                 {product.marketplaceSync.map((s) => (
-                  <li key={s.channel} className="flex justify-between">
-                    {s.channel}
-                    <Badge>{s.status}</Badge>
+                  <li key={s.channel} className="space-y-0.5">
+                    <div className="flex justify-between gap-2">
+                      {CHANNEL_NAMES[s.channel] ?? s.channel}
+                      <Badge
+                        variant={
+                          s.status === 'failed'
+                            ? 'destructive'
+                            : s.status === 'synced'
+                              ? 'success'
+                              : 'secondary'
+                        }
+                      >
+                        {MARKETPLACE_SYNC_STATUS_LABELS[s.status as MarketplaceSyncStatus] ??
+                          s.status}
+                      </Badge>
+                    </div>
+                    {s.lastError ? <p className="text-destructive text-xs">{s.lastError}</p> : null}
                   </li>
                 ))}
               </ul>

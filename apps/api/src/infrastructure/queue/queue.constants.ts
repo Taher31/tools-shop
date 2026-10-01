@@ -4,6 +4,7 @@ import type { DefaultJobOptions } from 'bullmq';
 export const QUEUES = {
   SEARCH_INDEXING: 'search-indexing',
   ORDERS: 'orders',
+  MARKETPLACE_SYNC: 'marketplace-sync',
   DEAD_LETTER: 'dead-letter',
 } as const;
 

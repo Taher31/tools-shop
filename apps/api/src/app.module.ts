@@ -28,6 +28,7 @@ import { CouponsModule } from './modules/coupons/coupons.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { HealthModule } from './modules/health/health.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { InvoicesModule } from './modules/invoices/invoices.module';
 import { MediaModule } from './modules/media/media.module';
@@ -81,6 +82,7 @@ import { SupportModule } from './modules/support/support.module';
     OrdersModule,
     PaymentsModule,
     InvoicesModule,
+    IntegrationsModule,
     CheckoutModule,
     AccountModule,
     CustomersModule,

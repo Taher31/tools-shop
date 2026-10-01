@@ -117,6 +117,13 @@ export const PERMISSION_CATALOG = {
       'user.manage': 'مدیریت کاربران',
     },
   },
+  integration: {
+    label: 'مرکز اتصال‌ها',
+    permissions: {
+      'integration.read': 'مشاهده اتصال‌ها و گزارش همگام‌سازی',
+      'integration.manage': 'فعال‌سازی، اعتبارنامه و همگام‌سازی',
+    },
+  },
   invoice: {
     label: 'فاکتورها و اسناد',
     permissions: {

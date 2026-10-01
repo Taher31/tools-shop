@@ -60,3 +60,10 @@ export const adminInvoiceListQuerySchema = listQuerySchema.extend({
   type: z.enum(INVOICE_TYPES).optional(),
 });
 export type AdminInvoiceListQuery = z.infer<typeof adminInvoiceListQuerySchema>;
+
+export const integrationUpdateSchema = z.object({
+  isEnabled: z.boolean().optional(),
+  /** Only the fields being changed; an empty string clears a value. */
+  credentials: z.record(z.string().max(60), z.string().trim().max(2000)).optional(),
+});
+export type IntegrationUpdateInput = z.infer<typeof integrationUpdateSchema>;
