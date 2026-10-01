@@ -117,6 +117,13 @@ export const PERMISSION_CATALOG = {
       'user.manage': 'مدیریت کاربران',
     },
   },
+  invoice: {
+    label: 'فاکتورها و اسناد',
+    permissions: {
+      'invoice.read': 'مشاهده و چاپ فاکتورها',
+      'invoice.issue': 'صدور فاکتور برای سفارش‌های قدیمی',
+    },
+  },
   ticket: {
     label: 'پشتیبانی',
     permissions: {
@@ -234,6 +241,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'coupon.manage',
       'ticket.read',
       'ticket.reply',
+      'invoice.read',
+      'invoice.issue',
     ],
   },
   {
@@ -266,6 +275,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'ticket.read',
       'ticket.reply',
       'ticket.manage',
+      'invoice.read',
     ],
   },
   {

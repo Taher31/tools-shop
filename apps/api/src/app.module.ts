@@ -29,6 +29,7 @@ import { CustomersModule } from './modules/customers/customers.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { HealthModule } from './modules/health/health.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
+import { InvoicesModule } from './modules/invoices/invoices.module';
 import { MediaModule } from './modules/media/media.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
@@ -79,6 +80,7 @@ import { SupportModule } from './modules/support/support.module';
     CartModule,
     OrdersModule,
     PaymentsModule,
+    InvoicesModule,
     CheckoutModule,
     AccountModule,
     CustomersModule,

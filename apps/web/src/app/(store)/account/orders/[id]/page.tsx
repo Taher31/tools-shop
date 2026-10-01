@@ -1,7 +1,12 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ORDER_STATUS_LABELS, ORDER_TRACKING_STEPS, type OrderDetail } from '@toolshop/shared';
+import {
+  ORDER_STATUS_LABELS,
+  ORDER_TRACKING_STEPS,
+  type InvoiceSummary,
+  type OrderDetail,
+} from '@toolshop/shared';
 import {
   Alert,
   Button,
@@ -17,6 +22,7 @@ import { Check } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { AddressText } from '@/components/account/address-form';
+import { InvoiceLinks } from '@/components/documents/invoice-links';
 import { OrderStatusBadge, PaymentStatusBadge } from '@/components/common/status-badges';
 import { ProductImage } from '@/components/product/product-image';
 import { api } from '@/lib/api/client';
@@ -65,6 +71,10 @@ export default function OrderDetailPage() {
   } = useQuery({
     queryKey: ['order', id],
     queryFn: () => api.get<OrderDetail>(`/account/orders/${id}`),
+  });
+  const invoices = useQuery({
+    queryKey: ['order', id, 'invoices'],
+    queryFn: () => api.get<InvoiceSummary[]>(`/account/orders/${id}/invoices`),
   });
   const cancel = useMutation({
     mutationFn: () => api.post<OrderDetail>(`/account/orders/${id}/cancel`, {}),
@@ -235,6 +245,12 @@ export default function OrderDetailPage() {
                   </li>
                 ))}
               </ul>
+            ) : null}
+            {invoices.data && invoices.data.length > 0 ? (
+              <div className="border-border border-t pt-3">
+                <p className="mb-1 text-xs font-bold">فاکتورها</p>
+                <InvoiceLinks invoices={invoices.data} />
+              </div>
             ) : null}
           </CardContent>
         </Card>

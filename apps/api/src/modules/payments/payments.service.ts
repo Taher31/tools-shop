@@ -17,6 +17,7 @@ import { AuditService } from '../audit/audit.service';
 import { toPaymentView } from '../orders/order.mapper';
 import { OrdersService } from '../orders/orders.service';
 import { PaymentProviderRegistry } from './payment-provider.registry';
+import { InvoicesService } from '../invoices/invoices.service';
 
 export interface CallbackOutcome {
   result: PaymentResultView;
@@ -42,6 +43,7 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
     private readonly registry: PaymentProviderRegistry,
     private readonly orders: OrdersService,
+    private readonly invoices: InvoicesService,
     private readonly audit: AuditService,
     private readonly outbox: OutboxService,
     private readonly config: AppConfig,
@@ -279,6 +281,12 @@ export class PaymentsService {
         },
         tx,
       );
+      await this.invoices.issueCreditNote(tx, {
+        orderId: payment.orderId,
+        paymentId,
+        amount,
+        reason: input.reason ?? null,
+      });
       if (fullyRefunded) {
         const order = await this.orders.lock(tx, payment.orderId);
         if (order.status === 'cancelled' || order.status === 'returned') {

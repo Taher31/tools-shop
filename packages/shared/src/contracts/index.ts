@@ -6,6 +6,7 @@ import type { Permission } from '../auth/permissions';
 import type {
   AttributeType,
   CouponType,
+  InvoiceType,
   PaymentStatus,
   ProductStatus,
   QuestionStatus,
@@ -778,4 +779,52 @@ export interface AdminTicketDetail extends AdminTicketSummary {
 export interface StaffOption {
   id: string;
   fullName: string;
+}
+
+/* -------------------------------------------------------------- invoices */
+
+/** Party as printed on an invoice (snapshot taken when the invoice is issued). */
+export interface InvoiceParty {
+  name: string;
+  nationalId: string | null;
+  economicCode: string | null;
+  registrationNumber: string | null;
+  nationalCode: string | null;
+  phone: string | null;
+  address: string | null;
+  postalCode: string | null;
+}
+
+export interface InvoiceLine {
+  title: string;
+  sku: string | null;
+  quantity: number;
+  unitPrice: Rial;
+  total: Rial;
+}
+
+export interface InvoiceSummary {
+  id: string;
+  invoiceNumber: number;
+  type: InvoiceType;
+  orderId: string;
+  orderNumber: number;
+  buyerName: string;
+  total: Rial;
+  issuedAt: string;
+}
+
+export interface InvoiceView extends InvoiceSummary {
+  /** For credit notes: the sale invoice being corrected. */
+  saleInvoiceNumber: number | null;
+  seller: InvoiceParty;
+  buyer: InvoiceParty;
+  lines: InvoiceLine[];
+  subtotal: Rial;
+  discountTotal: Rial;
+  shippingCost: Rial;
+  taxTotal: Rial;
+  taxIncluded: boolean;
+  totalInWords: string;
+  note: string | null;
 }

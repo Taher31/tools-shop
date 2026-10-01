@@ -1,4 +1,5 @@
 export * from './text/persian';
+export * from './text/number-words';
 export * from './commerce/money';
 export * from './commerce/enums';
 export * from './commerce/order-status';

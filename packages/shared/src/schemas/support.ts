@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { TICKET_CATEGORIES, TICKET_PRIORITIES, TICKET_STATUSES } from '../commerce/enums';
+import {
+  INVOICE_TYPES,
+  TICKET_CATEGORIES,
+  TICKET_PRIORITIES,
+  TICKET_STATUSES,
+} from '../commerce/enums';
 import { idSchema, listQuerySchema, textSchema } from './common';
 
 const messageBodySchema = textSchema({ min: 2, max: 5000 });
@@ -50,3 +55,8 @@ export const adminTicketListQuerySchema = listQuerySchema.extend({
     .transform((value) => (value === undefined ? undefined : value === 'true')),
 });
 export type AdminTicketListQuery = z.infer<typeof adminTicketListQuerySchema>;
+
+export const adminInvoiceListQuerySchema = listQuerySchema.extend({
+  type: z.enum(INVOICE_TYPES).optional(),
+});
+export type AdminInvoiceListQuery = z.infer<typeof adminInvoiceListQuerySchema>;

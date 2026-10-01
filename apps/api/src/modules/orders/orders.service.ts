@@ -35,6 +35,7 @@ import {
   toOrderDetail,
   toOrderSummary,
 } from './order.mapper';
+import { InvoicesService } from '../invoices/invoices.service';
 
 export interface OrderActor {
   type: 'customer' | 'staff' | 'system';
@@ -64,6 +65,7 @@ export class OrdersService {
     private readonly coupons: CouponsService,
     private readonly audit: AuditService,
     private readonly outbox: OutboxService,
+    private readonly invoices: InvoicesService,
     @InjectQueue(QUEUES.ORDERS) private readonly queue: Queue,
   ) {}
 
@@ -98,6 +100,7 @@ export class OrdersService {
         await this.inventory.commitReservations(tx, order.id, reference);
         data.paidAt = new Date();
         await this.incrementSoldCounts(tx, order.id);
+        await this.invoices.issueSaleInvoice(tx, order.id);
         break;
       case 'cancelled':
         if (STOCK_COMMITTED_STATUSES.includes(order.status)) {

@@ -707,6 +707,7 @@ model Order {
   stockMovements   StockMovement[]
   couponRedemption CouponRedemption?
   tickets          Ticket[]
+  invoices         Invoice[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -850,6 +851,47 @@ model ProductQuestion {
 }
 
 // ============================================================================
+// Invoices & documents
+// ============================================================================
+
+enum InvoiceType {
+  sale
+  credit_note
+}
+
+/// Issued documents are immutable snapshots: later changes to settings, customers or
+/// products never alter them. Corrections are made with credit notes.
+model Invoice {
+  id            String      @id @default(uuid(7)) @db.Uuid
+  /// Shared sequence for all document types (starts at 1001).
+  invoiceNumber Int         @unique @default(autoincrement())
+  type          InvoiceType
+  orderId       String      @db.Uuid
+  /// Credit notes reference the sale invoice they correct.
+  saleInvoiceId String?     @db.Uuid
+  paymentId     String?     @db.Uuid
+  seller        Json
+  buyer         Json
+  lines         Json
+  subtotal      BigInt
+  discountTotal BigInt      @default(0)
+  shippingCost  BigInt      @default(0)
+  taxTotal      BigInt      @default(0)
+  taxIncluded   Boolean     @default(true)
+  total         BigInt
+  note          String?
+  issuedById    String?     @db.Uuid
+  issuedAt      DateTime    @default(now())
+
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  saleInvoice Invoice?  @relation("CreditNotes", fields: [saleInvoiceId], references: [id], onDelete: Restrict)
+  creditNotes Invoice[] @relation("CreditNotes")
+
+  @@index([orderId])
+  @@index([type, issuedAt])
+}
+
+// ============================================================================
 // Support
 // ============================================================================
 
@@ -878,23 +920,23 @@ enum TicketCategory {
 }
 
 model Ticket {
-  id            String         @id @default(uuid(7)) @db.Uuid
+  id             String         @id @default(uuid(7)) @db.Uuid
   /// Human friendly number shown to customers (sequence starts at 10001).
-  ticketNumber  Int            @unique @default(autoincrement())
-  userId        String         @db.Uuid
-  orderId       String?        @db.Uuid
-  assigneeId    String?        @db.Uuid
-  subject       String
-  category      TicketCategory @default(other)
-  priority      TicketPriority @default(normal)
-  status        TicketStatus   @default(open)
+  ticketNumber   Int            @unique @default(autoincrement())
+  userId         String         @db.Uuid
+  orderId        String?        @db.Uuid
+  assigneeId     String?        @db.Uuid
+  subject        String
+  category       TicketCategory @default(other)
+  priority       TicketPriority @default(normal)
+  status         TicketStatus   @default(open)
   /// Unread flags drive the badges in the account and the admin panel.
-  customerUnread Boolean       @default(false)
-  staffUnread    Boolean       @default(true)
-  lastMessageAt DateTime       @default(now())
-  closedAt      DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  customerUnread Boolean        @default(false)
+  staffUnread    Boolean        @default(true)
+  lastMessageAt  DateTime       @default(now())
+  closedAt       DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   user     User            @relation(fields: [userId], references: [id], onDelete: Restrict)
   order    Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)

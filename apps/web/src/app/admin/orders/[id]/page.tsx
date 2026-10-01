@@ -1,7 +1,12 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { type AdminOrderDetail, ORDER_STATUS_LABELS, type OrderStatus } from '@toolshop/shared';
+import {
+  type AdminOrderDetail,
+  type InvoiceSummary,
+  ORDER_STATUS_LABELS,
+  type OrderStatus,
+} from '@toolshop/shared';
 import {
   Button,
   Card,
@@ -23,6 +28,7 @@ import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import { AddressText } from '@/components/account/address-form';
 import { PageHeader } from '@/components/admin/page-header';
+import { InvoiceLinks } from '@/components/documents/invoice-links';
 import { useAdminMutation } from '@/components/admin/query';
 import { OrderStatusBadge, PaymentStatusBadge } from '@/components/common/status-badges';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -49,6 +55,15 @@ export default function AdminOrderPage() {
     (value: string) => api.put(`/admin/orders/${id}/note`, { note: value }),
     { success: 'یادداشت ذخیره شد.' },
   );
+  const invoices = useQuery({
+    queryKey: ['admin', 'order', id, 'invoices'],
+    queryFn: () => api.get<InvoiceSummary[]>(`/admin/invoices/orders/${id}`),
+    enabled: can('invoice.read'),
+  });
+  const issueInvoice = useAdminMutation(() => api.post(`/admin/invoices/orders/${id}`), {
+    success: 'فاکتور صادر شد.',
+    invalidate: [['admin', 'order', id, 'invoices']],
+  });
   const refund = useAdminMutation(
     (paymentId: string) =>
       api.post(`/admin/payments/${paymentId}/refund`, { reason: note || undefined }),
@@ -67,6 +82,11 @@ export default function AdminOrderPage() {
         actions={
           <>
             <OrderStatusBadge status={o.status} />
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/print/packing-slip/${o.id}`} target="_blank">
+                برگه آماده‌سازی
+              </Link>
+            </Button>
             {can('order.update')
               ? o.allowedTransitions
                   .filter((s) => s !== 'cancelled' || can('order.cancel'))
@@ -270,6 +290,34 @@ export default function AdminOrderPage() {
               ))}
             </CardContent>
           </Card>
+          {can('invoice.read') ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>اسناد</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {invoices.data && invoices.data.length > 0 ? (
+                  <InvoiceLinks invoices={invoices.data} admin />
+                ) : (
+                  <p className="text-muted-foreground text-xs">
+                    {o.paidAt
+                      ? 'فاکتوری برای این سفارش صادر نشده است.'
+                      : 'فاکتور پس از پرداخت صادر می‌شود.'}
+                  </p>
+                )}
+                {o.paidAt && invoices.data?.length === 0 && can('invoice.issue') ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    loading={issueInvoice.isPending}
+                    onClick={() => issueInvoice.mutate(undefined)}
+                  >
+                    صدور فاکتور فروش
+                  </Button>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
           <Card>
             <CardHeader>
               <CardTitle>یادداشت داخلی</CardTitle>

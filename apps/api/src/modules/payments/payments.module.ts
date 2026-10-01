@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { InvoicesModule } from '../invoices/invoices.module';
 import { OrdersModule } from '../orders/orders.module';
 import { PaymentProviderRegistry } from './payment-provider.registry';
 import {
@@ -15,7 +16,7 @@ import { PAYMENT_PROVIDERS, type PaymentProvider } from './providers/payment-pro
  * here and add it to the PAYMENT_PROVIDERS factory. Nothing else changes.
  */
 @Module({
-  imports: [OrdersModule],
+  imports: [OrdersModule, InvoicesModule],
   controllers: [PaymentsController, MockGatewayController, AdminPaymentsController],
   providers: [
     MockPaymentProvider,

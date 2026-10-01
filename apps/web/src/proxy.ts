@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 const SESSION_HINT = 'ts_session';
-const CUSTOMER_AREAS = ['/account', '/checkout'];
+const CUSTOMER_AREAS = ['/account', '/checkout', '/print'];
 
 /**
  * Optimistic routing only: sends visitors without a session hint to the login page.
@@ -25,5 +25,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/account/:path*', '/checkout/:path*', '/checkout'],
+  matcher: ['/admin/:path*', '/account/:path*', '/checkout/:path*', '/checkout', '/print/:path*'],
 };

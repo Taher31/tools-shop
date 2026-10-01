@@ -138,3 +138,10 @@ export const TICKET_CATEGORY_LABELS: Record<TicketCategory, string> = {
   warranty: 'گارانتی و خدمات پس از فروش',
   other: 'سایر',
 };
+
+export const INVOICE_TYPES = ['sale', 'credit_note'] as const;
+export type InvoiceType = (typeof INVOICE_TYPES)[number];
+export const INVOICE_TYPE_LABELS: Record<InvoiceType, string> = {
+  sale: 'فاکتور فروش',
+  credit_note: 'اعلامیه برگشت از فروش',
+};
