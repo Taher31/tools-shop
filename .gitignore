@@ -14,9 +14,12 @@ next-env.d.ts
 .env.*.local
 !.env.example
 
-uploads/
+# Local file storage (STORAGE_DRIVER=local). Anchored so source folders such as
+# apps/api/src/infrastructure/storage are never ignored.
+/uploads/
+/storage/
+apps/api/uploads/*
 !apps/api/uploads/.gitkeep
-storage/
 *.log
 .DS_Store
 .idea/
