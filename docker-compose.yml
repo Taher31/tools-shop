@@ -1,0 +1,99 @@
+# Development infrastructure.
+#   docker compose up -d                 -> PostgreSQL, Redis, Meilisearch (run api/web on the host)
+#   docker compose --profile app up -d   -> also builds and runs the API and the web app in containers
+name: toolshop
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-toolshop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-toolshop}
+      POSTGRES_DB: ${POSTGRES_DB:-toolshop}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-toolshop} -d ${POSTGRES_DB:-toolshop}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.52.0
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev_master_key_change_me_0123456789}
+      MEILI_ENV: ${MEILI_ENV:-development}
+      MEILI_NO_ANALYTICS: "true"
+    ports:
+      - "${MEILI_PORT:-7700}:7700"
+    volumes:
+      - meili-data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-toolshop}:${POSTGRES_PASSWORD:-toolshop}@postgres:5432/${POSTGRES_DB:-toolshop}?schema=public
+      REDIS_URL: redis://redis:6379
+      MEILI_HOST: http://meilisearch:7700
+      STORAGE_LOCAL_DIR: /app/uploads
+    ports:
+      - "${API_PORT:-4000}:4000"
+    volumes:
+      - uploads-data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+
+  web:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      API_INTERNAL_URL: http://api:4000
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
+  redis-data:
+  meili-data:
+  uploads-data:

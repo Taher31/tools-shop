@@ -1,0 +1,37 @@
+{
+  "name": "toolshop",
+  "private": true,
+  "description": "Modular commerce platform for selling tools in Iran (storefront, admin, inventory, orders, payments, search).",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@toolshop/api",
+    "dev:web": "turbo run dev --filter=@toolshop/web",
+    "start:api": "pnpm --filter @toolshop/api start",
+    "start:web": "pnpm --filter @toolshop/web start",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @toolshop/database db:generate",
+    "db:migrate": "pnpm --filter @toolshop/database db:migrate",
+    "db:deploy": "pnpm --filter @toolshop/database db:deploy",
+    "db:seed": "pnpm --filter @toolshop/database db:seed",
+    "db:reset": "pnpm --filter @toolshop/database db:reset",
+    "db:studio": "pnpm --filter @toolshop/database db:studio",
+    "search:reindex": "pnpm --filter @toolshop/api search:reindex",
+    "infra:up": "docker compose up -d postgres redis meilisearch",
+    "infra:down": "docker compose down"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "turbo": "^2.11.6",
+    "typescript": "5.9.3"
+  }
+}
