@@ -1,0 +1,95 @@
+/*
+ * Design tokens. Every color, radius and font used by the UI comes from these CSS
+ * variables, so re-branding means overriding :root in one stylesheet (see
+ * apps/web/src/styles/brand.css) – no component changes.
+ */
+:root {
+  --font-family-base: 'Vazirmatn Variable', 'Vazirmatn', Tahoma, system-ui, sans-serif;
+  --radius: 0.375rem;
+
+  --background: #f5f6f8;
+  --foreground: #141a21;
+  --card: #ffffff;
+  --card-foreground: #141a21;
+  --popover: #ffffff;
+  --popover-foreground: #141a21;
+
+  --primary: #0f2a44;
+  --primary-foreground: #ffffff;
+  --primary-hover: #163a5c;
+  --accent: #f2a100;
+  --accent-foreground: #1d1400;
+  --accent-hover: #dc9200;
+  --secondary: #e8ecf1;
+  --secondary-foreground: #1b2430;
+  --muted: #f0f2f5;
+  --muted-foreground: #5c6776;
+
+  --border: #dde2e8;
+  --input: #cfd6de;
+  --ring: #2f6fb0;
+
+  --success: #15803d;
+  --success-soft: #e8f5ec;
+  --warning: #b45309;
+  --warning-soft: #fdf3e2;
+  --destructive: #b42318;
+  --destructive-soft: #fdecea;
+  --info: #1d5fa8;
+  --info-soft: #e8f0fa;
+
+  --header-bg: #ffffff;
+  --topbar-bg: #18202a;
+  --topbar-foreground: #c9d1db;
+  --nav-bg: #0f2a44;
+  --nav-foreground: #e6edf5;
+  --footer-bg: #121a23;
+  --footer-foreground: #b8c2ce;
+  --admin-sidebar-bg: #111922;
+  --admin-sidebar-foreground: #c3ccd6;
+}
+
+@theme inline {
+  --font-sans: var(--font-family-base);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-hover: var(--accent-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-header: var(--header-bg);
+  --color-topbar: var(--topbar-bg);
+  --color-topbar-foreground: var(--topbar-foreground);
+  --color-nav: var(--nav-bg);
+  --color-nav-foreground: var(--nav-foreground);
+  --color-footer: var(--footer-bg);
+  --color-footer-foreground: var(--footer-foreground);
+  --color-sidebar: var(--admin-sidebar-bg);
+  --color-sidebar-foreground: var(--admin-sidebar-foreground);
+}

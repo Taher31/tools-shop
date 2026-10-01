@@ -56,6 +56,12 @@ export class CatalogController {
     return this.brands.publicBySlug(slug);
   }
 
+  /** Slugs for the storefront sitemap (visible catalog only). */
+  @Get('catalog/sitemap')
+  sitemap() {
+    return this.products.sitemap();
+  }
+
   @Get('products/compare')
   compare(@Query('ids') ids: string | undefined): Promise<CompareResult> {
     return this.products.compare(idList(ids, 4));

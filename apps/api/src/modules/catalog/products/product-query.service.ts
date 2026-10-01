@@ -115,6 +115,30 @@ export class ProductQueryService {
     });
   }
 
+  async sitemap(): Promise<{
+    products: { slug: string; updatedAt: string }[];
+    categories: { slug: string; updatedAt: string }[];
+    brands: { slug: string; updatedAt: string }[];
+  }> {
+    return this.cache.wrap('catalog:sitemap', 600, async () => {
+      const taxonomy = await this.taxonomyService.get();
+      const [products, categories, brands] = await Promise.all([
+        this.prisma.product.findMany({ where: VISIBLE_PRODUCT_WHERE, select: { slug: true, updatedAt: true, categoryId: true }, take: 50_000 }),
+        this.prisma.category.findMany({ where: { isActive: true }, select: { id: true, slug: true, updatedAt: true } }),
+        this.prisma.brand.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
+      ]);
+      return {
+        products: products
+          .filter((p) => taxonomy.isCategoryVisible(p.categoryId))
+          .map((p) => ({ slug: p.slug, updatedAt: p.updatedAt.toISOString() })),
+        categories: categories
+          .filter((c) => taxonomy.isCategoryVisible(c.id))
+          .map((c) => ({ slug: c.slug, updatedAt: c.updatedAt.toISOString() })),
+        brands: brands.map((b) => ({ slug: b.slug, updatedAt: b.updatedAt.toISOString() })),
+      };
+    });
+  }
+
   async invalidateHome(): Promise<void> {
     await this.cache.del(HOME_CACHE_KEY);
   }

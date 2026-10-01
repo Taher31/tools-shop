@@ -1,0 +1,10 @@
+/*
+ * Brand overrides. The default industrial palette lives in @toolshop/ui/styles/theme.css.
+ * When the final brand identity is ready, override the tokens here, e.g.:
+ *
+ * :root {
+ *   --primary: #0b3d2e;
+ *   --accent: #ffb703;
+ *   --nav-bg: #0b3d2e;
+ * }
+ */

@@ -12,6 +12,7 @@ export interface IssuedTokens {
   refreshToken: string;
   sessionId: string;
   userId: string;
+  userType: UserType;
 }
 
 export interface ClientInfo {
@@ -47,7 +48,7 @@ export class SessionService {
       },
     });
     const accessToken = await this.tokens.signAccessToken({ sub: user.id, sid: session.id, typ: user.type });
-    return { accessToken, refreshToken, sessionId: session.id, userId: user.id };
+    return { accessToken, refreshToken, sessionId: session.id, userId: user.id, userType: user.type };
   }
 
   async rotate(refreshToken: string, client: ClientInfo): Promise<IssuedTokens> {
@@ -88,7 +89,13 @@ export class SessionService {
       sid: session.id,
       typ: session.user.type,
     });
-    return { accessToken, refreshToken: nextToken, sessionId: session.id, userId: session.user.id };
+    return {
+      accessToken,
+      refreshToken: nextToken,
+      sessionId: session.id,
+      userId: session.user.id,
+      userType: session.user.type,
+    };
   }
 
   async revoke(sessionId: string): Promise<void> {

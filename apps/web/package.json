@@ -1,0 +1,35 @@
+{
+  "name": "@toolshop/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Storefront and admin panel (Next.js App Router, RTL Persian).",
+  "scripts": {
+    "dev": "next dev --port ${WEB_PORT:-3000}",
+    "build": "next build",
+    "start": "next start --port ${WEB_PORT:-3000}",
+    "typecheck": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/vazirmatn": "^5.2.8",
+    "@hookform/resolvers": "^5.2.2",
+    "@tanstack/react-query": "^5.90.2",
+    "@toolshop/shared": "workspace:*",
+    "@toolshop/ui": "workspace:*",
+    "lucide-react": "^1.49.0",
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-hook-form": "^7.65.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@next/env": "16.3.8",
+    "@tailwindcss/postcss": "^4.1.14",
+    "@toolshop/config": "workspace:*",
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.14",
+    "typescript": "5.9.3"
+  }
+}

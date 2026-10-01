@@ -1,0 +1,102 @@
+@import 'tailwindcss';
+@import '@toolshop/ui/styles/theme.css';
+@import '../styles/brand.css';
+
+@source '../../../../packages/ui/src';
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-family-base);
+    font-feature-settings: 'ss01';
+    line-height: 1.75;
+    text-rendering: optimizeLegibility;
+  }
+
+  *,
+  ::after,
+  ::before {
+    border-color: var(--border);
+  }
+
+  :focus-visible {
+    outline-color: var(--ring);
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  /* Latin model numbers and SKUs inside RTL text */
+  .ltr {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+}
+
+@layer components {
+  .container-page {
+    width: 100%;
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  /* Rich text from the CMS / product descriptions (sanitized on the server). */
+  .prose-content {
+    line-height: 2;
+    font-size: 0.95rem;
+    color: color-mix(in srgb, var(--foreground) 88%, transparent);
+  }
+  .prose-content p {
+    margin-block: 0.75rem;
+  }
+  .prose-content h2 {
+    margin-block: 1.5rem 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+  .prose-content h3 {
+    margin-block: 1.25rem 0.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .prose-content ul,
+  .prose-content ol {
+    margin-block: 0.75rem;
+    padding-inline-start: 1.5rem;
+  }
+  .prose-content ul {
+    list-style: disc;
+  }
+  .prose-content ol {
+    list-style: decimal;
+  }
+  .prose-content a {
+    color: var(--info);
+    text-decoration: underline;
+  }
+  .prose-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-block: 1rem;
+  }
+  .prose-content td,
+  .prose-content th {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+  }
+}
