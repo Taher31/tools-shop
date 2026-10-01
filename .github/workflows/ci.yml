@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: toolshop
+          POSTGRES_PASSWORD: toolshop
+          POSTGRES_DB: toolshop
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U toolshop" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+      meilisearch:
+        image: getmeili/meilisearch:v1.52.0
+        env:
+          MEILI_MASTER_KEY: ci_master_key_0123456789abcdef
+          MEILI_NO_ANALYTICS: 'true'
+        ports: ['7700:7700']
+        options: >-
+          --health-cmd "curl -sf http://localhost:7700/health" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      # Integration tests recreate this database; the name must end with _test.
+      TEST_DATABASE_URL: postgresql://toolshop:toolshop@localhost:5432/toolshop_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      MEILI_HOST: http://localhost:7700
+      MEILI_MASTER_KEY: ci_master_key_0123456789abcdef
+      TURBO_TELEMETRY_DISABLED: '1'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm build
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
