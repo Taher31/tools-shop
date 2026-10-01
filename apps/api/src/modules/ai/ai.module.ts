@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
+import { Module, type Provider } from '@nestjs/common';
 import { QUEUES, workerProviders } from '../../infrastructure/queue/queue.constants';
 import { CatalogModule } from '../catalog/catalog.module';
 import { ContentModule } from '../content/content.module';
@@ -15,6 +15,11 @@ import { AiSettingsService } from './ai-settings.service';
 import { AiUsageService } from './ai-usage.service';
 import { AssistantController } from './assistant.controller';
 import { AssistantService } from './assistant.service';
+import { ConversationStore } from './conversation-store.service';
+import { MessengerConfigService } from './messengers/messenger-config.service';
+import { MessengerWebhookController } from './messengers/messenger-webhook.controller';
+import { MessengerProcessor } from './messengers/messenger.processor';
+import { MessengerService } from './messengers/messenger.service';
 import { StructuredAiService } from './structured.service';
 import { AssistantToolsService } from './tools/assistant-tools.service';
 
@@ -24,9 +29,9 @@ import { AssistantToolsService } from './tools/assistant-tools.service';
     SearchModule,
     ContentModule,
     ShippingModule,
-    BullModule.registerQueue({ name: QUEUES.AI_TASKS }),
+    BullModule.registerQueue({ name: QUEUES.AI_TASKS }, { name: QUEUES.MESSENGER }),
   ],
-  controllers: [AssistantController, AdminAiController],
+  controllers: [AssistantController, AdminAiController, MessengerWebhookController],
   providers: [
     AssistantService,
     AiSettingsService,
@@ -37,7 +42,10 @@ import { AssistantToolsService } from './tools/assistant-tools.service';
     AiStaffService,
     AiAdminService,
     AiTasksListener,
-    ...workerProviders(AiTasksProcessor),
+    ConversationStore,
+    MessengerConfigService,
+    MessengerService,
+    ...workerProviders<Provider>(AiTasksProcessor, MessengerProcessor),
   ],
   exports: [AiSettingsService, AiUsageService, AgentService, StructuredAiService],
 })

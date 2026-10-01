@@ -83,3 +83,20 @@ export const productContentRequestSchema = z.object({
   instructions: optionalTextSchema(500),
 });
 export type ProductContentRequest = z.infer<typeof productContentRequestSchema>;
+
+/* ------------------------------------------------------------- messengers */
+
+export const MESSENGER_CHANNELS = ['telegram', 'bale', 'eitaa'] as const;
+export type MessengerChannel = (typeof MESSENGER_CHANNELS)[number];
+export const MESSENGER_LABELS: Record<MessengerChannel, string> = {
+  telegram: 'تلگرام',
+  bale: 'بله',
+  eitaa: 'ایتا',
+};
+
+export const messengerUpdateSchema = z.object({
+  enabled: z.boolean(),
+  /** Omitted: keep the stored token. Empty string: remove it. */
+  botToken: z.string().trim().max(200).optional(),
+});
+export type MessengerUpdateInput = z.infer<typeof messengerUpdateSchema>;

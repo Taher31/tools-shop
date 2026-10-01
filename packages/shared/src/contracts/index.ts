@@ -22,7 +22,7 @@ import type {
   UserType,
 } from '../commerce/enums';
 import type { Rial } from '../commerce/money';
-import type { AiFeature, AiSettings } from '../schemas/ai';
+import type { AiFeature, AiSettings, MessengerChannel } from '../schemas/ai';
 import type { OrderStatus } from '../commerce/order-status';
 
 export interface Paginated<T> {
@@ -970,4 +970,20 @@ export interface TicketTriage {
   sentiment: 'positive' | 'neutral' | 'negative' | 'angry';
   suggestedPriority: TicketPriority;
   suggestedCategory: TicketCategory;
+}
+
+export interface MessengerChannelView {
+  channel: MessengerChannel;
+  label: string;
+  /** False when no documented two-way bot API exists for the platform yet. */
+  available: boolean;
+  note: string;
+  enabled: boolean;
+  token: { configured: boolean; preview: string | null };
+  botUsername: string | null;
+  /** Where updates are delivered (secret part masked); null until the webhook is registered. */
+  webhookUrl: string | null;
+  webhookAt: string | null;
+  lastActivityAt: string | null;
+  lastError: string | null;
 }

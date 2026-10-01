@@ -1,4 +1,4 @@
-import { Get, HttpCode, HttpStatus, Post, Put } from '@nestjs/common';
+import { Get, HttpCode, HttpStatus, Param, ParseEnumPipe, Post, Put } from '@nestjs/common';
 import {
   type AiConversationDetail,
   type AiConversationSummary,
@@ -10,6 +10,11 @@ import {
   type AiSettingsView,
   type AiUsageSummary,
   listQuerySchema,
+  MESSENGER_CHANNELS,
+  type MessengerChannel,
+  type MessengerChannelView,
+  type MessengerUpdateInput,
+  messengerUpdateSchema,
   type Paginated,
   type ProductContentDraft,
   type ProductContentRequest,
@@ -23,6 +28,9 @@ import { AiAdminService } from './ai-admin.service';
 import { AiSettingsService } from './ai-settings.service';
 import { AiStaffService } from './ai-staff.service';
 import { AiUsageService } from './ai-usage.service';
+import { MessengerConfigService } from './messengers/messenger-config.service';
+
+const channelPipe = new ParseEnumPipe(Object.fromEntries(MESSENGER_CHANNELS.map((c) => [c, c])));
 
 const conversationListSchema = listQuerySchema.extend({
   channel: z.enum(['web', 'telegram', 'bale', 'eitaa']).optional(),
@@ -35,7 +43,32 @@ export class AdminAiController {
     private readonly usage: AiUsageService,
     private readonly admin: AiAdminService,
     private readonly staff: AiStaffService,
+    private readonly messengers: MessengerConfigService,
   ) {}
+
+  @Get('messengers')
+  @RequirePermissions('ai.read')
+  listMessengers(): Promise<MessengerChannelView[]> {
+    return this.messengers.views();
+  }
+
+  @Put('messengers/:channel')
+  @RequirePermissions('ai.manage')
+  updateMessenger(
+    @Param('channel', channelPipe) channel: MessengerChannel,
+    @ZBody(messengerUpdateSchema) input: MessengerUpdateInput,
+  ): Promise<MessengerChannelView> {
+    return this.messengers.update(channel, input);
+  }
+
+  @Post('messengers/:channel/webhook')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('ai.manage')
+  registerWebhook(
+    @Param('channel', channelPipe) channel: MessengerChannel,
+  ): Promise<MessengerChannelView> {
+    return this.messengers.registerWebhook(channel);
+  }
 
   @Get('settings')
   @RequirePermissions('ai.read')

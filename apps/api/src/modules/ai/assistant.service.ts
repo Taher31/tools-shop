@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type Anthropic from '@anthropic-ai/sdk';
-import type { AiConversation, Prisma } from '@toolshop/database';
+import type { AiConversation } from '@toolshop/database';
 import type {
   AssistantConversationView,
   AssistantProduct,
@@ -14,10 +13,8 @@ import { REDIS } from '../../infrastructure/redis/redis.constants';
 import { ProductQueryService } from '../catalog/products/product-query.service';
 import { AgentService } from './agent.service';
 import { AiSettingsService } from './ai-settings.service';
+import { ConversationStore, MAX_USER_TURNS } from './conversation-store.service';
 import type { ToolContext } from './tools/assistant-tools.service';
-
-/** Conversations stay short and append-only; customers start a new one after this. */
-const MAX_USER_TURNS = 20;
 
 export interface AssistantIdentity {
   userId: string | null;
@@ -31,6 +28,7 @@ export class AssistantService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly agent: AgentService,
+    private readonly store: ConversationStore,
     private readonly aiSettings: AiSettingsService,
     private readonly products: ProductQueryService,
     @Inject(REDIS) private readonly redis: Redis,
@@ -69,9 +67,7 @@ export class AssistantService {
     await this.rateLimit(`ai:rl:ip:${identity.ip}`, settings.assistantHourlyLimit * 5);
     if (!conversationId) return null;
     const conversation = await this.owned(conversationId, identity);
-    const turns = await this.prisma.aiMessage.count({
-      where: { conversationId, role: 'user', text: { not: '' } },
-    });
+    const turns = await this.store.userTurns(conversationId);
     if (turns >= MAX_USER_TURNS) {
       throw AppException.conflict('این گفت‌وگو طولانی شده است؛ لطفاً گفت‌وگوی جدیدی شروع کنید.');
     }
@@ -96,21 +92,8 @@ export class AssistantService {
       }));
     emit({ type: 'conversation', conversationId: conversation.id });
 
-    const history = await this.history(conversation.id);
-    const userMessage: Anthropic.Beta.BetaMessageParam = {
-      role: 'user',
-      content: [{ type: 'text', text }],
-    };
-    const startedAt = Date.now();
-    await this.prisma.aiMessage.create({
-      data: {
-        conversationId: conversation.id,
-        role: 'user',
-        text,
-        content: userMessage.content as Prisma.InputJsonValue,
-        createdAt: new Date(startedAt),
-      },
-    });
+    const history = await this.store.history(conversation.id);
+    const { message: userMessage, startedAt } = await this.store.appendUser(conversation.id, text);
 
     const context: ToolContext = { userId: identity.userId, channel: 'web' };
     const turn = await this.agent.run(
@@ -124,34 +107,12 @@ export class AssistantService {
         onProducts: (products) => emit({ type: 'products', products }),
       },
     );
-
-    const lastAssistant = turn.appended.map((m) => m.role).lastIndexOf('assistant');
-    let lastId = '';
-    for (const [index, message] of turn.appended.entries()) {
-      const isFinal = index === lastAssistant;
-      const row = await this.prisma.aiMessage.create({
-        data: {
-          conversationId: conversation.id,
-          role: message.role,
-          text: isFinal ? turn.text.trim() : '',
-          content: message.content as Prisma.InputJsonValue,
-          productIds: isFinal ? turn.products.map((p) => p.id) : [],
-          tools:
-            isFinal && turn.tools.length > 0 ? (turn.tools as Prisma.InputJsonValue) : undefined,
-          // Explicit ordering: replay must follow the exact API order.
-          createdAt: new Date(startedAt + index + 1),
-        },
-      });
-      if (isFinal) lastId = row.id;
-    }
-    await this.prisma.aiConversation.update({
-      where: { id: conversation.id },
-      data: {
-        messageCount: { increment: 1 + turn.appended.length },
-        lastMessageAt: new Date(),
-        ...(identity.userId && !conversation.userId ? { userId: identity.userId } : {}),
-      },
-    });
+    const lastId = await this.store.appendTurn(
+      conversation.id,
+      turn,
+      startedAt,
+      identity.userId && !conversation.userId ? { user: { connect: { id: identity.userId } } } : {},
+    );
     emit({ type: 'done', messageId: lastId });
   }
 
@@ -193,19 +154,6 @@ export class AssistantService {
         createdAt: row.createdAt.toISOString(),
       })),
     };
-  }
-
-  /** Full API history, replayed exactly as stored (append-only). */
-  async history(conversationId: string): Promise<Anthropic.Beta.BetaMessageParam[]> {
-    const rows = await this.prisma.aiMessage.findMany({
-      where: { conversationId },
-      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      select: { role: true, content: true },
-    });
-    return rows.map((row) => ({
-      role: row.role === 'assistant' ? 'assistant' : 'user',
-      content: row.content as unknown as Anthropic.Beta.BetaMessageParam['content'],
-    }));
   }
 
   private async owned(

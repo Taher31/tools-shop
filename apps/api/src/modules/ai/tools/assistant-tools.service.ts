@@ -1,3 +1,4 @@
+import { AppConfig } from '../../../config/app-config';
 import { Injectable } from '@nestjs/common';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
@@ -83,6 +84,7 @@ export class AssistantToolsService {
     private readonly content: ContentService,
     private readonly settings: SettingsService,
     private readonly shipping: ShippingService,
+    private readonly config: AppConfig,
   ) {
     this.register({
       label: 'جست‌وجوی محصولات',
@@ -130,6 +132,7 @@ export class AssistantToolsService {
           products: result.items.map((p) => ({
             slug: p.slug,
             title: p.title,
+            url: this.productUrl(p.slug),
             brand: p.brand?.name ?? null,
             category: p.category?.name ?? null,
             price_toman: toman(p.price),
@@ -162,6 +165,7 @@ export class AssistantToolsService {
           return json({
             slug: product.slug,
             title: product.title,
+            url: this.productUrl(product.slug),
             brand: product.brand?.name ?? null,
             model: product.model,
             warranty: product.warranty,
@@ -340,6 +344,10 @@ export class AssistantToolsService {
       };
     }
     return tool.run(parsed.data, context);
+  }
+
+  private productUrl(slug: string): string {
+    return `${this.config.publicUrl}/product/${encodeURIComponent(slug)}`;
   }
 
   private register<I>(tool: AgentTool<I>): void {
