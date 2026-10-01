@@ -117,6 +117,14 @@ export const PERMISSION_CATALOG = {
       'user.manage': 'مدیریت کاربران',
     },
   },
+  ai: {
+    label: 'هوش مصنوعی',
+    permissions: {
+      'ai.use': 'استفاده از ابزارهای هوش مصنوعی (پیش‌نویس پاسخ، تولید محتوا)',
+      'ai.read': 'مشاهده مرکز هوش مصنوعی، مصرف و گفت‌وگوها',
+      'ai.manage': 'تنظیمات، کلید API و بودجه هوش مصنوعی',
+    },
+  },
   integration: {
     label: 'مرکز اتصال‌ها',
     permissions: {
@@ -250,6 +258,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'ticket.reply',
       'invoice.read',
       'invoice.issue',
+      'ai.use',
     ],
   },
   {
@@ -283,6 +292,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'ticket.reply',
       'ticket.manage',
       'invoice.read',
+      'ai.use',
     ],
   },
   {
@@ -304,6 +314,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'content.manage',
       'review.moderate',
       'question.answer',
+      'ai.use',
     ],
   },
 ];

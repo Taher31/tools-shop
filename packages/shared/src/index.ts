@@ -17,5 +17,6 @@ export * from './schemas/settings';
 export * from './schemas/search';
 export * from './schemas/admin';
 export * from './schemas/support';
+export * from './schemas/ai';
 export * from './contracts';
 export * from './zod-locale';

@@ -58,6 +58,7 @@ model User {
   tickets            Ticket[]
   assignedTickets    Ticket[]             @relation("TicketAssignee")
   ticketMessages     TicketMessage[]
+  aiConversations    AiConversation[]
 
   @@index([type, createdAt])
 }
@@ -848,6 +849,77 @@ model ProductQuestion {
 
   @@index([productId, status, createdAt])
   @@index([status, createdAt])
+}
+
+// ============================================================================
+// AI center
+// ============================================================================
+
+enum AiChannel {
+  web
+  telegram
+  bale
+  eitaa
+}
+
+/// Assistant conversation (website widget or messenger chat). Kept for quality review
+/// and abuse handling; the AI never has direct database access – only typed tools.
+model AiConversation {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  channel        AiChannel @default(web)
+  userId         String?   @db.Uuid
+  /// Anonymous visitor (httpOnly cookie) or messenger chat id.
+  visitorKey     String?
+  externalChatId String?
+  title          String?
+  messageCount   Int       @default(0)
+  lastMessageAt  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+
+  user     User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages AiMessage[]
+
+  @@unique([channel, externalChatId])
+  @@index([visitorKey])
+  @@index([userId, lastMessageAt])
+  @@index([lastMessageAt])
+}
+
+model AiMessage {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  conversationId String   @db.Uuid
+  role           String
+  /// Plain text shown in the UI.
+  text           String
+  /// Full Claude API content blocks of the turn (tool calls/results included), replayed
+  /// unchanged on the next request so the history stays append-only.
+  content        Json
+  productIds     String[] @default([])
+  tools          Json?
+  createdAt      DateTime @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+/// One model call. Cost is estimated from token usage and the model's list price.
+model AiUsage {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  feature          String
+  model            String
+  inputTokens      Int      @default(0)
+  outputTokens     Int      @default(0)
+  cacheReadTokens  Int      @default(0)
+  cacheWriteTokens Int      @default(0)
+  /// Micro-dollars (1e-6 USD).
+  costMicros       BigInt   @default(0)
+  stopReason       String?
+  conversationId   String?  @db.Uuid
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([feature, createdAt])
 }
 
 // ============================================================================

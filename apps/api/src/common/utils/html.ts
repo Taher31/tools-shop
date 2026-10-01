@@ -61,3 +61,21 @@ export function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+/** Plain text from stored rich text (for AI context, feeds and previews). */
+export function stripHtml(html: string): string {
+  return sanitizeHtml(
+    html.replace(/<\/(p|li|h[1-6]|tr|br)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n'),
+    {
+      allowedTags: [],
+      allowedAttributes: {},
+    },
+  )
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}

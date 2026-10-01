@@ -22,6 +22,7 @@ import type {
   UserType,
 } from '../commerce/enums';
 import type { Rial } from '../commerce/money';
+import type { AiFeature, AiSettings } from '../schemas/ai';
 import type { OrderStatus } from '../commerce/order-status';
 
 export interface Paginated<T> {
@@ -872,4 +873,97 @@ export interface IntegrationLogView {
   message: string;
   productId: string | null;
   createdAt: string;
+}
+
+/* -------------------------------------------------------------------- AI */
+
+export interface AiSettingsView {
+  settings: AiSettings;
+  key: { source: 'settings' | 'environment' | 'none'; preview: string | null };
+  /** True when the configured provider can actually answer (key present or mock). */
+  ready: boolean;
+}
+
+export interface AiUsageSummary {
+  monthStart: string;
+  costUsd: number;
+  budgetUsd: number;
+  requests: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  refusals: number;
+  byFeature: { feature: AiFeature; requests: number; costUsd: number }[];
+  daily: { date: string; requests: number; costUsd: number }[];
+}
+
+export interface AssistantPublicConfig {
+  enabled: boolean;
+  name: string;
+  greeting: string;
+  suggestions: string[];
+}
+
+/** Product card the assistant decided to show (prices and stock are always live). */
+export type AssistantProduct = Pick<
+  ProductCard,
+  'id' | 'slug' | 'title' | 'imageUrl' | 'price' | 'compareAtPrice' | 'inStock' | 'brand'
+> & { defaultVariantId: string | null };
+
+export interface AssistantMessageView {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  products: AssistantProduct[];
+  createdAt: string;
+}
+
+export interface AssistantConversationView {
+  id: string;
+  messages: AssistantMessageView[];
+}
+
+/** Server-sent events emitted by POST /ai/assistant/messages. */
+export type AssistantStreamEvent =
+  | { type: 'conversation'; conversationId: string }
+  | { type: 'text'; delta: string }
+  | { type: 'tool'; name: string; label: string }
+  | { type: 'products'; products: AssistantProduct[] }
+  | { type: 'done'; messageId: string }
+  | { type: 'error'; message: string };
+
+export interface AiConversationSummary {
+  id: string;
+  channel: string;
+  customer: { id: string; fullName: string } | null;
+  title: string | null;
+  messageCount: number;
+  lastMessageAt: string;
+  createdAt: string;
+}
+
+export interface AiConversationDetail extends AiConversationSummary {
+  messages: (AssistantMessageView & { tools: { name: string; input: unknown }[] })[];
+}
+
+export interface AiDraft {
+  text: string;
+  /** Model's own estimate (0–1) of how well the answer is supported by store data. */
+  confidence: number;
+  notes: string | null;
+}
+
+export interface ProductContentDraft {
+  shortDescription: string;
+  description: string;
+  seoTitle: string;
+  seoDescription: string;
+  tags: string[];
+}
+
+export interface TicketTriage {
+  summary: string;
+  sentiment: 'positive' | 'neutral' | 'negative' | 'angry';
+  suggestedPriority: TicketPriority;
+  suggestedCategory: TicketCategory;
 }

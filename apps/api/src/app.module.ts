@@ -16,6 +16,7 @@ import { RedisModule } from './infrastructure/redis/redis.module';
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { AccessModule } from './modules/access/access.module';
 import { AccountModule } from './modules/account/account.module';
+import { AiModule } from './modules/ai/ai.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { isAuthRateLimited } from './modules/auth/auth-throttle';
 import { AuthModule } from './modules/auth/auth.module';
@@ -83,6 +84,7 @@ import { SupportModule } from './modules/support/support.module';
     PaymentsModule,
     InvoicesModule,
     IntegrationsModule,
+    AiModule,
     CheckoutModule,
     AccountModule,
     CustomersModule,

@@ -60,3 +60,14 @@ export function setCartCookie(response: Response, config: AppConfig, token: stri
 export function clearCartCookie(response: Response, config: AppConfig): void {
   response.clearCookie(CART_COOKIE, { ...baseOptions(config), path: '/' });
 }
+
+/** Anonymous assistant visitor (binds a guest's chat history to their browser). */
+export const AI_VISITOR_COOKIE = 'ts_ai';
+
+export function setAiVisitorCookie(response: Response, config: AppConfig, token: string): void {
+  response.cookie(AI_VISITOR_COOKIE, token, {
+    ...baseOptions(config),
+    path: '/api/v1/ai',
+    maxAge: 30 * 86_400_000,
+  });
+}

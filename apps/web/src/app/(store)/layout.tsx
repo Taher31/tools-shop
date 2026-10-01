@@ -1,5 +1,6 @@
 import { connection } from 'next/server';
 import type { ReactNode } from 'react';
+import { AssistantWidget } from '@/components/assistant/assistant-widget';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { getCategoryTree, getSettings } from '@/lib/store';
@@ -16,6 +17,7 @@ export default async function StoreLayout({ children }: { children: ReactNode })
         {children}
       </main>
       <SiteFooter settings={settings} tree={tree} />
+      <AssistantWidget />
     </div>
   );
 }
