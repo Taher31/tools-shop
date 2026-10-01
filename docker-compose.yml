@@ -52,13 +52,33 @@ services:
       timeout: 3s
       retries: 10
 
+  # One-off job: applies migrations before the API starts. Seed demo data with
+  #   docker compose --profile app run --rm migrate pnpm prisma db seed
+  migrate:
+    profiles: ['app']
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: tools
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-toolshop}:${POSTGRES_PASSWORD:-toolshop}@postgres:5432/${POSTGRES_DB:-toolshop}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   api:
     profiles: ['app']
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      target: runtime
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-toolshop}:${POSTGRES_PASSWORD:-toolshop}@postgres:5432/${POSTGRES_DB:-toolshop}?schema=public
@@ -70,8 +90,8 @@ services:
     volumes:
       - uploads-data:/app/uploads
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       meilisearch:
@@ -82,15 +102,21 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        API_INTERNAL_URL: http://api:4000
+        NEXT_PUBLIC_SITE_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       NODE_ENV: production
       API_INTERNAL_URL: http://api:4000
     ports:
       - '${WEB_PORT:-3000}:3000'
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   postgres-data:

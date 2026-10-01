@@ -8,7 +8,9 @@ interface SitemapData {
   brands: { slug: string; updatedAt: string }[];
 }
 
-export const revalidate = 3600;
+// Rendered per request (API data is cached for an hour by the fetch below), so builds
+// never depend on a running API and a fresh deploy never serves an empty sitemap.
+export const dynamic = 'force-dynamic';
 
 const STATIC_PAGES = [
   '',
