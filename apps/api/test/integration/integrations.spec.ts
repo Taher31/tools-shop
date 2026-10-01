@@ -5,7 +5,7 @@ import type {
   IntegrationView,
   Paginated,
 } from '@toolshop/shared';
-import { Queue } from 'bullmq';
+import type { Queue } from 'bullmq';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
 import { MockMarketplaceAdapter } from '../../src/modules/integrations/adapters/mock-marketplace.adapter';
