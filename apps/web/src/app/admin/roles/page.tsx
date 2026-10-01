@@ -15,7 +15,7 @@ import {
   Input,
 } from '@toolshop/ui';
 import { Lock, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ConfirmButton } from '@/components/admin/confirm-button';
 import { PageHeader } from '@/components/admin/page-header';
 import { useAdminMutation } from '@/components/admin/query';
@@ -42,7 +42,12 @@ export default function RolesPage() {
     permissions: [] as string[],
   });
 
-  useEffect(() => {
+  const [loaded, setLoaded] = useState<{ id: string; role: RoleView | null }>({
+    id: '',
+    role: null,
+  });
+  if (loaded.id !== selectedId || loaded.role !== selected) {
+    setLoaded({ id: selectedId, role: selected });
     if (selectedId === 'new') setDraft({ key: '', name: '', description: '', permissions: [] });
     else if (selected)
       setDraft({
@@ -51,7 +56,7 @@ export default function RolesPage() {
         description: selected.description ?? '',
         permissions: selected.permissions,
       });
-  }, [selectedId, selected]);
+  }
 
   const groups = useMemo(() => {
     const map = new Map<string, PermissionDefinition[]>();

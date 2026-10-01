@@ -31,7 +31,7 @@ import {
   variantOf,
 } from './support/commerce';
 
-const PERSIAN = /[؀-ۿ]/;
+const PERSIAN = /[\u0600-\u06FF]/;
 const SOME_UUID = '0192f0e0-0000-7000-8000-000000000000';
 
 function errorOf(response: request.Response): ApiErrorBody['error'] {

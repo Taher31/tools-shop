@@ -22,7 +22,7 @@ import {
   Textarea,
   toast,
 } from '@toolshop/ui';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import type { z } from 'zod';
 import { api } from '@/lib/api/client';
 import { applyApiError } from '@/lib/forms';
@@ -72,6 +72,7 @@ export function AddressDialog({
   });
   const errors = form.formState.errors;
 
+  const isDefault = useWatch({ control: form.control, name: 'isDefault' });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl" aria-describedby={undefined}>
@@ -165,7 +166,7 @@ export function AddressDialog({
           <div className="flex items-center gap-2 sm:col-span-2">
             <Checkbox
               id="isDefault"
-              checked={form.watch('isDefault') ?? false}
+              checked={isDefault ?? false}
               onCheckedChange={(v) => form.setValue('isDefault', v === true)}
             />
             <Label htmlFor="isDefault" className="font-normal">

@@ -1,9 +1,10 @@
 const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 
-const INVISIBLE_CHARS = /[​‍‎‏⁦-⁩﻿]/g;
-const ARABIC_DIACRITICS = /[ً-ٰٟۖ-ۭ]/g;
-const TATWEEL = /ـ/g;
+// ZWJ is matched outside the class: inside one it would join with its neighbours.
+const INVISIBLE_CHARS = /[\u200B\u200E\u200F\u2066-\u2069\uFEFF]|\u200D/g;
+const ARABIC_DIACRITICS = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;
+const TATWEEL = /\u0640/g;
 
 /** Converts Persian (۰-۹) and Arabic-Indic (٠-٩) digits to ASCII digits. */
 export function toEnglishDigits(input: string): string {
@@ -29,7 +30,7 @@ export function normalizePersian(input: string): string {
     .replace(/ك/g, 'ک')
     .replace(TATWEEL, '')
     .replace(INVISIBLE_CHARS, '')
-    .replace(/[ \t]*‌+[ \t]*/g, '‌')
+    .replace(/[ \t]*\u200C+[ \t]*/g, '\u200C')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -51,7 +52,7 @@ export function normalizeForSearch(input: string): string {
     .replace(ARABIC_DIACRITICS, '')
     .replace(/٫/g, '.')
     .replace(/[٬،]/g, ' ')
-    .replace(/‌/g, ' ')
+    .replace(/\u200C/g, ' ')
     .replace(/(\d)([^\d\s.,/])/gu, '$1 $2')
     .replace(/([^\d\s.,/])(\d)/gu, '$1 $2')
     .replace(/[«»"'`()[\]{}!؟?;:…]/g, ' ')
@@ -67,7 +68,7 @@ export function normalizeForSearch(input: string): string {
  */
 export function buildSearchVariants(input: string): string {
   const normalized = normalizeForSearch(input);
-  const joined = normalizeForSearch(normalizePersian(input).replace(/‌/g, ''));
+  const joined = normalizeForSearch(normalizePersian(input).replace(/\u200C/g, ''));
   return joined === normalized ? normalized : `${normalized} ${joined}`;
 }
 

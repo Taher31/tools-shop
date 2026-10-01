@@ -19,7 +19,7 @@ import {
   Textarea,
 } from '@toolshop/ui';
 import { ChevronDown, ChevronLeft, FolderTree, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ConfirmButton } from '@/components/admin/confirm-button';
 import { PageHeader } from '@/components/admin/page-header';
@@ -241,25 +241,29 @@ function CategoryEditor({
   );
 }
 
+function assignmentState(
+  category: AdminCategoryView,
+): Record<string, { assigned: boolean; isRequired: boolean; isFilterable: boolean }> {
+  return Object.fromEntries(
+    category.attributes.map((a) => [
+      a.attribute.id,
+      { assigned: true, isRequired: a.isRequired, isFilterable: a.isFilterable },
+    ]),
+  );
+}
+
 function AttributeAssignment({ category }: { category: AdminCategoryView }) {
   const { can } = usePermissions();
   const attributes = useQuery({
     queryKey: ['admin', 'attributes'],
     queryFn: () => api.get<(AttributeView & { usage: unknown })[]>('/admin/attributes'),
   });
-  const [state, setState] = useState<
-    Record<string, { assigned: boolean; isRequired: boolean; isFilterable: boolean }>
-  >({});
-  useEffect(() => {
-    setState(
-      Object.fromEntries(
-        category.attributes.map((a) => [
-          a.attribute.id,
-          { assigned: true, isRequired: a.isRequired, isFilterable: a.isFilterable },
-        ]),
-      ),
-    );
-  }, [category]);
+  const [state, setState] = useState(() => assignmentState(category));
+  const [loadedCategory, setLoadedCategory] = useState(category);
+  if (loadedCategory !== category) {
+    setLoadedCategory(category);
+    setState(assignmentState(category));
+  }
   const save = useAdminMutation(
     () =>
       api.put(`/admin/categories/${category.id}/attributes`, {

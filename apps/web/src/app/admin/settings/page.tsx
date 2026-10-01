@@ -22,7 +22,7 @@ import {
   toast,
 } from '@toolshop/ui';
 import { Plus, RefreshCw, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { PageHeader } from '@/components/admin/page-header';
 import { useAdminMutation } from '@/components/admin/query';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -46,7 +46,11 @@ const SOCIALS: [keyof StoreSettings['socials'], string][] = [
 
 function useGroupForm<G extends keyof AllSettings>(group: G, initial: AllSettings[G] | undefined) {
   const [value, setValue] = useState<AllSettings[G] | undefined>(initial);
-  useEffect(() => setValue(initial), [initial]);
+  const [loaded, setLoaded] = useState(initial);
+  if (loaded !== initial) {
+    setLoaded(initial);
+    setValue(initial);
+  }
   const save = useAdminMutation(() => api.put(`/admin/settings/${group}`, value), {
     success: 'تنظیمات ذخیره شد.',
   });

@@ -10,7 +10,7 @@ import {
 import { Badge, Button, Field, Input, NativeSelect, Switch } from '@toolshop/ui';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { ConfirmButton } from '@/components/admin/confirm-button';
 import { DataTable, Pager, SearchInput, TableCard } from '@/components/admin/data-table';
 import { FormDialog } from '@/components/admin/form-dialog';
@@ -58,7 +58,7 @@ export default function CouponsPage() {
       isActive: editing?.isActive ?? true,
     },
   });
-  const type = form.watch('type');
+  const type = useWatch({ control: form.control, name: 'type' });
   const save = useAdminMutation(
     (input: CouponUpsertInput) =>
       editing ? api.put(`/admin/coupons/${editing.id}`, input) : api.post('/admin/coupons', input),

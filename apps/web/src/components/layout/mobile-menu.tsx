@@ -14,7 +14,7 @@ import {
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const LINKS = [
   { href: '/products?onSale=true', label: 'تخفیف‌ها' },
@@ -28,7 +28,12 @@ const LINKS = [
 export function MobileMenu({ tree }: { tree: CategoryTreeNode[] }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  useEffect(() => setOpen(false), [pathname]);
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    // Navigated: close the menu (state adjusted during render, no effect needed).
+    setMenuPath(pathname);
+    setOpen(false);
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

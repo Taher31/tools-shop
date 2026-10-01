@@ -16,7 +16,7 @@ import { BadgeCheck, MessageSquare, Star } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api/client';
 import { errorMessage } from '@/lib/api/errors';
@@ -58,7 +58,7 @@ export function ReviewsSection({ productId }: { productId: string }) {
     },
     onError: (error) => toast.error(errorMessage(error)),
   });
-  const rating = form.watch('rating');
+  const rating = useWatch({ control: form.control, name: 'rating' });
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">

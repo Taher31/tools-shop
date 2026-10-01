@@ -11,7 +11,7 @@ import {
 import { Badge, Button, Field, Input, NativeSelect, Switch } from '@toolshop/ui';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { ConfirmButton } from '@/components/admin/confirm-button';
 import { DataTable, TableCard } from '@/components/admin/data-table';
 import { FormDialog } from '@/components/admin/form-dialog';
@@ -57,7 +57,7 @@ export default function AttributesPage() {
     },
   });
   const options = useFieldArray({ control: form.control, name: 'options' });
-  const type = form.watch('type');
+  const type = useWatch({ control: form.control, name: 'type' });
   const save = useAdminMutation(
     (input: AttributeUpsertInput) =>
       editing

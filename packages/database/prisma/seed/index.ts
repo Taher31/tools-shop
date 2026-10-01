@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import path from 'node:path';
 import { config as loadEnv } from 'dotenv';
 import argon2 from 'argon2';

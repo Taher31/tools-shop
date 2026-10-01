@@ -3,7 +3,7 @@ export function JsonLd({ data }: { data: Record<string, unknown> | Record<string
   return (
     <script
       type="application/ld+json"
-      // eslint-disable-next-line react/no-danger
+      // Safe: JSON is serialized by us and `<` is escaped so it cannot close the script tag.
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }}
     />
   );

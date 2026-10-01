@@ -37,7 +37,7 @@ import { ArrowDown, ArrowUp, ImagePlus, Plus, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useRef, useState } from 'react';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { ProductImage } from '@/components/product/product-image';
 import { usePermissions } from '@/hooks/use-permissions';
 import { api, toQueryString } from '@/lib/api/client';
@@ -415,7 +415,7 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
   const form = useForm<FormValues>({ defaultValues: toFormValues(product) });
   const variants = useFieldArray({ control: form.control, name: 'variants', keyName: 'key' });
   const images = useFieldArray({ control: form.control, name: 'images', keyName: 'key' });
-  const categoryId = form.watch('categoryId');
+  const categoryId = useWatch({ control: form.control, name: 'categoryId' });
 
   const categories = useQuery({
     queryKey: ['admin', 'categories'],

@@ -20,7 +20,7 @@ import {
 import { CreditCard, MapPin, Plus, ShoppingCart, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AddressDialog, AddressText } from '@/components/account/address-form';
 import { OrderSummary } from '@/components/cart/order-summary';
 import { CART_QUERY_KEY } from '@/hooks/use-cart';
@@ -44,13 +44,15 @@ export function CheckoutView() {
   });
   const data = preview.data;
 
-  useEffect(() => {
-    if (!data) return;
+  // Apply defaults whenever a new preview arrives (state adjusted during render).
+  const [appliedPreview, setAppliedPreview] = useState<CheckoutPreview>();
+  if (data && data !== appliedPreview) {
+    setAppliedPreview(data);
     if (!addressId && data.addresses[0]) setAddressId(data.addresses[0].id);
     if (shippingId && !data.shippingOptions.some((o) => o.id === shippingId))
       setShippingId(undefined);
     if (!provider && data.paymentProviders[0]) setProvider(data.paymentProviders[0].code);
-  }, [data, addressId, shippingId, provider]);
+  }
 
   const quote = useQuery({
     queryKey: ['checkout-quote', addressId, shippingId, data?.cart.totals.total],
