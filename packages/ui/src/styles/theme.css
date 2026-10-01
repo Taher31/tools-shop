@@ -47,6 +47,10 @@
   --footer-foreground: #b8c2ce;
   --admin-sidebar-bg: #111922;
   --admin-sidebar-foreground: #c3ccd6;
+
+  /* Data visualization (validated for CVD separation and contrast) */
+  --chart-1: #2f6fb0;
+  --chart-grid: #e6e9ee;
 }
 
 @theme inline {
@@ -92,4 +96,6 @@
   --color-footer-foreground: var(--footer-foreground);
   --color-sidebar: var(--admin-sidebar-bg);
   --color-sidebar-foreground: var(--admin-sidebar-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-grid: var(--chart-grid);
 }

@@ -7,7 +7,8 @@ export function applyApiError<T extends FieldValues>(form: UseFormReturn<T>, err
   if (error instanceof ApiError && error.details.length > 0) {
     let matched = false;
     for (const detail of error.details) {
-      if (detail.path && detail.path !== '_' && detail.path in form.getValues()) {
+      const root = detail.path.split('.')[0] ?? '';
+      if (detail.path && detail.path !== '_' && root in form.getValues()) {
         form.setError(detail.path as Path<T>, { message: detail.message });
         matched = true;
       }
