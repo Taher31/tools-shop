@@ -177,12 +177,15 @@ importers:
       '@toolshop/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       lucide-react:
         specifier: ^1.49.0
         version: 1.49.0(@types/react@19.3.0)(react@19.2.8)
       next:
         specifier: 16.3.8
-        version: 16.3.8(@babel/core@7.29.7)(@types/node@22.20.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.3.8(@types/node@22.20.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -196,9 +199,6 @@ importers:
         specifier: ^4.1.12
         version: 4.6.5
     devDependencies:
-      '@next/env':
-        specifier: 16.3.8
-        version: 16.3.8
       '@tailwindcss/postcss':
         specifier: ^4.1.14
         version: 4.3.3
@@ -9662,7 +9662,7 @@ snapshots:
       pino-http: 11.0.0
       rxjs: 7.8.2
 
-  next@16.3.8(@babel/core@7.29.7)(@types/node@22.20.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  next@16.3.8(@types/node@22.20.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@next/env': 16.3.8
       '@swc/helpers': 0.5.23
@@ -9671,7 +9671,7 @@ snapshots:
       postcss: 8.5.23
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
-      styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.8)
+      styled-jsx: 5.1.6(react@19.2.8)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.3.8
       '@next/swc-darwin-x64': 16.3.8
@@ -10412,12 +10412,10 @@ snapshots:
     dependencies:
       '@tokenizer/token': 0.3.0
 
-  styled-jsx@5.1.6(@babel/core@7.29.7)(react@19.2.8):
+  styled-jsx@5.1.6(react@19.2.8):
     dependencies:
       client-only: 0.0.1
       react: 19.2.8
-    optionalDependencies:
-      '@babel/core': 7.29.7
 
   sucrase@3.35.1:
     dependencies:

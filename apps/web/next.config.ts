@@ -1,9 +1,11 @@
 import path from 'node:path';
-import { loadEnvConfig } from '@next/env';
+import { config as loadDotenv } from 'dotenv';
 import type { NextConfig } from 'next';
 
-// Development: a single .env at the repository root serves every app.
-loadEnvConfig(path.resolve(__dirname, '../..'));
+// A single .env at the repository root serves every app; real environment variables
+// always win. (@next/env cannot be used here: it caches the first directory Next loads,
+// apps/web, and silently ignores later calls for the repository root.)
+loadDotenv({ path: path.resolve(__dirname, '../../.env'), quiet: true });
 
 const apiUrl = (process.env.API_INTERNAL_URL ?? 'http://localhost:4000').replace(/\/$/, '');
 
