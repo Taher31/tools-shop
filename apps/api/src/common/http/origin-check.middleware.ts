@@ -5,12 +5,15 @@ import { AppException } from '../errors/app-exception';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+/** Server-to-server/gateway endpoints: they never rely on ambient cookies. */
+const EXEMPT_PREFIXES = ['/api/v1/payments/callback/', '/api/v1/webhooks/'];
+
 /**
  * CSRF defence in depth for cookie-authenticated requests. Cookies are SameSite=Lax,
  * and additionally every state-changing browser request must come from an allowed
  * origin. Requests without Origin/Referer (server-to-server, payment gateway callbacks,
  * bots with bearer tokens) are not affected because they do not carry ambient cookies
- * from a victim's browser.
+ * from a victim's browser. Payment gateway callbacks are exempt by path.
  */
 @Injectable()
 export class OriginCheckMiddleware implements NestMiddleware {
@@ -22,6 +25,7 @@ export class OriginCheckMiddleware implements NestMiddleware {
 
   use(request: Request, _response: Response, next: NextFunction): void {
     if (SAFE_METHODS.has(request.method)) return next();
+    if (EXEMPT_PREFIXES.some((prefix) => request.originalUrl.startsWith(prefix))) return next();
     const origin = request.get('origin') ?? this.originFromReferer(request.get('referer'));
     if (!origin || this.allowed.has(origin)) return next();
     next(new AppException('FORBIDDEN', 'درخواست از مبدا نامعتبر ارسال شده است.'));
