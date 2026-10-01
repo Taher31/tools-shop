@@ -151,7 +151,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: Plug,
         permission: 'integration.read',
       },
-      { href: '/admin/ai', label: 'مرکز هوش مصنوعی', icon: Bot, phase: 3 },
+      { href: '/admin/ai', label: 'مرکز هوش مصنوعی', icon: Bot, permission: 'ai.read' },
       { href: '/admin/reports', label: 'گزارش‌ها و تحلیل', icon: BarChart3, phase: 4 },
     ],
   },

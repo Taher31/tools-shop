@@ -203,7 +203,9 @@ export class MessengerConfigService {
       return await new BotApiClient(base, token).getMe();
     } catch (error) {
       const reason =
-        error instanceof BotApiError && error.status !== null
+        // The Bot API answers 401 (or 404 for a malformed token); anything else is a
+        // connectivity problem (blocked host, proxy, outage), not a bad token.
+        error instanceof BotApiError && (error.status === 401 || error.status === 404)
           ? 'توکن معتبر نیست.'
           : `اتصال به سرور ${MESSENGER_LABELS[channel]} برقرار نشد.`;
       throw AppException.validation([{ path: 'botToken', message: reason }]);
