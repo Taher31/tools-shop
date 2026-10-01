@@ -1,9 +1,11 @@
 'use client';
 
-import type { TicketMessageView } from '@toolshop/shared';
+import type { AiDraft, TicketMessageView } from '@toolshop/shared';
 import { Button, Checkbox, cn, Label, Spinner, Textarea } from '@toolshop/ui';
 import { Lock, Send } from 'lucide-react';
 import { useState } from 'react';
+import { AiButton, AiDraftNote } from '@/components/admin/ai-assist';
+import { errorMessage } from '@/lib/api/errors';
 import { dateTime } from '@/lib/format';
 
 /**
@@ -67,22 +69,46 @@ export interface ReplyValues {
   close: boolean;
 }
 
-/** Reply box; staff additionally get "internal note" and "reply and close". */
+/**
+ * Reply box; staff additionally get "internal note", "reply and close" and – with
+ * `onAiDraft` – an AI-drafted reply that fills the box for review (never auto-sent).
+ */
 export function TicketReplyForm({
   onSubmit,
   pending,
   staff,
   canClose = false,
+  onAiDraft,
 }: {
   onSubmit: (values: ReplyValues) => Promise<unknown>;
   pending: boolean;
   staff?: boolean;
   canClose?: boolean;
+  onAiDraft?: () => Promise<AiDraft>;
 }) {
   const [body, setBody] = useState('');
   const [internal, setInternal] = useState(false);
   const [close, setClose] = useState(false);
+  const [draft, setDraft] = useState<AiDraft | null>(null);
+  const [drafting, setDrafting] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
   const tooShort = body.trim().length < 2;
+
+  const requestDraft = async () => {
+    if (!onAiDraft) return;
+    setDrafting(true);
+    setDraftError(null);
+    try {
+      const result = await onAiDraft();
+      setDraft(result);
+      setBody(result.text);
+      setInternal(false);
+    } catch (error) {
+      setDraftError(errorMessage(error));
+    } finally {
+      setDrafting(false);
+    }
+  };
 
   return (
     <form
@@ -94,10 +120,20 @@ export function TicketReplyForm({
           setBody('');
           setInternal(false);
           setClose(false);
+          setDraft(null);
         });
       }}
     >
-      <Label htmlFor="ticket-reply">{internal ? 'یادداشت داخلی' : 'پاسخ شما'}</Label>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Label htmlFor="ticket-reply">{internal ? 'یادداشت داخلی' : 'پاسخ شما'}</Label>
+        {onAiDraft ? (
+          <AiButton pending={drafting} onClick={() => void requestDraft()}>
+            پیش‌نویس با هوش مصنوعی
+          </AiButton>
+        ) : null}
+      </div>
+      {draftError ? <p className="text-destructive text-xs">{draftError}</p> : null}
+      {draft ? <AiDraftNote confidence={draft.confidence} notes={draft.notes} /> : null}
       <Textarea
         id="ticket-reply"
         rows={4}

@@ -5,6 +5,7 @@ export const QUEUES = {
   SEARCH_INDEXING: 'search-indexing',
   ORDERS: 'orders',
   MARKETPLACE_SYNC: 'marketplace-sync',
+  AI_TASKS: 'ai-tasks',
   DEAD_LETTER: 'dead-letter',
 } as const;
 

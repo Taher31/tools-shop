@@ -2,16 +2,19 @@
 
 import {
   type AdminQuestionView,
+  type AiDraft,
   QUESTION_STATUS_LABELS,
   QUESTION_STATUSES,
 } from '@toolshop/shared';
 import { Badge, Button, Field, NativeSelect, Textarea } from '@toolshop/ui';
 import Link from 'next/link';
 import { useState } from 'react';
+import { AiButton, AiDraftNote, ConfidenceBadge } from '@/components/admin/ai-assist';
 import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { FormDialog } from '@/components/admin/form-dialog';
 import { PageHeader } from '@/components/admin/page-header';
 import { useAdminList, useAdminMutation } from '@/components/admin/query';
+import { usePermissions } from '@/hooks/use-permissions';
 import { api } from '@/lib/api/client';
 import { date } from '@/lib/format';
 
@@ -21,6 +24,25 @@ export default function QuestionsPage() {
   const list = useAdminList<AdminQuestionView>('/admin/questions', { status: 'pending' });
   const [answering, setAnswering] = useState<AdminQuestionView | null>(null);
   const [answer, setAnswer] = useState('');
+  const [draft, setDraft] = useState<AiDraft | null>(null);
+  const { can } = usePermissions();
+  const canUseAi = can('ai.use');
+  const suggest = useAdminMutation(
+    (id: string) => api.post<AiDraft>(`/admin/ai/questions/${id}/suggest`),
+    {
+      invalidate: [],
+      onSuccess: (result) => {
+        setDraft(result);
+        setAnswer(result.text);
+      },
+    },
+  );
+  const open = (q: AdminQuestionView) => {
+    setAnswering(q);
+    setDraft(null);
+    // Prefill with the stored AI suggestion when there is no human answer yet.
+    setAnswer(q.answer ?? q.aiSuggestion?.answer ?? '');
+  };
   const save = useAdminMutation(
     ({ id, status }: { id: string; status: 'answered' | 'rejected' }) =>
       api.put(`/admin/questions/${id}/answer`, { answer: answer || 'رد شد', status }),
@@ -31,7 +53,7 @@ export default function QuestionsPage() {
     <>
       <PageHeader
         title="پرسش‌های محصولات"
-        description="پرسش‌ها پس از پاسخ کارشناس در صفحه محصول نمایش داده می‌شوند. (پاسخ پیشنهادی هوش مصنوعی در فاز ۳ اضافه می‌شود.)"
+        description="پرسش‌ها پس از پاسخ کارشناس در صفحه محصول نمایش داده می‌شوند. هوش مصنوعی برای پرسش‌های جدید پاسخ پیشنهادی آماده می‌کند تا با یک کلیک بازبینی و منتشر شوند."
       />
       <TableCard
         toolbar={
@@ -73,7 +95,16 @@ export default function QuestionsPage() {
               cell: (q) => (
                 <div className="max-w-md">
                   <p className="text-sm">{q.body}</p>
-                  {q.answer ? <p className="text-success mt-1 text-xs">پاسخ: {q.answer}</p> : null}
+                  {q.answer ? (
+                    <p className="text-success mt-1 text-xs">پاسخ: {q.answer}</p>
+                  ) : q.aiSuggestion ? (
+                    <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-violet-700 dark:text-violet-300">
+                      <span className="line-clamp-1 max-w-72">
+                        ✦ پیشنهاد: {q.aiSuggestion.answer}
+                      </span>
+                      <ConfidenceBadge value={q.aiSuggestion.confidence} />
+                    </p>
+                  ) : null}
                 </div>
               ),
             },
@@ -88,15 +119,8 @@ export default function QuestionsPage() {
             {
               header: '',
               cell: (q) => (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setAnswering(q);
-                    setAnswer(q.answer ?? '');
-                  }}
-                >
-                  {q.answer ? 'ویرایش پاسخ' : 'پاسخ'}
+                <Button size="sm" variant="outline" onClick={() => open(q)}>
+                  {q.answer ? 'ویرایش پاسخ' : q.aiSuggestion ? 'بازبینی و پاسخ' : 'پاسخ'}
                 </Button>
               ),
             },
@@ -116,6 +140,18 @@ export default function QuestionsPage() {
         }}
       >
         <p className="bg-muted rounded-md p-3 text-sm">{answering?.body}</p>
+        {canUseAi && answering ? (
+          <div className="flex justify-end">
+            <AiButton pending={suggest.isPending} onClick={() => suggest.mutate(answering.id)}>
+              پیشنهاد پاسخ با هوش مصنوعی
+            </AiButton>
+          </div>
+        ) : null}
+        {draft ? (
+          <AiDraftNote confidence={draft.confidence} notes={draft.notes} />
+        ) : answering && !answering.answer && answering.aiSuggestion ? (
+          <AiDraftNote confidence={answering.aiSuggestion.confidence} notes={null} />
+        ) : null}
         <Field label="پاسخ کارشناس" htmlFor="q-answer" required>
           <Textarea
             id="q-answer"

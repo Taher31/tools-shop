@@ -1056,6 +1056,9 @@ model Ticket {
   staffUnread    Boolean        @default(true)
   lastMessageAt  DateTime       @default(now())
   closedAt       DateTime?
+  /// AI triage output (summary for staff, detected customer sentiment).
+  aiSummary      String?
+  aiSentiment    String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 

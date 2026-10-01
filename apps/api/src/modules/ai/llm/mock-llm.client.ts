@@ -113,7 +113,7 @@ export class MockLlmClient implements LlmClient {
       confidence: 0.6,
       needs_human: true,
       notes: 'پاسخ آزمایشی – کلید API تنظیم نشده است.',
-      summary: prompt.slice(0, 120),
+      summary: `درخواست مشتری درباره «${/"subject":"([^"]{1,80})"/.exec(prompt)?.[1] ?? 'موضوع تیکت'}» (خلاصه آزمایشی)`,
       sentiment: /فوری|عصبانی|شکایت|کسر شد/.test(prompt) ? 'negative' : 'neutral',
       priority: /کسر شد|پرداخت/.test(prompt) ? 'high' : 'normal',
       category: /پرداخت/.test(prompt) ? 'payment' : 'other',

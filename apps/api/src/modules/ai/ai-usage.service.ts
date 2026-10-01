@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import type Anthropic from '@anthropic-ai/sdk';
 import type { AiFeature, AiSettings, AiUsageSummary } from '@toolshop/shared';
-import { AppException } from '../../common/errors/app-exception';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { startOfJalaliMonth, tehranDateKey } from '../dashboard/tehran-time';
+import { AiUnavailableError } from './ai-errors';
 import { costMicros, tokenUsage } from './pricing';
 
 /** Token accounting and the monthly budget (Jalali month, Tehran time). */
@@ -40,7 +40,7 @@ export class AiUsageService {
 
   async assertWithinBudget(settings: AiSettings): Promise<void> {
     if ((await this.spentThisMonthUsd()) >= settings.monthlyBudgetUsd) {
-      throw new AppException('SERVICE_UNAVAILABLE', 'سقف بودجه ماهانه هوش مصنوعی تکمیل شده است.');
+      throw new AiUnavailableError('budget', 'سقف بودجه ماهانه هوش مصنوعی تکمیل شده است.');
     }
   }
 

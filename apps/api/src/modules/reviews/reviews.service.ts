@@ -139,9 +139,21 @@ export class ReviewsService {
     });
     if (recent >= 10)
       throw new AppException('RATE_LIMITED', 'تعداد پرسش‌های شما در یک ساعت گذشته زیاد است.');
-    await this.prisma.productQuestion.create({
-      data: { productId, userId, body: input.body, status: 'pending' },
+    await this.prisma.$transaction(async (tx) => {
+      const question = await tx.productQuestion.create({
+        data: { productId, userId, body: input.body, status: 'pending' },
+      });
+      // Lets the AI center prepare a suggested answer for staff review.
+      await this.outbox.record(tx, [
+        {
+          type: 'question.created',
+          aggregateType: 'question',
+          aggregateId: question.id,
+          payload: { questionId: question.id },
+        },
+      ]);
     });
+    this.outbox.flush();
     return { status: 'pending' };
   }
 
@@ -215,6 +227,10 @@ export class ReviewsService {
         ...toQuestion(question),
         status: question.status,
         product: question.product,
+        aiSuggestion:
+          question.status === 'pending' && question.aiSuggestedAnswer
+            ? { answer: question.aiSuggestedAnswer, confidence: question.aiConfidence ?? 0 }
+            : null,
       })),
       total,
       query,

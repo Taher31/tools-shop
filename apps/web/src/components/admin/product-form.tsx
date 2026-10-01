@@ -18,6 +18,8 @@ import {
   type UsageType,
   MARKETPLACE_SYNC_STATUS_LABELS,
   type MarketplaceSyncStatus,
+  type ProductContentDraft,
+  type ProductContentRequest,
 } from '@toolshop/shared';
 import {
   Alert,
@@ -41,6 +43,7 @@ import { useRouter } from 'next/navigation';
 import { type ReactNode, useRef, useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { ProductImage } from '@/components/product/product-image';
+import { AiButton } from '@/components/admin/ai-assist';
 import { usePermissions } from '@/hooks/use-permissions';
 import { api, toQueryString } from '@/lib/api/client';
 import { ApiError, errorMessage } from '@/lib/api/errors';
@@ -237,6 +240,72 @@ function Section({
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
+  );
+}
+
+/**
+ * Drafts the copy (short/long description, SEO fields, tags) from the title, category,
+ * brand and specifications already entered. The result only fills the form: nothing is
+ * saved until a person reviews it and presses save.
+ */
+function ContentAssistant({
+  getRequest,
+  hasContent,
+  onDraft,
+}: {
+  getRequest: () => Omit<ProductContentRequest, 'instructions'>;
+  hasContent: () => boolean;
+  onDraft: (draft: ProductContentDraft) => void;
+}) {
+  const [instructions, setInstructions] = useState('');
+  const [done, setDone] = useState(false);
+  const generate = useAdminMutation(
+    (input: ProductContentRequest) =>
+      api.post<ProductContentDraft>('/admin/ai/product-content', input),
+    {
+      invalidate: [],
+      onSuccess: (draft) => {
+        onDraft(draft);
+        setDone(true);
+      },
+    },
+  );
+  const run = () => {
+    const request = getRequest();
+    if (request.title.length < 2 || !request.categoryId) {
+      toast.error('ابتدا عنوان و دسته‌بندی محصول را وارد کنید.');
+      return;
+    }
+    if (hasContent() && !window.confirm('توضیحات فعلی با متن تولیدشده جایگزین شود؟')) return;
+    generate.mutate({ ...request, instructions: instructions.trim() || null });
+  };
+  return (
+    <div className="space-y-3 rounded-lg border border-dashed border-violet-300 bg-violet-50/50 p-4 dark:border-violet-500/40 dark:bg-violet-500/5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold">نویسنده هوش مصنوعی</p>
+          <p className="text-muted-foreground text-xs leading-6">
+            توضیحات، متای سئو و برچسب‌ها از روی عنوان، برند و مشخصات فنی نوشته می‌شود؛ پیش از ذخیره
+            بازبینی کنید.
+          </p>
+        </div>
+        <AiButton pending={generate.isPending} onClick={run}>
+          تولید متن
+        </AiButton>
+      </div>
+      <Input
+        value={instructions}
+        maxLength={500}
+        onChange={(e) => setInstructions(e.target.value)}
+        placeholder="راهنمایی اختیاری؛ مثلاً «روی مناسب بودن برای کار صنعتی تأکید کن»"
+        aria-label="راهنمایی برای هوش مصنوعی"
+      />
+      {done ? (
+        <p className="text-success text-xs">
+          متن تولید شد و در فیلدهای توضیحات و سئو قرار گرفت. پس از بازبینی، محصول را ذخیره کنید.
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -790,6 +859,36 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
 
           <Section title="توضیحات">
             <div className="space-y-4">
+              {can('ai.use') ? (
+                <ContentAssistant
+                  getRequest={() => {
+                    const values = form.getValues();
+                    return {
+                      productId: product?.id ?? null,
+                      title: values.title.trim(),
+                      categoryId: values.categoryId,
+                      brandId: values.brandId || null,
+                      model: values.model.trim() || null,
+                      attributes: toInput(values, effective.data ?? []).attributes,
+                    };
+                  }}
+                  hasContent={() =>
+                    Boolean(
+                      form.getValues('description').trim() ||
+                      form.getValues('shortDescription').trim(),
+                    )
+                  }
+                  onDraft={(draft) => {
+                    const options = { shouldDirty: true } as const;
+                    form.setValue('shortDescription', draft.shortDescription, options);
+                    form.setValue('description', draft.description, options);
+                    form.setValue('seoTitle', draft.seoTitle, options);
+                    form.setValue('seoDescription', draft.seoDescription, options);
+                    if (!form.getValues('tags').trim())
+                      form.setValue('tags', draft.tags.join('، '), options);
+                  }}
+                />
+              ) : null}
               <Field
                 label="توضیح کوتاه"
                 htmlFor="shortDescription"

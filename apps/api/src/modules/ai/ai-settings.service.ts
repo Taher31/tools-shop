@@ -7,12 +7,12 @@ import {
   aiSettingsSchema,
   type AiSettingsView,
 } from '@toolshop/shared';
-import { AppException } from '../../common/errors/app-exception';
 import { decryptSecret, encryptSecret } from '../../common/utils/crypto';
 import { AppConfig } from '../../config/app-config';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { CacheService } from '../../infrastructure/redis/cache.service';
 import { AuditService } from '../audit/audit.service';
+import { AiUnavailableError } from './ai-errors';
 import { AnthropicLlmClient } from './llm/anthropic-llm.client';
 import type { LlmClient } from './llm/llm-client';
 import { MockLlmClient } from './llm/mock-llm.client';
@@ -118,11 +118,11 @@ export class AiSettingsService {
   ): Promise<{ llm: LlmClient; settings: AiSettings; model: string }> {
     const settings = await this.get();
     if (!settings.enabled || !settings.features[feature]) {
-      throw new AppException('SERVICE_UNAVAILABLE', 'این قابلیت هوش مصنوعی فعال نیست.');
+      throw new AiUnavailableError('disabled', 'این قابلیت هوش مصنوعی فعال نیست.');
     }
     if (settings.provider === 'mock') return { llm: this.mock, settings, model: settings.model };
     const key = (await this.storedKey()) ?? process.env['ANTHROPIC_API_KEY'];
-    if (!key) throw new AppException('SERVICE_UNAVAILABLE', 'کلید API هوش مصنوعی تنظیم نشده است.');
+    if (!key) throw new AiUnavailableError('no_key', 'کلید API هوش مصنوعی تنظیم نشده است.');
     if (!this.client || this.client.key !== key) {
       this.client = {
         key,

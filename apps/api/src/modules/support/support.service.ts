@@ -277,6 +277,7 @@ export class SupportService {
       ...toAdminTicketSummary(ticket),
       unread: false,
       orderId: ticket.orderId,
+      ai: ticket.aiSummary ? { summary: ticket.aiSummary, sentiment: ticket.aiSentiment } : null,
       customerEmail: ticket.user.email,
       messages: ticket.messages.map((m) => toMessageView(m, 'staff')),
       recentOrders: recentOrders.map(toOrderSummary),

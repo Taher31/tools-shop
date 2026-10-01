@@ -438,6 +438,8 @@ export interface AdminReviewView extends ReviewView {
 export interface AdminQuestionView extends QuestionView {
   status: QuestionStatus;
   product: { id: string; title: string; slug: string };
+  /** AI draft awaiting human review (null when none). */
+  aiSuggestion: { answer: string; confidence: number } | null;
 }
 
 /* ----------------------------------------------------------------- admin */
@@ -774,6 +776,8 @@ export interface AdminTicketSummary extends Omit<TicketSummary, 'unread'> {
 
 export interface AdminTicketDetail extends AdminTicketSummary {
   orderId: string | null;
+  /** AI triage (suggestion only). */
+  ai: { summary: string; sentiment: string | null } | null;
   customerEmail: string | null;
   messages: TicketMessageView[];
   /** Recent orders of the customer, for context while answering. */

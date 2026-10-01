@@ -3,6 +3,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { AiFeature } from '@toolshop/shared';
 import type { z } from 'zod';
 import { AppException } from '../../common/errors/app-exception';
+import { AiUnavailableError } from './ai-errors';
 import { AiSettingsService } from './ai-settings.service';
 import { AiUsageService } from './ai-usage.service';
 
@@ -50,8 +51,8 @@ export class StructuredAiService {
       });
     } catch (error) {
       this.logger.error({ err: error, feature: request.feature }, 'Structured AI request failed');
-      throw new AppException(
-        'SERVICE_UNAVAILABLE',
+      throw new AiUnavailableError(
+        'provider',
         'سرویس هوش مصنوعی در دسترس نیست؛ کمی بعد دوباره تلاش کنید.',
       );
     }
@@ -60,7 +61,7 @@ export class StructuredAiService {
       throw new AppException('BAD_REQUEST', 'هوش مصنوعی برای این درخواست پاسخی تولید نکرد.');
     }
     if (message.stop_reason === 'max_tokens') {
-      throw new AppException('SERVICE_UNAVAILABLE', 'پاسخ هوش مصنوعی ناقص ماند؛ دوباره تلاش کنید.');
+      throw new AiUnavailableError('provider', 'پاسخ هوش مصنوعی ناقص ماند؛ دوباره تلاش کنید.');
     }
     const text = message.content
       .map((block) => (block.type === 'text' ? block.text : ''))
@@ -70,11 +71,11 @@ export class StructuredAiService {
     try {
       raw = JSON.parse(text);
     } catch {
-      throw new AppException('SERVICE_UNAVAILABLE', 'پاسخ هوش مصنوعی قابل پردازش نبود.');
+      throw new AiUnavailableError('provider', 'پاسخ هوش مصنوعی قابل پردازش نبود.');
     }
     const parsed = request.schema.safeParse(raw);
     if (!parsed.success)
-      throw new AppException('SERVICE_UNAVAILABLE', 'پاسخ هوش مصنوعی قابل پردازش نبود.');
+      throw new AiUnavailableError('provider', 'پاسخ هوش مصنوعی قابل پردازش نبود.');
     return parsed.data;
   }
 }

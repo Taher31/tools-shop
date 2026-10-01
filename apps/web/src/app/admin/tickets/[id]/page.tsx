@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   type AdminTicketDetail,
+  type AiDraft,
   type StaffOption,
   TICKET_CATEGORIES,
   TICKET_CATEGORY_LABELS,
@@ -10,6 +11,7 @@ import {
   TICKET_PRIORITY_LABELS,
   TICKET_STATUSES,
   TICKET_STATUS_LABELS,
+  type TicketTriage,
   type TicketUpdateInput,
 } from '@toolshop/shared';
 import {
@@ -21,8 +23,10 @@ import {
   NativeSelect,
   Skeleton,
 } from '@toolshop/ui';
+import { Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { AiButton } from '@/components/admin/ai-assist';
 import { PageHeader } from '@/components/admin/page-header';
 import { useAdminMutation } from '@/components/admin/query';
 import {
@@ -38,6 +42,13 @@ import {
 import { usePermissions } from '@/hooks/use-permissions';
 import { api } from '@/lib/api/client';
 import { date, dateTime, faNumber, price } from '@/lib/format';
+
+const SENTIMENT_LABELS: Record<string, string> = {
+  positive: '😊 راضی',
+  neutral: '😐 عادی',
+  negative: '😟 ناراضی',
+  angry: '😠 عصبانی',
+};
 
 export default function AdminTicketPage() {
   const { id } = useParams<{ id: string }>();
@@ -77,9 +88,15 @@ export default function AdminTicketPage() {
     },
   );
 
+  const triage = useAdminMutation(() => api.post<TicketTriage>(`/admin/ai/tickets/${id}/triage`), {
+    success: 'تحلیل هوش مصنوعی انجام شد.',
+    invalidate: [key, ['admin', '/admin/tickets']],
+  });
+
   if (!ticket.data) return <Skeleton className="h-96" />;
   const t = ticket.data;
   const manage = can('ticket.manage');
+  const ai = can('ai.use');
 
   return (
     <>
@@ -104,12 +121,49 @@ export default function AdminTicketPage() {
                   canClose={manage}
                   pending={reply.isPending}
                   onSubmit={(v) => reply.mutateAsync(v)}
+                  onAiDraft={
+                    ai ? () => api.post<AiDraft>(`/admin/ai/tickets/${id}/draft`) : undefined
+                  }
                 />
               </div>
             ) : null}
           </CardContent>
         </Card>
         <div className="space-y-5">
+          {t.ai || (ai && manage) ? (
+            <Card className="border-violet-200 dark:border-violet-500/30">
+              <CardHeader className="flex-row items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-violet-600" /> خلاصه هوش مصنوعی
+                </CardTitle>
+                {ai && manage ? (
+                  <AiButton pending={triage.isPending} onClick={() => triage.mutate()}>
+                    {t.ai ? 'تحلیل مجدد' : 'تحلیل'}
+                  </AiButton>
+                ) : null}
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm leading-7">
+                {t.ai ? (
+                  <>
+                    <p className="break-words">{t.ai.summary}</p>
+                    {t.ai.sentiment ? (
+                      <p className="text-muted-foreground text-xs">
+                        حال مشتری:{' '}
+                        <span className="text-foreground font-semibold">
+                          {SENTIMENT_LABELS[t.ai.sentiment] ?? t.ai.sentiment}
+                        </span>
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground text-xs">
+                    خلاصه، حال مشتری و اولویت پیشنهادی را تحلیل کنید. هوش مصنوعی فقط اولویت را بالا
+                    می‌برد و هرگز پیامی برای مشتری نمی‌فرستد.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
           {manage ? (
             <Card>
               <CardHeader>
