@@ -31,10 +31,14 @@ export class HealthController {
   async ready(@Res({ passthrough: true }) response: Response) {
     const [database, redis, search] = await Promise.all([
       this.prisma.$queryRaw`SELECT 1`.then((): Check => 'up').catch((): Check => 'down'),
-      this.redis.ping().then((): Check => 'up').catch((): Check => 'down'),
+      this.redis
+        .ping()
+        .then((): Check => 'up')
+        .catch((): Check => 'down'),
       this.search.isHealthy().then((ok): Check => (ok ? 'up' : 'down')),
     ]);
-    const status = database === 'up' ? (redis === 'up' && search === 'up' ? 'ok' : 'degraded') : 'down';
+    const status =
+      database === 'up' ? (redis === 'up' && search === 'up' ? 'ok' : 'degraded') : 'down';
     if (status === 'down') response.status(HttpStatus.SERVICE_UNAVAILABLE);
     return { status, checks: { database, redis, search } };
   }

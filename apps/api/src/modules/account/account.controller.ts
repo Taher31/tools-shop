@@ -46,13 +46,19 @@ export class AccountController {
   }
 
   @Put('profile')
-  updateProfile(@CurrentUser() user: AuthContext, @ZBody(updateProfileSchema) input: UpdateProfileInput): Promise<AuthUser> {
+  updateProfile(
+    @CurrentUser() user: AuthContext,
+    @ZBody(updateProfileSchema) input: UpdateProfileInput,
+  ): Promise<AuthUser> {
     return this.auth.updateProfile(user.userId, input);
   }
 
   @Post('password')
   @HttpCode(HttpStatus.NO_CONTENT)
-  changePassword(@CurrentUser() user: AuthContext, @ZBody(changePasswordSchema) input: ChangePasswordInput): Promise<void> {
+  changePassword(
+    @CurrentUser() user: AuthContext,
+    @ZBody(changePasswordSchema) input: ChangePasswordInput,
+  ): Promise<void> {
     return this.auth.changePassword(user.userId, user.sessionId, input);
   }
 
@@ -62,7 +68,10 @@ export class AccountController {
   }
 
   @Post('addresses')
-  createAddress(@CurrentUser() user: AuthContext, @ZBody(addressUpsertSchema) input: AddressUpsertInput): Promise<AddressView> {
+  createAddress(
+    @CurrentUser() user: AuthContext,
+    @ZBody(addressUpsertSchema) input: AddressUpsertInput,
+  ): Promise<AddressView> {
     return this.addresses.create(user.userId, input);
   }
 
@@ -76,7 +85,10 @@ export class AccountController {
   }
 
   @Post('addresses/:id/default')
-  setDefaultAddress(@CurrentUser() user: AuthContext, @UuidParam() id: string): Promise<AddressView[]> {
+  setDefaultAddress(
+    @CurrentUser() user: AuthContext,
+    @UuidParam() id: string,
+  ): Promise<AddressView[]> {
     return this.addresses.setDefault(user.userId, id);
   }
 
@@ -87,7 +99,10 @@ export class AccountController {
   }
 
   @Get('orders')
-  listOrders(@CurrentUser() user: AuthContext, @ZQuery(paginationQuerySchema) query: PaginationQuery): Promise<Paginated<OrderSummary>> {
+  listOrders(
+    @CurrentUser() user: AuthContext,
+    @ZQuery(paginationQuerySchema) query: PaginationQuery,
+  ): Promise<Paginated<OrderSummary>> {
     return this.orders.listForCustomer(user.userId, query);
   }
 
@@ -126,12 +141,18 @@ export class AccountController {
   }
 
   @Put('wishlist/:productId')
-  addToWishlist(@CurrentUser() user: AuthContext, @UuidParam('productId') productId: string): Promise<string[]> {
+  addToWishlist(
+    @CurrentUser() user: AuthContext,
+    @UuidParam('productId') productId: string,
+  ): Promise<string[]> {
     return this.wishlist.add(user.userId, productId);
   }
 
   @Delete('wishlist/:productId')
-  removeFromWishlist(@CurrentUser() user: AuthContext, @UuidParam('productId') productId: string): Promise<string[]> {
+  removeFromWishlist(
+    @CurrentUser() user: AuthContext,
+    @UuidParam('productId') productId: string,
+  ): Promise<string[]> {
     return this.wishlist.remove(user.userId, productId);
   }
 }

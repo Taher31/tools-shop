@@ -27,13 +27,17 @@ export class AdminInventoryController {
 
   @Get()
   @RequirePermissions('inventory.read')
-  list(@ZQuery(inventoryListQuerySchema) query: InventoryListQuery): Promise<Paginated<InventoryRow>> {
+  list(
+    @ZQuery(inventoryListQuerySchema) query: InventoryListQuery,
+  ): Promise<Paginated<InventoryRow>> {
     return this.inventory.list(query);
   }
 
   @Get('movements')
   @RequirePermissions('inventory.read')
-  movements(@ZQuery(stockMovementListQuerySchema) query: StockMovementListQuery): Promise<Paginated<StockMovementView>> {
+  movements(
+    @ZQuery(stockMovementListQuerySchema) query: StockMovementListQuery,
+  ): Promise<Paginated<StockMovementView>> {
     return this.inventory.movements(query);
   }
 
@@ -45,13 +49,19 @@ export class AdminInventoryController {
 
   @Post('operations')
   @RequirePermissions('inventory.update')
-  operate(@ZBody(stockOperationSchema) input: StockOperationInput, @CurrentUser() user: AuthContext): Promise<InventoryRow> {
+  operate(
+    @ZBody(stockOperationSchema) input: StockOperationInput,
+    @CurrentUser() user: AuthContext,
+  ): Promise<InventoryRow> {
     return this.inventory.applyOperation(input, user.userId);
   }
 
   @Post('transfers')
   @RequirePermissions('inventory.update')
-  transfer(@ZBody(stockTransferSchema) input: StockTransferInput, @CurrentUser() user: AuthContext): Promise<InventoryRow> {
+  transfer(
+    @ZBody(stockTransferSchema) input: StockTransferInput,
+    @CurrentUser() user: AuthContext,
+  ): Promise<InventoryRow> {
     return this.inventory.transfer(input, user.userId);
   }
 }
@@ -74,7 +84,10 @@ export class AdminWarehousesController {
 
   @Put(':id')
   @RequirePermissions('warehouse.manage')
-  update(@UuidParam() id: string, @ZBody(warehouseUpsertSchema) input: WarehouseUpsertInput): Promise<WarehouseView> {
+  update(
+    @UuidParam() id: string,
+    @ZBody(warehouseUpsertSchema) input: WarehouseUpsertInput,
+  ): Promise<WarehouseView> {
     return this.warehouses.update(id, input);
   }
 }

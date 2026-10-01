@@ -42,19 +42,31 @@ export class CouponsService {
   ) {}
 
   /** Checks everything except the minimum subtotal (evaluated by the pricing engine). */
-  async resolve(code: string, userId: string | undefined, client: Tx | PrismaService = this.prisma): Promise<CouponResolution> {
+  async resolve(
+    code: string,
+    userId: string | undefined,
+    client: Tx | PrismaService = this.prisma,
+  ): Promise<CouponResolution> {
     const coupon = await client.coupon.findUnique({ where: { code: code.trim().toUpperCase() } });
-    const invalid = (error: string): CouponResolution => ({ rule: null, couponId: null, description: null, error });
+    const invalid = (error: string): CouponResolution => ({
+      rule: null,
+      couponId: null,
+      description: null,
+      error,
+    });
     const now = new Date();
     if (!coupon || !coupon.isActive) return invalid('کد تخفیف معتبر نیست.');
-    if (coupon.startsAt && coupon.startsAt > now) return invalid('زمان استفاده از این کد تخفیف هنوز شروع نشده است.');
-    if (coupon.endsAt && coupon.endsAt <= now) return invalid('مهلت استفاده از این کد تخفیف به پایان رسیده است.');
+    if (coupon.startsAt && coupon.startsAt > now)
+      return invalid('زمان استفاده از این کد تخفیف هنوز شروع نشده است.');
+    if (coupon.endsAt && coupon.endsAt <= now)
+      return invalid('مهلت استفاده از این کد تخفیف به پایان رسیده است.');
     if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
       return invalid('ظرفیت استفاده از این کد تخفیف تکمیل شده است.');
     }
     if (userId && coupon.perCustomerLimit !== null) {
       const used = await client.couponRedemption.count({ where: { couponId: coupon.id, userId } });
-      if (used >= coupon.perCustomerLimit) return invalid('شما قبلاً از این کد تخفیف استفاده کرده‌اید.');
+      if (used >= coupon.perCustomerLimit)
+        return invalid('شما قبلاً از این کد تخفیف استفاده کرده‌اید.');
     }
     return {
       rule: {
@@ -71,13 +83,22 @@ export class CouponsService {
   }
 
   /** Consumes one use atomically; fails if the usage limit was reached concurrently. */
-  async redeem(tx: Tx, input: { couponId: string; userId: string; orderId: string; amount: number }): Promise<void> {
+  async redeem(
+    tx: Tx,
+    input: { couponId: string; userId: string; orderId: string; amount: number },
+  ): Promise<void> {
     const consumed = await tx.$executeRaw`
       UPDATE "Coupon" SET "usedCount" = "usedCount" + 1, "updatedAt" = now()
       WHERE "id" = ${input.couponId}::uuid AND ("usageLimit" IS NULL OR "usedCount" < "usageLimit")`;
-    if (consumed === 0) throw new AppException('INVALID_COUPON', 'ظرفیت استفاده از این کد تخفیف تکمیل شده است.');
+    if (consumed === 0)
+      throw new AppException('INVALID_COUPON', 'ظرفیت استفاده از این کد تخفیف تکمیل شده است.');
     await tx.couponRedemption.create({
-      data: { couponId: input.couponId, userId: input.userId, orderId: input.orderId, amount: BigInt(input.amount) },
+      data: {
+        couponId: input.couponId,
+        userId: input.userId,
+        orderId: input.orderId,
+        amount: BigInt(input.amount),
+      },
     });
   }
 
@@ -92,9 +113,15 @@ export class CouponsService {
   }
 
   async list(query: ListQuery): Promise<Paginated<CouponView>> {
-    const where: Prisma.CouponWhereInput = query.q ? { code: { contains: query.q.toUpperCase() } } : {};
+    const where: Prisma.CouponWhereInput = query.q
+      ? { code: { contains: query.q.toUpperCase() } }
+      : {};
     const [coupons, total] = await Promise.all([
-      this.prisma.coupon.findMany({ where, orderBy: { createdAt: 'desc' }, ...paginationArgs(query) }),
+      this.prisma.coupon.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        ...paginationArgs(query),
+      }),
       this.prisma.coupon.count({ where }),
     ]);
     return paginate(coupons.map(toView), total, query);
@@ -102,12 +129,19 @@ export class CouponsService {
 
   async create(input: CouponUpsertInput): Promise<CouponView> {
     if (await this.prisma.coupon.findUnique({ where: { code: input.code } })) {
-      throw AppException.conflict('این کد تخفیف قبلاً ثبت شده است.', [{ path: 'code', message: 'تکراری' }]);
+      throw AppException.conflict('این کد تخفیف قبلاً ثبت شده است.', [
+        { path: 'code', message: 'تکراری' },
+      ]);
     }
     const coupon = await this.prisma.$transaction(async (tx) => {
       const created = await tx.coupon.create({ data: this.toData(input) });
       await this.audit.record(
-        { action: 'coupon.create', entityType: 'coupon', entityId: created.id, summary: `ایجاد کد تخفیف ${created.code}` },
+        {
+          action: 'coupon.create',
+          entityType: 'coupon',
+          entityId: created.id,
+          summary: `ایجاد کد تخفیف ${created.code}`,
+        },
         tx,
       );
       return created;
@@ -118,8 +152,13 @@ export class CouponsService {
   async update(id: string, input: CouponUpsertInput): Promise<CouponView> {
     const existing = await this.prisma.coupon.findUnique({ where: { id } });
     if (!existing) throw AppException.notFound('کد تخفیف یافت نشد.');
-    if (existing.code !== input.code && (await this.prisma.coupon.findUnique({ where: { code: input.code } }))) {
-      throw AppException.conflict('این کد تخفیف قبلاً ثبت شده است.', [{ path: 'code', message: 'تکراری' }]);
+    if (
+      existing.code !== input.code &&
+      (await this.prisma.coupon.findUnique({ where: { code: input.code } }))
+    ) {
+      throw AppException.conflict('این کد تخفیف قبلاً ثبت شده است.', [
+        { path: 'code', message: 'تکراری' },
+      ]);
     }
     const coupon = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.coupon.update({ where: { id }, data: this.toData(input) });
@@ -129,8 +168,18 @@ export class CouponsService {
           entityType: 'coupon',
           entityId: id,
           summary: `ویرایش کد تخفیف ${updated.code}`,
-          before: { type: existing.type, value: existing.value, isActive: existing.isActive, endsAt: existing.endsAt },
-          after: { type: updated.type, value: updated.value, isActive: updated.isActive, endsAt: updated.endsAt },
+          before: {
+            type: existing.type,
+            value: existing.value,
+            isActive: existing.isActive,
+            endsAt: existing.endsAt,
+          },
+          after: {
+            type: updated.type,
+            value: updated.value,
+            isActive: updated.isActive,
+            endsAt: updated.endsAt,
+          },
         },
         tx,
       );
@@ -149,7 +198,12 @@ export class CouponsService {
         await tx.coupon.delete({ where: { id } });
       }
       await this.audit.record(
-        { action: 'coupon.delete', entityType: 'coupon', entityId: id, summary: `حذف/غیرفعال‌سازی کد ${coupon.code}` },
+        {
+          action: 'coupon.delete',
+          entityType: 'coupon',
+          entityId: id,
+          summary: `حذف/غیرفعال‌سازی کد ${coupon.code}`,
+        },
         tx,
       );
     });

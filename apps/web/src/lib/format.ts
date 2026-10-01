@@ -1,6 +1,9 @@
 import { formatPrice as formatRial, toPersianDigits, type DisplayCurrency } from '@toolshop/shared';
 
-const dateFormatter = new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeZone: 'Asia/Tehran' });
+const dateFormatter = new Intl.DateTimeFormat('fa-IR', {
+  dateStyle: 'medium',
+  timeZone: 'Asia/Tehran',
+});
 const dateTimeFormatter = new Intl.DateTimeFormat('fa-IR', {
   dateStyle: 'medium',
   timeStyle: 'short',
@@ -17,7 +20,9 @@ export function priceNumber(amountRial: number, currency: DisplayCurrency = 'IRT
 }
 
 export function faNumber(value: number | string): string {
-  return typeof value === 'number' ? new Intl.NumberFormat('fa-IR').format(value) : toPersianDigits(value);
+  return typeof value === 'number'
+    ? new Intl.NumberFormat('fa-IR').format(value)
+    : toPersianDigits(value);
 }
 
 /** Jalali date in Tehran time. */

@@ -19,7 +19,9 @@ export class AdminOrdersController {
 
   @Get()
   @RequirePermissions('order.read')
-  list(@ZQuery(adminOrderListQuerySchema) query: AdminOrderListQuery): Promise<Paginated<AdminOrderSummary>> {
+  list(
+    @ZQuery(adminOrderListQuerySchema) query: AdminOrderListQuery,
+  ): Promise<Paginated<AdminOrderSummary>> {
     return this.orders.listForAdmin(query);
   }
 

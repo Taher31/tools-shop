@@ -1,7 +1,13 @@
 import { z } from 'zod';
 import { queryBoolean } from './common';
 
-export const PRODUCT_SORTS = ['relevance', 'newest', 'price_asc', 'price_desc', 'bestselling'] as const;
+export const PRODUCT_SORTS = [
+  'relevance',
+  'newest',
+  'price_asc',
+  'price_desc',
+  'bestselling',
+] as const;
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 export const PRODUCT_SORT_LABELS: Record<ProductSort, string> = {
   relevance: 'مرتبط‌ترین',
@@ -15,7 +21,9 @@ const csv = z
   .union([z.string(), z.array(z.string())])
   .optional()
   .transform((value) =>
-    (Array.isArray(value) ? value : value ? value.split(',') : []).map((v) => v.trim()).filter(Boolean),
+    (Array.isArray(value) ? value : value ? value.split(',') : [])
+      .map((v) => v.trim())
+      .filter(Boolean),
   );
 
 /**

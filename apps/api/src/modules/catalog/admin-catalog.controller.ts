@@ -53,7 +53,10 @@ export class AdminCategoriesController {
 
   @Put(':id')
   @RequirePermissions('category.update')
-  update(@UuidParam() id: string, @ZBody(categoryUpsertSchema) input: CategoryUpsertInput): Promise<AdminCategoryView> {
+  update(
+    @UuidParam() id: string,
+    @ZBody(categoryUpsertSchema) input: CategoryUpsertInput,
+  ): Promise<AdminCategoryView> {
     return this.categories.update(id, input);
   }
 
@@ -92,7 +95,10 @@ export class AdminBrandsController {
 
   @Put(':id')
   @RequirePermissions('brand.update')
-  update(@UuidParam() id: string, @ZBody(brandUpsertSchema) input: BrandUpsertInput): Promise<AdminBrandView> {
+  update(
+    @UuidParam() id: string,
+    @ZBody(brandUpsertSchema) input: BrandUpsertInput,
+  ): Promise<AdminBrandView> {
     return this.brands.update(id, input);
   }
 
@@ -122,7 +128,10 @@ export class AdminAttributesController {
 
   @Put(':id')
   @RequirePermissions('attribute.update')
-  update(@UuidParam() id: string, @ZBody(attributeUpsertSchema) input: AttributeUpsertInput): Promise<AttributeView> {
+  update(
+    @UuidParam() id: string,
+    @ZBody(attributeUpsertSchema) input: AttributeUpsertInput,
+  ): Promise<AttributeView> {
     return this.attributes.update(id, input);
   }
 
@@ -140,7 +149,9 @@ export class AdminProductsController {
 
   @Get()
   @RequirePermissions('product.read')
-  list(@ZQuery(adminProductListQuerySchema) query: AdminProductListQuery): Promise<Paginated<AdminProductListItem>> {
+  list(
+    @ZQuery(adminProductListQuerySchema) query: AdminProductListQuery,
+  ): Promise<Paginated<AdminProductListItem>> {
     return this.products.list(query);
   }
 

@@ -3,7 +3,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type AuthUser, type UpdateProfileInput, updateProfileSchema } from '@toolshop/shared';
-import { Button, Card, CardContent, CardHeader, CardTitle, Field, Input, toast } from '@toolshop/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Field,
+  Input,
+  toast,
+} from '@toolshop/ui';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { AUTH_QUERY_KEY, useAuth } from '@/hooks/use-auth';
@@ -40,7 +49,11 @@ export default function ProfilePage() {
         <CardTitle>اطلاعات حساب کاربری</CardTitle>
       </CardHeader>
       <CardContent>
-        <form className="grid max-w-2xl gap-4 sm:grid-cols-2" noValidate onSubmit={form.handleSubmit((v) => save.mutate(v as unknown as UpdateProfileInput))}>
+        <form
+          className="grid max-w-2xl gap-4 sm:grid-cols-2"
+          noValidate
+          onSubmit={form.handleSubmit((v) => save.mutate(v as unknown as UpdateProfileInput))}
+        >
           <Field label="نام" htmlFor="firstName" required error={errors.firstName?.message}>
             <Input id="firstName" {...form.register('firstName')} />
           </Field>
@@ -51,10 +64,27 @@ export default function ProfilePage() {
             <Input value={user?.mobile ?? ''} disabled dir="ltr" className="text-left" />
           </Field>
           <Field label="ایمیل" htmlFor="email" error={errors.email?.message}>
-            <Input id="email" type="email" dir="ltr" className="text-left" {...form.register('email')} />
+            <Input
+              id="email"
+              type="email"
+              dir="ltr"
+              className="text-left"
+              {...form.register('email')}
+            />
           </Field>
-          <Field label="کد ملی" htmlFor="nationalCode" hint="برای صدور فاکتور رسمی" error={errors.nationalCode?.message}>
-            <Input id="nationalCode" inputMode="numeric" dir="ltr" className="text-left" {...form.register('nationalCode')} />
+          <Field
+            label="کد ملی"
+            htmlFor="nationalCode"
+            hint="برای صدور فاکتور رسمی"
+            error={errors.nationalCode?.message}
+          >
+            <Input
+              id="nationalCode"
+              inputMode="numeric"
+              dir="ltr"
+              className="text-left"
+              {...form.register('nationalCode')}
+            />
           </Field>
           <div className="flex items-end sm:col-span-2">
             <Button type="submit" loading={save.isPending}>

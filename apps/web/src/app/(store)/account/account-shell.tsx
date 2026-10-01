@@ -27,12 +27,14 @@ export function AccountShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="container-page grid items-start gap-6 py-6 lg:grid-cols-[16rem_1fr]">
-      <aside className="rounded-lg border border-border bg-card">
-        <div className="border-b border-border p-4">
+      <aside className="border-border bg-card rounded-lg border">
+        <div className="border-border border-b p-4">
           {user ? (
             <>
               <p className="font-bold">{user.fullName}</p>
-              <p className="ltr text-end text-xs text-muted-foreground">{user.mobile ?? user.email}</p>
+              <p className="ltr text-muted-foreground text-end text-xs">
+                {user.mobile ?? user.email}
+              </p>
             </>
           ) : (
             <Skeleton className="h-10" />
@@ -46,7 +48,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-2 rounded-md px-3 py-2.5 text-sm whitespace-nowrap',
+                  'flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2.5 text-sm',
                   active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
                 )}
               >
@@ -57,7 +59,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() => logout.mutate(undefined, { onSettled: () => router.push('/') })}
-            className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm whitespace-nowrap text-destructive hover:bg-destructive-soft"
+            className="text-destructive hover:bg-destructive-soft flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2.5 text-sm"
           >
             <LogOut className="size-4" /> خروج
           </button>

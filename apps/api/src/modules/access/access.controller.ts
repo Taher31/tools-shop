@@ -43,7 +43,10 @@ export class RolesController {
 
   @Put(':id')
   @RequirePermissions('role.manage')
-  update(@UuidParam() id: string, @ZBody(roleUpsertSchema) input: RoleUpsertInput): Promise<RoleView> {
+  update(
+    @UuidParam() id: string,
+    @ZBody(roleUpsertSchema) input: RoleUpsertInput,
+  ): Promise<RoleView> {
     return this.roles.update(id, input);
   }
 

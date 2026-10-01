@@ -71,12 +71,19 @@ export class CartController {
   }
 
   @Delete('coupon')
-  removeCoupon(@Req() request: Request, @OptionalUser() user: AuthContext | undefined): Promise<CartView> {
+  removeCoupon(
+    @Req() request: Request,
+    @OptionalUser() user: AuthContext | undefined,
+  ): Promise<CartView> {
     return this.carts.removeCoupon(this.identity(request, user));
   }
 
   /** Resolves the cart owner; issues a guest token cookie when `response` is given. */
-  private identity(request: Request, user: AuthContext | undefined, response?: Response): CartIdentity {
+  private identity(
+    request: Request,
+    user: AuthContext | undefined,
+    response?: Response,
+  ): CartIdentity {
     if (user) return { userId: user.userId };
     const token = (request.cookies as Record<string, string> | undefined)?.[CART_COOKIE];
     if (token && /^[A-Za-z0-9_-]{32,128}$/.test(token)) return { guestToken: token };

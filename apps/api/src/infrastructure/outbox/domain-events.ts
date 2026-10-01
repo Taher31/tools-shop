@@ -6,7 +6,11 @@ export interface DomainEventMap {
   'product.changed': { productIds: string[] };
   'product.deleted': { productIds: string[] };
   'inventory.changed': { productIds: string[]; variantIds: string[] };
-  'catalog.taxonomy_changed': { categoryIds?: string[]; brandIds?: string[]; attributeIds?: string[] };
+  'catalog.taxonomy_changed': {
+    categoryIds?: string[];
+    brandIds?: string[];
+    attributeIds?: string[];
+  };
   'order.created': { orderId: string };
   'order.paid': { orderId: string };
   'order.status_changed': { orderId: string; from: string; to: string };

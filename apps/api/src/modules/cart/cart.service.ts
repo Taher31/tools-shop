@@ -15,7 +15,12 @@ import { ACTIVE_LEVELS_SELECT, parseVariantOptions } from '../catalog/product-ca
 import { TaxonomyService } from '../catalog/taxonomy.service';
 import { CouponsService } from '../coupons/coupons.service';
 import { availableQuantity } from '../inventory/stock';
-import { calculateTotals, type CouponRule, type PricingResult, type ShippingRule } from '../pricing/pricing';
+import {
+  calculateTotals,
+  type CouponRule,
+  type PricingResult,
+  type ShippingRule,
+} from '../pricing/pricing';
 import { SettingsService } from '../settings/settings.service';
 
 export interface CartIdentity {
@@ -74,7 +79,12 @@ export class CartService {
 
   async addItem(identity: CartIdentity, input: AddCartItemInput): Promise<CartView> {
     const variant = await this.prisma.productVariant.findFirst({
-      where: { id: input.variantId, isActive: true, deletedAt: null, product: { status: 'active', deletedAt: null } },
+      where: {
+        id: input.variantId,
+        isActive: true,
+        deletedAt: null,
+        product: { status: 'active', deletedAt: null },
+      },
       include: { inventoryLevels: ACTIVE_LEVELS_SELECT, product: { select: { title: true } } },
     });
     if (!variant) throw AppException.notFound('این کالا در حال حاضر قابل خرید نیست.');
@@ -83,9 +93,13 @@ export class CartService {
     const existing = cart.items.find((item) => item.variantId === input.variantId);
     const quantity = Math.min(MAX_CART_LINE_QUANTITY, (existing?.quantity ?? 0) + input.quantity);
     const available = availableQuantity(variant.inventoryLevels);
-    if (available <= 0) throw new AppException('OUT_OF_STOCK', `${variant.product.title} موجود نیست.`);
+    if (available <= 0)
+      throw new AppException('OUT_OF_STOCK', `${variant.product.title} موجود نیست.`);
     if (quantity > available) {
-      throw new AppException('OUT_OF_STOCK', `از ${variant.product.title} فقط ${available} عدد موجود است.`);
+      throw new AppException(
+        'OUT_OF_STOCK',
+        `از ${variant.product.title} فقط ${available} عدد موجود است.`,
+      );
     }
     await this.prisma.cartItem.upsert({
       where: { cartId_variantId: { cartId: cart.id, variantId: input.variantId } },
@@ -105,7 +119,10 @@ export class CartService {
     }
     const available = availableQuantity(item.variant.inventoryLevels);
     if (quantity > item.quantity && quantity > available) {
-      throw new AppException('OUT_OF_STOCK', `از ${item.variant.product.title} فقط ${available} عدد موجود است.`);
+      throw new AppException(
+        'OUT_OF_STOCK',
+        `از ${item.variant.product.title} فقط ${available} عدد موجود است.`,
+      );
     }
     await this.prisma.cartItem.update({ where: { id: itemId }, data: { quantity } });
     return this.view(identity);
@@ -122,8 +139,12 @@ export class CartService {
     const resolution = await this.coupons.resolve(code, identity.userId);
     if (!resolution.rule) throw new AppException('INVALID_COUPON', resolution.error ?? undefined);
     const priced = await this.price({ ...cart, couponCode: resolution.rule.code }, identity.userId);
-    if (priced.pricing.couponError) throw new AppException('INVALID_COUPON', priced.pricing.couponError);
-    await this.prisma.cart.update({ where: { id: cart.id }, data: { couponCode: resolution.rule.code } });
+    if (priced.pricing.couponError)
+      throw new AppException('INVALID_COUPON', priced.pricing.couponError);
+    await this.prisma.cart.update({
+      where: { id: cart.id },
+      data: { couponCode: resolution.rule.code },
+    });
     return this.view(identity);
   }
 
@@ -135,7 +156,10 @@ export class CartService {
 
   /** On login/registration the guest cart is folded into the customer's cart. */
   async mergeGuestCartIntoUser(guestToken: string, userId: string): Promise<void> {
-    const guest = await this.prisma.cart.findUnique({ where: { tokenHash: sha256(guestToken) }, include: { items: true } });
+    const guest = await this.prisma.cart.findUnique({
+      where: { tokenHash: sha256(guestToken) },
+      include: { items: true },
+    });
     if (!guest) return;
     await this.prisma.$transaction(async (tx) => {
       const userCart =
@@ -151,7 +175,10 @@ export class CartService {
         });
       }
       if (!userCart.couponCode && guest.couponCode) {
-        await tx.cart.update({ where: { id: userCart.id }, data: { couponCode: guest.couponCode } });
+        await tx.cart.update({
+          where: { id: userCart.id },
+          data: { couponCode: guest.couponCode },
+        });
       }
       await tx.cart.delete({ where: { id: guest.id } });
     });
@@ -162,10 +189,17 @@ export class CartService {
     await tx.cart.update({ where: { id: cartId }, data: { couponCode: null } });
   }
 
-  async find(identity: CartIdentity, client: Tx | PrismaService = this.prisma): Promise<CartRecord | null> {
-    if (identity.userId) return client.cart.findUnique({ where: { userId: identity.userId }, include: CART_INCLUDE });
+  async find(
+    identity: CartIdentity,
+    client: Tx | PrismaService = this.prisma,
+  ): Promise<CartRecord | null> {
+    if (identity.userId)
+      return client.cart.findUnique({ where: { userId: identity.userId }, include: CART_INCLUDE });
     if (identity.guestToken) {
-      return client.cart.findUnique({ where: { tokenHash: sha256(identity.guestToken) }, include: CART_INCLUDE });
+      return client.cart.findUnique({
+        where: { tokenHash: sha256(identity.guestToken) },
+        include: CART_INCLUDE,
+      });
     }
     return null;
   }
@@ -222,14 +256,19 @@ export class CartService {
       return { line, record: item };
     });
 
-    const priceable = lines.filter(({ line }) => line.issue !== 'unavailable' && line.issue !== 'out_of_stock');
+    const priceable = lines.filter(
+      ({ line }) => line.issue !== 'unavailable' && line.issue !== 'out_of_stock',
+    );
     let coupon: PricedCart['coupon'] = null;
     if (cart.couponCode) {
       const resolution = await this.coupons.resolve(cart.couponCode, userId, options.client);
       if (resolution.rule && resolution.couponId) {
-        coupon = { rule: resolution.rule, couponId: resolution.couponId, description: resolution.description };
-      }
-      else warnings.push(resolution.error ?? 'کد تخفیف معتبر نیست.');
+        coupon = {
+          rule: resolution.rule,
+          couponId: resolution.couponId,
+          description: resolution.description,
+        };
+      } else warnings.push(resolution.error ?? 'کد تخفیف معتبر نیست.');
     }
 
     const pricing = calculateTotals({
@@ -253,7 +292,10 @@ export class CartService {
       view: {
         id: cart.id,
         lines: lines.map(({ line }) => line),
-        coupon: couponActive && coupon ? { code: coupon.rule.code, description: coupon.description } : null,
+        coupon:
+          couponActive && coupon
+            ? { code: coupon.rule.code, description: coupon.description }
+            : null,
         totals: {
           itemsCount: pricing.itemsCount,
           subtotal: pricing.subtotal,
@@ -272,9 +314,13 @@ export class CartService {
   private async findOrCreate(identity: CartIdentity): Promise<CartRecord> {
     const existing = await this.find(identity);
     if (existing) return existing;
-    if (identity.userId) return this.prisma.cart.create({ data: { userId: identity.userId }, include: CART_INCLUDE });
+    if (identity.userId)
+      return this.prisma.cart.create({ data: { userId: identity.userId }, include: CART_INCLUDE });
     if (identity.guestToken) {
-      return this.prisma.cart.create({ data: { tokenHash: sha256(identity.guestToken) }, include: CART_INCLUDE });
+      return this.prisma.cart.create({
+        data: { tokenHash: sha256(identity.guestToken) },
+        include: CART_INCLUDE,
+      });
     }
     throw new AppException('BAD_REQUEST', 'شناسه سبد خرید نامعتبر است.');
   }

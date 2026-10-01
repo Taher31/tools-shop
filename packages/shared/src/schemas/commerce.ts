@@ -26,12 +26,7 @@ export const updateCartItemSchema = z.object({
 export type UpdateCartItemInput = z.infer<typeof updateCartItemSchema>;
 
 export const applyCouponSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .min(2, 'کد تخفیف را وارد کنید.')
-    .max(40),
+  code: z.string().trim().toUpperCase().min(2, 'کد تخفیف را وارد کنید.').max(40),
 });
 export type ApplyCouponInput = z.infer<typeof applyCouponSchema>;
 
@@ -39,7 +34,9 @@ export const addressUpsertSchema = z.object({
   title: optionalTextSchema(60),
   recipientName: textSchema({ max: 120 }),
   recipientMobile: mobileSchema,
-  province: z.enum(IRAN_PROVINCE_NAMES as [string, ...string[]], { message: 'استان را انتخاب کنید.' }),
+  province: z.enum(IRAN_PROVINCE_NAMES as [string, ...string[]], {
+    message: 'استان را انتخاب کنید.',
+  }),
   city: textSchema({ max: 80 }),
   addressLine: textSchema({ min: 10, max: 500 }),
   plaque: optionalTextSchema(20),
@@ -74,21 +71,49 @@ export const couponUpsertSchema = z
     value: z.coerce.number().int().min(0),
     maxDiscount: rialSchema.nullish().transform((v) => v || null),
     minSubtotal: rialSchema.nullish().transform((v) => v || null),
-    startsAt: z.coerce.date().nullish().transform((v) => v ?? null),
-    endsAt: z.coerce.date().nullish().transform((v) => v ?? null),
-    usageLimit: z.coerce.number().int().min(1).nullish().transform((v) => v ?? null),
-    perCustomerLimit: z.coerce.number().int().min(1).nullish().transform((v) => v ?? null),
+    startsAt: z.coerce
+      .date()
+      .nullish()
+      .transform((v) => v ?? null),
+    endsAt: z.coerce
+      .date()
+      .nullish()
+      .transform((v) => v ?? null),
+    usageLimit: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .nullish()
+      .transform((v) => v ?? null),
+    perCustomerLimit: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .nullish()
+      .transform((v) => v ?? null),
     isActive: z.boolean().default(true),
   })
   .superRefine((value, ctx) => {
     if (value.type === 'percent' && (value.value < 1 || value.value > 100)) {
-      ctx.addIssue({ code: 'custom', path: ['value'], message: 'درصد تخفیف باید بین ۱ تا ۱۰۰ باشد.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['value'],
+        message: 'درصد تخفیف باید بین ۱ تا ۱۰۰ باشد.',
+      });
     }
     if (value.type === 'fixed' && value.value < 1) {
-      ctx.addIssue({ code: 'custom', path: ['value'], message: 'مبلغ تخفیف باید بیشتر از صفر باشد.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['value'],
+        message: 'مبلغ تخفیف باید بیشتر از صفر باشد.',
+      });
     }
     if (value.startsAt && value.endsAt && value.endsAt <= value.startsAt) {
-      ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'تاریخ پایان باید بعد از تاریخ شروع باشد.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['endsAt'],
+        message: 'تاریخ پایان باید بعد از تاریخ شروع باشد.',
+      });
     }
   });
 export type CouponUpsertInput = z.infer<typeof couponUpsertSchema>;

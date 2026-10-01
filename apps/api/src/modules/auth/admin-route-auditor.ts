@@ -22,7 +22,8 @@ export class AdminRouteAuditor implements OnApplicationBootstrap {
     let checked = 0;
     for (const wrapper of this.discovery.getControllers()) {
       const { metatype, instance } = wrapper;
-      if (!metatype || !instance || !this.reflector.get<boolean>(ADMIN_CONTROLLER_KEY, metatype)) continue;
+      if (!metatype || !instance || !this.reflector.get<boolean>(ADMIN_CONTROLLER_KEY, metatype))
+        continue;
       const prototype = Object.getPrototypeOf(instance) as Record<string, unknown>;
       for (const name of this.scanner.getAllMethodNames(prototype)) {
         const handler = prototype[name];
@@ -30,7 +31,10 @@ export class AdminRouteAuditor implements OnApplicationBootstrap {
         if (Reflect.getMetadata(PATH_METADATA, handler) === undefined) continue;
         if (Reflect.getMetadata(METHOD_METADATA, handler) === undefined) continue;
         checked += 1;
-        const permissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [handler, metatype]);
+        const permissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
+          handler,
+          metatype,
+        ]);
         if (!permissions?.length) unprotected.push(`${metatype.name}.${name}`);
       }
     }

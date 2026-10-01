@@ -198,9 +198,13 @@ export class Taxonomy {
   facetTokens(attribute: TaxonomyAttribute, value: StoredAttributeValue): string[] {
     switch (attribute.type) {
       case 'number':
-        return value.numberValue === null ? [] : [`${attribute.code}:${Math.round(value.numberValue * 1000) / 1000}`];
+        return value.numberValue === null
+          ? []
+          : [`${attribute.code}:${Math.round(value.numberValue * 1000) / 1000}`];
       case 'boolean':
-        return value.booleanValue === null ? [] : [`${attribute.code}:${value.booleanValue ? 'yes' : 'no'}`];
+        return value.booleanValue === null
+          ? []
+          : [`${attribute.code}:${value.booleanValue ? 'yes' : 'no'}`];
       case 'select':
       case 'multiselect':
         return value.optionValues.map((v) => `${attribute.code}:${v}`);

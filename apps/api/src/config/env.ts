@@ -21,7 +21,9 @@ const csv = z
 const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-    LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+    LOG_LEVEL: z
+      .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+      .default('info'),
     API_PORT: z.coerce.number().int().positive().default(4000),
     APP_PUBLIC_URL: z.url(),
     CORS_ORIGINS: csv,
@@ -39,10 +41,16 @@ const envSchema = z
     JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(900),
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
     COOKIE_SECURE: booleanString,
-    COOKIE_DOMAIN: z.string().optional().transform((value) => value || undefined),
+    COOKIE_DOMAIN: z
+      .string()
+      .optional()
+      .transform((value) => value || undefined),
     APP_ENCRYPTION_KEY: z
       .string()
-      .refine((value) => Buffer.from(value, 'base64').length === 32, 'must be 32 bytes, base64 encoded'),
+      .refine(
+        (value) => Buffer.from(value, 'base64').length === 32,
+        'must be 32 bytes, base64 encoded',
+      ),
 
     RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().positive().default(60),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
@@ -62,7 +70,12 @@ const envSchema = z
     PAYMENT_DEFAULT_PROVIDER: z.string().default('mock'),
     /** The mock gateway is refused in production unless explicitly allowed (staging). */
     PAYMENT_ALLOW_MOCK_IN_PRODUCTION: booleanString,
-    STOCK_RESERVATION_TTL_MINUTES: z.coerce.number().int().min(5).max(24 * 60).default(20),
+    STOCK_RESERVATION_TTL_MINUTES: z.coerce
+      .number()
+      .int()
+      .min(5)
+      .max(24 * 60)
+      .default(20),
 
     /** Run BullMQ workers in this process (disable to run the API as a pure web node). */
     QUEUE_WORKERS_ENABLED: z
@@ -73,19 +86,32 @@ const envSchema = z
   .superRefine((env, ctx) => {
     if (env.STORAGE_DRIVER === 's3') {
       for (const key of ['S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY'] as const) {
-        if (!env[key]) ctx.addIssue({ code: 'custom', path: [key], message: 'required when STORAGE_DRIVER=s3' });
+        if (!env[key])
+          ctx.addIssue({ code: 'custom', path: [key], message: 'required when STORAGE_DRIVER=s3' });
       }
     }
     if (env.NODE_ENV === 'production') {
       const weak = (value: string | undefined) => !value || /change_me|dev_/i.test(value);
       if (weak(env.JWT_ACCESS_SECRET)) {
-        ctx.addIssue({ code: 'custom', path: ['JWT_ACCESS_SECRET'], message: 'must be a strong secret in production' });
+        ctx.addIssue({
+          code: 'custom',
+          path: ['JWT_ACCESS_SECRET'],
+          message: 'must be a strong secret in production',
+        });
       }
       if (weak(env.MEILI_MASTER_KEY)) {
-        ctx.addIssue({ code: 'custom', path: ['MEILI_MASTER_KEY'], message: 'must be a strong key in production' });
+        ctx.addIssue({
+          code: 'custom',
+          path: ['MEILI_MASTER_KEY'],
+          message: 'must be a strong key in production',
+        });
       }
       if (!env.COOKIE_SECURE) {
-        ctx.addIssue({ code: 'custom', path: ['COOKIE_SECURE'], message: 'must be true in production' });
+        ctx.addIssue({
+          code: 'custom',
+          path: ['COOKIE_SECURE'],
+          message: 'must be true in production',
+        });
       }
     }
   });
@@ -94,7 +120,10 @@ export type Env = z.infer<typeof envSchema>;
 
 /** Loads the repository root `.env` (development) without overriding real env vars. */
 export function loadEnvFiles(): void {
-  const candidates = [path.resolve(process.cwd(), '.env'), path.resolve(process.cwd(), '../../.env')];
+  const candidates = [
+    path.resolve(process.cwd(), '.env'),
+    path.resolve(process.cwd(), '../../.env'),
+  ];
   for (const file of candidates) {
     if (fs.existsSync(file)) loadDotenv({ path: file, quiet: true });
   }
@@ -103,7 +132,9 @@ export function loadEnvFiles(): void {
 export function parseEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const result = envSchema.safeParse(source);
   if (!result.success) {
-    const problems = result.error.issues.map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`);
+    const problems = result.error.issues.map(
+      (issue) => `  - ${issue.path.join('.')}: ${issue.message}`,
+    );
     throw new Error(`Invalid environment configuration:\n${problems.join('\n')}`);
   }
   return result.data;

@@ -52,7 +52,11 @@ export class AppConfig {
     this.trustProxyHops = env.TRUST_PROXY_HOPS;
     this.database = { url: env.DATABASE_URL, poolSize: env.DATABASE_POOL_SIZE };
     this.redisUrl = env.REDIS_URL;
-    this.search = { host: env.MEILI_HOST, apiKey: env.MEILI_MASTER_KEY, indexPrefix: env.MEILI_INDEX_PREFIX };
+    this.search = {
+      host: env.MEILI_HOST,
+      apiKey: env.MEILI_MASTER_KEY,
+      indexPrefix: env.MEILI_INDEX_PREFIX,
+    };
     this.auth = {
       accessSecret: env.JWT_ACCESS_SECRET,
       accessTtlSeconds: env.JWT_ACCESS_TTL_SECONDS,

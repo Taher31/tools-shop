@@ -47,8 +47,18 @@ export class SessionService {
         expiresAt: this.refreshExpiry(),
       },
     });
-    const accessToken = await this.tokens.signAccessToken({ sub: user.id, sid: session.id, typ: user.type });
-    return { accessToken, refreshToken, sessionId: session.id, userId: user.id, userType: user.type };
+    const accessToken = await this.tokens.signAccessToken({
+      sub: user.id,
+      sid: session.id,
+      typ: user.type,
+    });
+    return {
+      accessToken,
+      refreshToken,
+      sessionId: session.id,
+      userId: user.id,
+      userType: user.type,
+    };
   }
 
   async rotate(refreshToken: string, client: ClientInfo): Promise<IssuedTokens> {
@@ -59,14 +69,20 @@ export class SessionService {
     });
 
     if (!session) {
-      const reused = await this.prisma.session.findUnique({ where: { previousTokenHash: tokenHash } });
+      const reused = await this.prisma.session.findUnique({
+        where: { previousTokenHash: tokenHash },
+      });
       if (reused && !reused.revokedAt) {
-        this.logger.warn({ sessionId: reused.id, userId: reused.userId }, 'Refresh token reuse detected');
+        this.logger.warn(
+          { sessionId: reused.id, userId: reused.userId },
+          'Refresh token reuse detected',
+        );
         await this.revoke(reused.id);
       }
       throw new AppException('SESSION_EXPIRED');
     }
-    if (session.revokedAt || session.expiresAt <= new Date()) throw new AppException('SESSION_EXPIRED');
+    if (session.revokedAt || session.expiresAt <= new Date())
+      throw new AppException('SESSION_EXPIRED');
     if (!session.user.isActive) throw new AppException('ACCOUNT_DISABLED');
 
     const nextToken = randomToken(48);
@@ -107,13 +123,19 @@ export class SessionService {
   }
 
   async revokeByRefreshToken(refreshToken: string): Promise<void> {
-    const session = await this.prisma.session.findUnique({ where: { tokenHash: sha256(refreshToken) } });
+    const session = await this.prisma.session.findUnique({
+      where: { tokenHash: sha256(refreshToken) },
+    });
     if (session) await this.revoke(session.id);
   }
 
   async revokeAllForUser(userId: string, exceptSessionId?: string): Promise<void> {
     const sessions = await this.prisma.session.findMany({
-      where: { userId, revokedAt: null, ...(exceptSessionId ? { id: { not: exceptSessionId } } : {}) },
+      where: {
+        userId,
+        revokedAt: null,
+        ...(exceptSessionId ? { id: { not: exceptSessionId } } : {}),
+      },
       select: { id: true },
     });
     for (const session of sessions) await this.revoke(session.id);

@@ -20,7 +20,9 @@ export class OrdersProcessor extends WorkerHost implements OnApplicationBootstra
   async onApplicationBootstrap(): Promise<void> {
     await this.queue
       .upsertJobScheduler(ORDER_JOBS.SWEEP, { every: 5 * 60_000 }, { name: ORDER_JOBS.SWEEP })
-      .catch((error: unknown) => this.logger.warn({ err: error }, 'Could not register order sweeper'));
+      .catch((error: unknown) =>
+        this.logger.warn({ err: error }, 'Could not register order sweeper'),
+      );
   }
 
   async process(job: Job<{ orderId?: string }>): Promise<unknown> {

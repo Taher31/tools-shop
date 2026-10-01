@@ -13,7 +13,13 @@ function remoteImagePatterns(): NonNullable<NextConfig['images']>['remotePattern
   try {
     const url = new URL(base);
     if (url.hostname === 'localhost') return [];
-    return [{ protocol: url.protocol.replace(':', '') as 'http' | 'https', hostname: url.hostname, pathname: `${url.pathname.replace(/\/$/, '')}/**` }];
+    return [
+      {
+        protocol: url.protocol.replace(':', '') as 'http' | 'https',
+        hostname: url.hostname,
+        pathname: `${url.pathname.replace(/\/$/, '')}/**`,
+      },
+    ];
   } catch {
     return [];
   }

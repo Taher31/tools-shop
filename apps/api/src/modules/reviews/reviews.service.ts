@@ -77,28 +77,50 @@ export class ReviewsService {
   async publicReviews(productId: string, query: PaginationQuery): Promise<Paginated<ReviewView>> {
     const where: Prisma.ReviewWhereInput = { productId, status: 'approved' };
     const [reviews, total] = await Promise.all([
-      this.prisma.review.findMany({ where, include: REVIEW_INCLUDE, orderBy: { createdAt: 'desc' }, ...paginationArgs(query) }),
+      this.prisma.review.findMany({
+        where,
+        include: REVIEW_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+        ...paginationArgs(query),
+      }),
       this.prisma.review.count({ where }),
     ]);
     return paginate(reviews.map(toReview), total, query);
   }
 
-  async publicQuestions(productId: string, query: PaginationQuery): Promise<Paginated<QuestionView>> {
+  async publicQuestions(
+    productId: string,
+    query: PaginationQuery,
+  ): Promise<Paginated<QuestionView>> {
     const where: Prisma.ProductQuestionWhereInput = { productId, status: 'answered' };
     const [questions, total] = await Promise.all([
-      this.prisma.productQuestion.findMany({ where, include: QUESTION_INCLUDE, orderBy: { createdAt: 'desc' }, ...paginationArgs(query) }),
+      this.prisma.productQuestion.findMany({
+        where,
+        include: QUESTION_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+        ...paginationArgs(query),
+      }),
       this.prisma.productQuestion.count({ where }),
     ]);
     return paginate(questions.map(toQuestion), total, query);
   }
 
-  async createReview(productId: string, userId: string, input: ReviewCreateInput): Promise<{ status: ReviewStatus }> {
+  async createReview(
+    productId: string,
+    userId: string,
+    input: ReviewCreateInput,
+  ): Promise<{ status: ReviewStatus }> {
     await this.assertProduct(productId);
-    if (await this.prisma.review.findUnique({ where: { productId_userId: { productId, userId } } })) {
+    if (
+      await this.prisma.review.findUnique({ where: { productId_userId: { productId, userId } } })
+    ) {
       throw AppException.conflict('شما قبلاً برای این محصول نظر ثبت کرده‌اید.');
     }
     const purchased = await this.prisma.orderItem.count({
-      where: { productId, order: { userId, status: { in: ['paid', 'processing', 'packed', 'shipped', 'delivered'] } } },
+      where: {
+        productId,
+        order: { userId, status: { in: ['paid', 'processing', 'packed', 'shipped', 'delivered'] } },
+      },
     });
     await this.prisma.review.create({
       data: { ...input, productId, userId, isVerifiedBuyer: purchased > 0, status: 'pending' },
@@ -106,24 +128,42 @@ export class ReviewsService {
     return { status: 'pending' };
   }
 
-  async createQuestion(productId: string, userId: string, input: QuestionCreateInput): Promise<{ status: QuestionStatus }> {
+  async createQuestion(
+    productId: string,
+    userId: string,
+    input: QuestionCreateInput,
+  ): Promise<{ status: QuestionStatus }> {
     await this.assertProduct(productId);
     const recent = await this.prisma.productQuestion.count({
       where: { userId, createdAt: { gt: new Date(Date.now() - 3_600_000) } },
     });
-    if (recent >= 10) throw new AppException('RATE_LIMITED', 'تعداد پرسش‌های شما در یک ساعت گذشته زیاد است.');
-    await this.prisma.productQuestion.create({ data: { productId, userId, body: input.body, status: 'pending' } });
+    if (recent >= 10)
+      throw new AppException('RATE_LIMITED', 'تعداد پرسش‌های شما در یک ساعت گذشته زیاد است.');
+    await this.prisma.productQuestion.create({
+      data: { productId, userId, body: input.body, status: 'pending' },
+    });
     return { status: 'pending' };
   }
 
-  async adminReviews(query: ListQuery & { status?: ReviewStatus }): Promise<Paginated<AdminReviewView>> {
+  async adminReviews(
+    query: ListQuery & { status?: ReviewStatus },
+  ): Promise<Paginated<AdminReviewView>> {
     const where: Prisma.ReviewWhereInput = { status: query.status };
     const [reviews, total] = await Promise.all([
-      this.prisma.review.findMany({ where, include: REVIEW_INCLUDE, orderBy: { createdAt: 'desc' }, ...paginationArgs(query) }),
+      this.prisma.review.findMany({
+        where,
+        include: REVIEW_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+        ...paginationArgs(query),
+      }),
       this.prisma.review.count({ where }),
     ]);
     return paginate(
-      reviews.map((review) => ({ ...toReview(review), status: review.status, product: review.product })),
+      reviews.map((review) => ({
+        ...toReview(review),
+        status: review.status,
+        product: review.product,
+      })),
       total,
       query,
     );
@@ -146,20 +186,36 @@ export class ReviewsService {
         tx,
       );
       await this.outbox.record(tx, [
-        { type: 'product.changed', aggregateType: 'product', aggregateId: review.productId, payload: { productIds: [review.productId] } },
+        {
+          type: 'product.changed',
+          aggregateType: 'product',
+          aggregateId: review.productId,
+          payload: { productIds: [review.productId] },
+        },
       ]);
     });
     this.outbox.flush();
   }
 
-  async adminQuestions(query: ListQuery & { status?: QuestionStatus }): Promise<Paginated<AdminQuestionView>> {
+  async adminQuestions(
+    query: ListQuery & { status?: QuestionStatus },
+  ): Promise<Paginated<AdminQuestionView>> {
     const where: Prisma.ProductQuestionWhereInput = { status: query.status };
     const [questions, total] = await Promise.all([
-      this.prisma.productQuestion.findMany({ where, include: QUESTION_INCLUDE, orderBy: { createdAt: 'desc' }, ...paginationArgs(query) }),
+      this.prisma.productQuestion.findMany({
+        where,
+        include: QUESTION_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+        ...paginationArgs(query),
+      }),
       this.prisma.productQuestion.count({ where }),
     ]);
     return paginate(
-      questions.map((question) => ({ ...toQuestion(question), status: question.status, product: question.product })),
+      questions.map((question) => ({
+        ...toQuestion(question),
+        status: question.status,
+        product: question.product,
+      })),
       total,
       query,
     );
@@ -173,14 +229,22 @@ export class ReviewsService {
       data:
         input.status === 'rejected'
           ? { status: 'rejected' }
-          : { status: 'answered', answer: input.answer, answeredById: actorId, answeredAt: new Date() },
+          : {
+              status: 'answered',
+              answer: input.answer,
+              answeredById: actorId,
+              answeredAt: new Date(),
+            },
     });
     await this.audit.record({
       action: 'question.answer',
       entityType: 'question',
       entityId: id,
       before: { status: question.status, answer: question.answer },
-      after: { status: input.status, answer: input.status === 'rejected' ? question.answer : input.answer },
+      after: {
+        status: input.status,
+        answer: input.status === 'rejected' ? question.answer : input.answer,
+      },
     });
   }
 
@@ -197,7 +261,9 @@ export class ReviewsService {
   }
 
   private async assertProduct(productId: string): Promise<void> {
-    const exists = await this.prisma.product.count({ where: { id: productId, status: 'active', deletedAt: null } });
+    const exists = await this.prisma.product.count({
+      where: { id: productId, status: 'active', deletedAt: null },
+    });
     if (!exists) throw AppException.notFound('محصول یافت نشد.');
   }
 }

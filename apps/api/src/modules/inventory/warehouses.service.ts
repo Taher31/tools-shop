@@ -28,7 +28,9 @@ export class WarehousesService {
   ) {}
 
   async list(): Promise<WarehouseView[]> {
-    const warehouses = await this.prisma.warehouse.findMany({ orderBy: [{ priority: 'asc' }, { createdAt: 'asc' }] });
+    const warehouses = await this.prisma.warehouse.findMany({
+      orderBy: [{ priority: 'asc' }, { createdAt: 'asc' }],
+    });
     return warehouses.map(toView);
   }
 
@@ -37,10 +39,16 @@ export class WarehousesService {
       throw AppException.conflict('کد انبار تکراری است.', [{ path: 'code', message: 'تکراری' }]);
     }
     const warehouse = await this.prisma.$transaction(async (tx) => {
-      if (input.isDefault) await tx.warehouse.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
+      if (input.isDefault)
+        await tx.warehouse.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
       const created = await tx.warehouse.create({ data: input });
       await this.audit.record(
-        { action: 'warehouse.create', entityType: 'warehouse', entityId: created.id, summary: `ایجاد انبار ${created.name}` },
+        {
+          action: 'warehouse.create',
+          entityType: 'warehouse',
+          entityId: created.id,
+          summary: `ایجاد انبار ${created.name}`,
+        },
         tx,
       );
       return created;
@@ -51,13 +59,21 @@ export class WarehousesService {
   async update(id: string, input: WarehouseUpsertInput): Promise<WarehouseView> {
     const existing = await this.prisma.warehouse.findUnique({ where: { id } });
     if (!existing) throw AppException.notFound('انبار یافت نشد.');
-    if (input.code !== existing.code && (await this.prisma.warehouse.findUnique({ where: { code: input.code } }))) {
+    if (
+      input.code !== existing.code &&
+      (await this.prisma.warehouse.findUnique({ where: { code: input.code } }))
+    ) {
       throw AppException.conflict('کد انبار تکراری است.', [{ path: 'code', message: 'تکراری' }]);
     }
     if (!input.isActive && existing.isActive) {
-      const reserved = await this.prisma.inventoryLevel.aggregate({ where: { warehouseId: id }, _sum: { reserved: true } });
+      const reserved = await this.prisma.inventoryLevel.aggregate({
+        where: { warehouseId: id },
+        _sum: { reserved: true },
+      });
       if ((reserved._sum.reserved ?? 0) > 0) {
-        throw AppException.conflict('این انبار کالای رزروشده برای سفارش‌های در انتظار پرداخت دارد.');
+        throw AppException.conflict(
+          'این انبار کالای رزروشده برای سفارش‌های در انتظار پرداخت دارد.',
+        );
       }
     }
     const warehouse = await this.prisma.$transaction(async (tx) => {

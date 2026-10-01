@@ -30,14 +30,25 @@ function refreshSession(): Promise<boolean> {
   return refreshing;
 }
 
-async function request<T>(method: Method, path: string, options: RequestOptions = {}, retry = true): Promise<T> {
+async function request<T>(
+  method: Method,
+  path: string,
+  options: RequestOptions = {},
+  retry = true,
+): Promise<T> {
   const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const response = await fetch(`/api/v1${path}`, {
     method,
     credentials: 'same-origin',
     signal: options.signal,
-    headers: options.body === undefined || isForm ? undefined : { 'content-type': 'application/json' },
-    body: options.body === undefined ? undefined : isForm ? (options.body as FormData) : JSON.stringify(options.body),
+    headers:
+      options.body === undefined || isForm ? undefined : { 'content-type': 'application/json' },
+    body:
+      options.body === undefined
+        ? undefined
+        : isForm
+          ? (options.body as FormData)
+          : JSON.stringify(options.body),
   });
 
   if (response.status === 401 && retry && !path.startsWith('/auth/') && hasSessionHint()) {
@@ -59,10 +70,18 @@ export const api = {
   upload: <T>(path: string, form: FormData) => request<T>('POST', path, { body: form }),
 };
 
-export function toQueryString(params: Record<string, string | number | boolean | string[] | null | undefined>): string {
+export function toQueryString(
+  params: Record<string, string | number | boolean | string[] | null | undefined>,
+): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)) continue;
+    if (
+      value === undefined ||
+      value === null ||
+      value === '' ||
+      (Array.isArray(value) && value.length === 0)
+    )
+      continue;
     search.set(key, Array.isArray(value) ? value.join(',') : String(value));
   }
   const query = search.toString();

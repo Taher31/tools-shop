@@ -2,8 +2,26 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type AddressUpsertInput, addressUpsertSchema, type AddressView, IRAN_PROVINCE_NAMES } from '@toolshop/shared';
-import { Button, Checkbox, Dialog, DialogContent, DialogHeader, DialogTitle, Field, Input, Label, NativeSelect, Textarea, toast } from '@toolshop/ui';
+import {
+  type AddressUpsertInput,
+  addressUpsertSchema,
+  type AddressView,
+  IRAN_PROVINCE_NAMES,
+} from '@toolshop/shared';
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Field,
+  Input,
+  Label,
+  NativeSelect,
+  Textarea,
+  toast,
+} from '@toolshop/ui';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { api } from '@/lib/api/client';
@@ -40,7 +58,9 @@ export function AddressDialog({
   });
   const save = useMutation({
     mutationFn: (input: AddressUpsertInput) =>
-      address ? api.put<AddressView>(`/account/addresses/${address.id}`, input) : api.post<AddressView>('/account/addresses', input),
+      address
+        ? api.put<AddressView>(`/account/addresses/${address.id}`, input)
+        : api.post<AddressView>('/account/addresses', input),
     onSuccess: (saved) => {
       toast.success('آدرس ذخیره شد.');
       void queryClient.invalidateQueries({ queryKey: ['addresses'] });
@@ -61,16 +81,39 @@ export function AddressDialog({
         <form
           className="grid gap-3 sm:grid-cols-2"
           noValidate
-          onSubmit={form.handleSubmit((values) => save.mutate(values as unknown as AddressUpsertInput))}
+          onSubmit={form.handleSubmit((values) =>
+            save.mutate(values as unknown as AddressUpsertInput),
+          )}
         >
-          <Field label="عنوان آدرس" htmlFor="title" hint="مثلاً: کارگاه، منزل" error={errors.title?.message}>
+          <Field
+            label="عنوان آدرس"
+            htmlFor="title"
+            hint="مثلاً: کارگاه، منزل"
+            error={errors.title?.message}
+          >
             <Input id="title" {...form.register('title')} />
           </Field>
-          <Field label="نام و نام خانوادگی گیرنده" htmlFor="recipientName" required error={errors.recipientName?.message}>
+          <Field
+            label="نام و نام خانوادگی گیرنده"
+            htmlFor="recipientName"
+            required
+            error={errors.recipientName?.message}
+          >
             <Input id="recipientName" autoComplete="name" {...form.register('recipientName')} />
           </Field>
-          <Field label="موبایل گیرنده" htmlFor="recipientMobile" required error={errors.recipientMobile?.message}>
-            <Input id="recipientMobile" type="tel" dir="ltr" className="text-left" {...form.register('recipientMobile')} />
+          <Field
+            label="موبایل گیرنده"
+            htmlFor="recipientMobile"
+            required
+            error={errors.recipientMobile?.message}
+          >
+            <Input
+              id="recipientMobile"
+              type="tel"
+              dir="ltr"
+              className="text-left"
+              {...form.register('recipientMobile')}
+            />
           </Field>
           <Field label="استان" htmlFor="province" required error={errors.province?.message}>
             <NativeSelect id="province" {...form.register('province')}>
@@ -84,11 +127,34 @@ export function AddressDialog({
           <Field label="شهر" htmlFor="city" required error={errors.city?.message}>
             <Input id="city" autoComplete="address-level2" {...form.register('city')} />
           </Field>
-          <Field label="کد پستی" htmlFor="postalCode" required error={errors.postalCode?.message} hint="۱۰ رقم بدون خط تیره">
-            <Input id="postalCode" inputMode="numeric" dir="ltr" className="text-left" {...form.register('postalCode')} />
+          <Field
+            label="کد پستی"
+            htmlFor="postalCode"
+            required
+            error={errors.postalCode?.message}
+            hint="۱۰ رقم بدون خط تیره"
+          >
+            <Input
+              id="postalCode"
+              inputMode="numeric"
+              dir="ltr"
+              className="text-left"
+              {...form.register('postalCode')}
+            />
           </Field>
-          <Field label="نشانی کامل" htmlFor="addressLine" required error={errors.addressLine?.message} className="sm:col-span-2">
-            <Textarea id="addressLine" rows={2} autoComplete="street-address" {...form.register('addressLine')} />
+          <Field
+            label="نشانی کامل"
+            htmlFor="addressLine"
+            required
+            error={errors.addressLine?.message}
+            className="sm:col-span-2"
+          >
+            <Textarea
+              id="addressLine"
+              rows={2}
+              autoComplete="street-address"
+              {...form.register('addressLine')}
+            />
           </Field>
           <Field label="پلاک" htmlFor="plaque" error={errors.plaque?.message}>
             <Input id="plaque" {...form.register('plaque')} />
@@ -97,7 +163,11 @@ export function AddressDialog({
             <Input id="unit" {...form.register('unit')} />
           </Field>
           <div className="flex items-center gap-2 sm:col-span-2">
-            <Checkbox id="isDefault" checked={form.watch('isDefault') ?? false} onCheckedChange={(v) => form.setValue('isDefault', v === true)} />
+            <Checkbox
+              id="isDefault"
+              checked={form.watch('isDefault') ?? false}
+              onCheckedChange={(v) => form.setValue('isDefault', v === true)}
+            />
             <Label htmlFor="isDefault" className="font-normal">
               آدرس پیش‌فرض
             </Label>
@@ -116,7 +186,21 @@ export function AddressDialog({
   );
 }
 
-export function AddressText({ address }: { address: Pick<AddressView, 'province' | 'city' | 'addressLine' | 'plaque' | 'unit' | 'postalCode' | 'recipientName' | 'recipientMobile'> }) {
+export function AddressText({
+  address,
+}: {
+  address: Pick<
+    AddressView,
+    | 'province'
+    | 'city'
+    | 'addressLine'
+    | 'plaque'
+    | 'unit'
+    | 'postalCode'
+    | 'recipientName'
+    | 'recipientMobile'
+  >;
+}) {
   return (
     <div className="space-y-1 text-sm leading-7">
       <p>
@@ -124,8 +208,9 @@ export function AddressText({ address }: { address: Pick<AddressView, 'province'
         {address.plaque ? `، پلاک ${address.plaque}` : ''}
         {address.unit ? `، واحد ${address.unit}` : ''}
       </p>
-      <p className="text-xs text-muted-foreground">
-        گیرنده: {address.recipientName} · <span className="ltr">{address.recipientMobile}</span> · کد پستی: <span className="ltr">{address.postalCode}</span>
+      <p className="text-muted-foreground text-xs">
+        گیرنده: {address.recipientName} · <span className="ltr">{address.recipientMobile}</span> ·
+        کد پستی: <span className="ltr">{address.postalCode}</span>
       </p>
     </div>
   );

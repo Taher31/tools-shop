@@ -10,7 +10,11 @@ export function availableQuantity(levels: readonly LevelLike[]): number {
   return levels.reduce((sum, level) => sum + Math.max(0, level.onHand - level.reserved), 0);
 }
 
-export function stockTotals(levels: readonly LevelLike[]): { onHand: number; reserved: number; available: number } {
+export function stockTotals(levels: readonly LevelLike[]): {
+  onHand: number;
+  reserved: number;
+  available: number;
+} {
   return {
     onHand: levels.reduce((sum, level) => sum + level.onHand, 0),
     reserved: levels.reduce((sum, level) => sum + level.reserved, 0),

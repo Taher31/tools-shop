@@ -20,7 +20,8 @@ export class AddressesService {
 
   async create(userId: string, input: AddressUpsertInput): Promise<AddressView> {
     const count = await this.prisma.address.count({ where: { userId, deletedAt: null } });
-    if (count >= MAX_ADDRESSES) throw AppException.conflict(`حداکثر ${MAX_ADDRESSES} آدرس قابل ثبت است.`);
+    if (count >= MAX_ADDRESSES)
+      throw AppException.conflict(`حداکثر ${MAX_ADDRESSES} آدرس قابل ثبت است.`);
     const address = await this.prisma.$transaction(async (tx) => {
       const isDefault = input.isDefault || count === 0;
       if (isDefault) await tx.address.updateMany({ where: { userId }, data: { isDefault: false } });
@@ -32,7 +33,8 @@ export class AddressesService {
   async update(userId: string, id: string, input: AddressUpsertInput): Promise<AddressView> {
     await this.own(userId, id);
     const address = await this.prisma.$transaction(async (tx) => {
-      if (input.isDefault) await tx.address.updateMany({ where: { userId }, data: { isDefault: false } });
+      if (input.isDefault)
+        await tx.address.updateMany({ where: { userId }, data: { isDefault: false } });
       return tx.address.update({ where: { id }, data: input });
     });
     return toAddressView(address);
@@ -50,10 +52,17 @@ export class AddressesService {
   /** Soft delete: past orders keep their own address snapshot anyway. */
   async remove(userId: string, id: string): Promise<void> {
     const address = await this.own(userId, id);
-    await this.prisma.address.update({ where: { id }, data: { deletedAt: new Date(), isDefault: false } });
+    await this.prisma.address.update({
+      where: { id },
+      data: { deletedAt: new Date(), isDefault: false },
+    });
     if (address.isDefault) {
-      const next = await this.prisma.address.findFirst({ where: { userId, deletedAt: null }, orderBy: { createdAt: 'desc' } });
-      if (next) await this.prisma.address.update({ where: { id: next.id }, data: { isDefault: true } });
+      const next = await this.prisma.address.findFirst({
+        where: { userId, deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (next)
+        await this.prisma.address.update({ where: { id: next.id }, data: { isDefault: true } });
     }
   }
 

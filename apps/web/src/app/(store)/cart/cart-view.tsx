@@ -10,7 +10,13 @@ import { OrderSummary } from '@/components/cart/order-summary';
 import { PriceTag } from '@/components/product/price-tag';
 import { ProductImage } from '@/components/product/product-image';
 import { useAuth } from '@/hooks/use-auth';
-import { useApplyCoupon, useCart, useRemoveCartItem, useRemoveCoupon, useUpdateCartItem } from '@/hooks/use-cart';
+import {
+  useApplyCoupon,
+  useCart,
+  useRemoveCartItem,
+  useRemoveCoupon,
+  useUpdateCartItem,
+} from '@/hooks/use-cart';
 import { faNumber } from '@/lib/format';
 
 const ISSUE_LABELS = {
@@ -25,18 +31,33 @@ function Line({ line }: { line: CartLine }) {
   const busy = update.isPending || remove.isPending;
   return (
     <li className="flex gap-4 py-4">
-      <Link href={`/product/${line.productSlug}`} className="relative size-24 shrink-0 overflow-hidden rounded-md bg-muted">
+      <Link
+        href={`/product/${line.productSlug}`}
+        className="bg-muted relative size-24 shrink-0 overflow-hidden rounded-md"
+      >
         <ProductImage src={line.imageUrl} alt={line.title} sizes="96px" className="p-2" />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <Link href={`/product/${line.productSlug}`} className="line-clamp-2 text-sm font-semibold leading-6 hover:text-primary">
+        <Link
+          href={`/product/${line.productSlug}`}
+          className="hover:text-primary line-clamp-2 text-sm font-semibold leading-6"
+        >
           {line.title}
         </Link>
-        {line.variantTitle ? <p className="text-xs text-muted-foreground">{line.variantTitle}</p> : null}
-        {line.issue ? <p className="text-xs font-medium text-destructive">{ISSUE_LABELS[line.issue]}{line.issue === 'insufficient_stock' ? ` (موجودی: ${faNumber(line.availableQuantity)})` : ''}</p> : null}
+        {line.variantTitle ? (
+          <p className="text-muted-foreground text-xs">{line.variantTitle}</p>
+        ) : null}
+        {line.issue ? (
+          <p className="text-destructive text-xs font-medium">
+            {ISSUE_LABELS[line.issue]}
+            {line.issue === 'insufficient_stock'
+              ? ` (موجودی: ${faNumber(line.availableQuantity)})`
+              : ''}
+          </p>
+        ) : null}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex items-center rounded-md border border-input">
+            <div className="border-input flex items-center rounded-md border">
               <button
                 type="button"
                 className="flex size-9 items-center justify-center disabled:opacity-40"
@@ -52,18 +73,32 @@ function Line({ line }: { line: CartLine }) {
                 className="flex size-9 items-center justify-center disabled:opacity-40"
                 disabled={busy}
                 onClick={() =>
-                  line.quantity > 1 ? update.mutate({ itemId: line.id, quantity: line.quantity - 1 }) : remove.mutate(line.id)
+                  line.quantity > 1
+                    ? update.mutate({ itemId: line.id, quantity: line.quantity - 1 })
+                    : remove.mutate(line.id)
                 }
                 aria-label="کاهش تعداد"
               >
                 <Minus className="size-4" />
               </button>
             </div>
-            <Button variant="ghost" size="icon-sm" onClick={() => remove.mutate(line.id)} disabled={busy} aria-label="حذف">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => remove.mutate(line.id)}
+              disabled={busy}
+              aria-label="حذف"
+            >
               <Trash2 className="text-muted-foreground" />
             </Button>
           </div>
-          <PriceTag price={line.lineTotal} compareAtPrice={line.compareAtPrice ? line.compareAtPrice * line.quantity : null} discountPercent={line.compareAtPrice ? Math.round((1 - line.unitPrice / line.compareAtPrice) * 100) : 0} />
+          <PriceTag
+            price={line.lineTotal}
+            compareAtPrice={line.compareAtPrice ? line.compareAtPrice * line.quantity : null}
+            discountPercent={
+              line.compareAtPrice ? Math.round((1 - line.unitPrice / line.compareAtPrice) * 100) : 0
+            }
+          />
         </div>
       </div>
     </li>
@@ -76,11 +111,15 @@ function CouponForm({ applied }: { applied: { code: string; description: string 
   const remove = useRemoveCoupon();
   if (applied) {
     return (
-      <div className="flex items-center justify-between rounded-md bg-success-soft px-3 py-2 text-sm">
+      <div className="bg-success-soft flex items-center justify-between rounded-md px-3 py-2 text-sm">
         <span>
           کد <b className="ltr font-mono">{applied.code}</b> اعمال شد
         </span>
-        <button type="button" className="text-xs text-destructive hover:underline" onClick={() => remove.mutate(undefined)}>
+        <button
+          type="button"
+          className="text-destructive text-xs hover:underline"
+          onClick={() => remove.mutate(undefined)}
+        >
           حذف
         </button>
       </div>
@@ -94,7 +133,14 @@ function CouponForm({ applied }: { applied: { code: string; description: string 
         if (code.trim()) apply.mutate(code.trim(), { onSuccess: () => setCode('') });
       }}
     >
-      <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="کد تخفیف" dir="ltr" className="text-left uppercase" aria-label="کد تخفیف" />
+      <Input
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        placeholder="کد تخفیف"
+        dir="ltr"
+        className="text-left uppercase"
+        aria-label="کد تخفیف"
+      />
       <Button type="submit" variant="secondary" loading={apply.isPending}>
         اعمال
       </Button>
@@ -117,7 +163,7 @@ export function CartView() {
   }
   if (!cart || cart.lines.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card">
+      <div className="border-border bg-card rounded-lg border">
         <EmptyState
           icon={<ShoppingCart />}
           title="سبد خرید شما خالی است"
@@ -135,7 +181,7 @@ export function CartView() {
   const blocked = cart.lines.some((line) => line.issue !== null);
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[1fr_22rem]">
-      <div className="rounded-lg border border-border bg-card px-5">
+      <div className="border-border bg-card rounded-lg border px-5">
         {cart.warnings.length > 0 ? (
           <Alert variant="warning" className="mt-4">
             {cart.warnings.map((warning) => (
@@ -143,7 +189,7 @@ export function CartView() {
             ))}
           </Alert>
         ) : null}
-        <ul className="divide-y divide-border">
+        <ul className="divide-border divide-y">
           {cart.lines.map((line) => (
             <Line key={line.id} line={line} />
           ))}
@@ -161,10 +207,15 @@ export function CartView() {
           >
             {user ? 'ادامه فرایند خرید' : 'ورود و ادامه خرید'}
           </Button>
-          {blocked ? <p className="text-xs text-destructive">ابتدا اقلام دارای مشکل موجودی را اصلاح یا حذف کنید.</p> : null}
+          {blocked ? (
+            <p className="text-destructive text-xs">
+              ابتدا اقلام دارای مشکل موجودی را اصلاح یا حذف کنید.
+            </p>
+          ) : null}
         </OrderSummary>
-        <p className="px-1 text-xs leading-6 text-muted-foreground">
-          قیمت و موجودی کالاها هنگام ثبت سفارش دوباره بررسی می‌شود و کالاها تا پایان مهلت پرداخت برای شما رزرو می‌شوند.
+        <p className="text-muted-foreground px-1 text-xs leading-6">
+          قیمت و موجودی کالاها هنگام ثبت سفارش دوباره بررسی می‌شود و کالاها تا پایان مهلت پرداخت
+          برای شما رزرو می‌شوند.
         </p>
       </div>
     </div>

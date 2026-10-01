@@ -9,7 +9,10 @@ export const warehouseUpsertSchema = z.object({
     .toUpperCase()
     .regex(/^[A-Z0-9_-]{2,32}$/, 'کد انبار باید انگلیسی و بین ۲ تا ۳۲ کاراکتر باشد.'),
   name: textSchema({ max: 120 }),
-  province: z.enum(IRAN_PROVINCE_NAMES as [string, ...string[]]).nullish().transform((v) => v ?? null),
+  province: z
+    .enum(IRAN_PROVINCE_NAMES as [string, ...string[]])
+    .nullish()
+    .transform((v) => v ?? null),
   city: optionalTextSchema(80),
   address: optionalTextSchema(500),
   phone: optionalTextSchema(30),
@@ -37,10 +40,18 @@ export const stockOperationSchema = z
   })
   .superRefine((value, ctx) => {
     if ((value.type === 'purchase' || value.type === 'return') && value.quantity <= 0) {
-      ctx.addIssue({ code: 'custom', path: ['quantity'], message: 'تعداد باید بیشتر از صفر باشد.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['quantity'],
+        message: 'تعداد باید بیشتر از صفر باشد.',
+      });
     }
     if (value.type === 'adjustment' && value.quantity === 0) {
-      ctx.addIssue({ code: 'custom', path: ['quantity'], message: 'مقدار اصلاح نمی‌تواند صفر باشد.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['quantity'],
+        message: 'مقدار اصلاح نمی‌تواند صفر باشد.',
+      });
     }
     if (value.type === 'set' && value.quantity < 0) {
       ctx.addIssue({ code: 'custom', path: ['quantity'], message: 'موجودی نمی‌تواند منفی باشد.' });
@@ -75,7 +86,15 @@ export const stockMovementListQuerySchema = listQuerySchema.extend({
   variantId: idSchema.optional(),
   warehouseId: idSchema.optional(),
   type: z
-    .enum(['purchase', 'sale', 'return', 'adjustment', 'cancellation', 'transfer_in', 'transfer_out'])
+    .enum([
+      'purchase',
+      'sale',
+      'return',
+      'adjustment',
+      'cancellation',
+      'transfer_in',
+      'transfer_out',
+    ])
     .optional(),
 });
 export type StockMovementListQuery = z.infer<typeof stockMovementListQuerySchema>;

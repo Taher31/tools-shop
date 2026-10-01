@@ -3,12 +3,20 @@ import { Breadcrumbs } from '@/components/common/breadcrumbs';
 import { ProductListing } from '@/components/catalog/product-listing';
 import { parseListingParams, type RawSearchParams } from '@/lib/listing';
 
-export async function generateMetadata({ searchParams }: { searchParams: Promise<RawSearchParams> }): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<RawSearchParams>;
+}): Promise<Metadata> {
   const { q } = parseListingParams(await searchParams);
   return { title: q ? `جستجوی «${q}»` : 'جستجو', robots: { index: false, follow: true } };
 }
 
-export default async function SearchPage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<RawSearchParams>;
+}) {
   const state = parseListingParams(await searchParams);
   return (
     <div className="container-page py-6">

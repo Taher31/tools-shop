@@ -1,4 +1,11 @@
-import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  type ArgumentsHost,
+  Catch,
+  type ExceptionFilter,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ERROR_MESSAGES, type ApiErrorBody, type ErrorCode } from '@toolshop/shared';
 import { ZodError } from 'zod';
@@ -49,7 +56,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (status >= 500) {
       this.logger.error(
-        { err: exception, path: request.url, method: request.method, requestId: body.error.requestId },
+        {
+          err: exception,
+          path: request.url,
+          method: request.method,
+          requestId: body.error.requestId,
+        },
         'Unhandled error',
       );
     } else if (status !== 401 && status !== 404) {
@@ -92,14 +104,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private fromPrisma(error: PrismaLikeError): { status: number; body: ApiErrorBody } {
     switch (error.code) {
       case 'P2002': {
-        const target = Array.isArray(error.meta?.target) ? (error.meta.target as string[]).join(', ') : undefined;
+        const target = Array.isArray(error.meta?.target)
+          ? (error.meta.target as string[]).join(', ')
+          : undefined;
         return {
           status: HttpStatus.CONFLICT,
           body: {
             error: {
               code: 'CONFLICT',
               message: 'مقدار واردشده تکراری است.',
-              details: target ? [{ path: target, message: 'این مقدار قبلاً ثبت شده است.' }] : undefined,
+              details: target
+                ? [{ path: target, message: 'این مقدار قبلاً ثبت شده است.' }]
+                : undefined,
             },
           },
         };
@@ -110,7 +126,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
           body: { error: { code: 'CONFLICT', message: 'این مورد به داده‌های دیگری وابسته است.' } },
         };
       case 'P2025':
-        return { status: HttpStatus.NOT_FOUND, body: { error: { code: 'NOT_FOUND', message: ERROR_MESSAGES.NOT_FOUND } } };
+        return {
+          status: HttpStatus.NOT_FOUND,
+          body: { error: { code: 'NOT_FOUND', message: ERROR_MESSAGES.NOT_FOUND } },
+        };
       default:
         this.logger.error({ err: error }, 'Unhandled database error');
         return {

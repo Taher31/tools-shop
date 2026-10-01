@@ -29,7 +29,10 @@ export class AdminCouponsController {
 
   @Put(':id')
   @RequirePermissions('coupon.manage')
-  update(@UuidParam() id: string, @ZBody(couponUpsertSchema) input: CouponUpsertInput): Promise<CouponView> {
+  update(
+    @UuidParam() id: string,
+    @ZBody(couponUpsertSchema) input: CouponUpsertInput,
+  ): Promise<CouponView> {
     return this.coupons.update(id, input);
   }
 

@@ -138,13 +138,11 @@ describe('catalog management and search', () => {
     });
 
     it('keeps SKUs unique across the catalog', async () => {
-      const duplicate = await admin
-        .post(`${API}/admin/products`)
-        .send({
-          ...product,
-          title: 'محصول تکراری',
-          variants: [{ sku: 'VLT-VCD18-K2', price: 1_000_000 }],
-        });
+      const duplicate = await admin.post(`${API}/admin/products`).send({
+        ...product,
+        title: 'محصول تکراری',
+        variants: [{ sku: 'VLT-VCD18-K2', price: 1_000_000 }],
+      });
       expect(duplicate.status).toBe(400);
       expect((duplicate.body as ApiErrorBody).error.details?.[0]?.path).toBe('variants.0.sku');
     });

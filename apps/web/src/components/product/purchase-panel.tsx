@@ -3,7 +3,17 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ProductDetail, ProductVariantView } from '@toolshop/shared';
 import { Badge, Button, cn } from '@toolshop/ui';
-import { CircleCheck, GitCompareArrows, Heart, Minus, Plus, ShieldCheck, ShoppingCart, Truck, TriangleAlert } from 'lucide-react';
+import {
+  CircleCheck,
+  GitCompareArrows,
+  Heart,
+  Minus,
+  Plus,
+  ShieldCheck,
+  ShoppingCart,
+  Truck,
+  TriangleAlert,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useAddToCart } from '@/hooks/use-cart';
@@ -21,7 +31,9 @@ function Availability({ variant }: { variant: ProductVariantView }) {
     return (
       <Badge variant="warning">
         <TriangleAlert className="size-3.5" />
-        {variant.availableQuantity ? `تنها ${faNumber(variant.availableQuantity)} عدد در انبار` : 'موجودی محدود'}
+        {variant.availableQuantity
+          ? `تنها ${faNumber(variant.availableQuantity)} عدد در انبار`
+          : 'موجودی محدود'}
       </Badge>
     );
   }
@@ -43,7 +55,8 @@ export function PurchasePanel({ initial }: { initial: ProductDetail }) {
     initialData: initial,
     staleTime: 0,
   });
-  const firstAvailable = product.variants.find((v) => v.availability !== 'out_of_stock') ?? product.variants[0];
+  const firstAvailable =
+    product.variants.find((v) => v.availability !== 'out_of_stock') ?? product.variants[0];
   const [variantId, setVariantId] = useState(firstAvailable?.id);
   const [quantity, setQuantity] = useState(1);
   const variant = product.variants.find((v) => v.id === variantId) ?? firstAvailable;
@@ -59,11 +72,15 @@ export function PurchasePanel({ initial }: { initial: ProductDetail }) {
   const soldOut = variant.availability === 'out_of_stock';
 
   return (
-    <div className="flex flex-col gap-5 rounded-lg border border-border bg-card p-5">
+    <div className="border-border bg-card flex flex-col gap-5 rounded-lg border p-5">
       {product.variants.length > 1 ? (
         <div>
           <p className="mb-2 text-sm font-bold">{optionNames[0] ?? 'انتخاب نوع'}:</p>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={optionNames[0] ?? 'انتخاب نوع'}>
+          <div
+            className="flex flex-wrap gap-2"
+            role="radiogroup"
+            aria-label={optionNames[0] ?? 'انتخاب نوع'}
+          >
             {product.variants.map((option) => (
               <button
                 key={option.id}
@@ -76,8 +93,11 @@ export function PurchasePanel({ initial }: { initial: ProductDetail }) {
                 }}
                 className={cn(
                   'rounded-md border px-3 py-2 text-[13px] transition-colors',
-                  option.id === variant.id ? 'border-primary bg-primary/5 font-bold text-primary ring-1 ring-primary' : 'border-border hover:border-primary/60',
-                  option.availability === 'out_of_stock' && 'text-muted-foreground line-through decoration-muted-foreground/50',
+                  option.id === variant.id
+                    ? 'border-primary bg-primary/5 text-primary ring-primary font-bold ring-1'
+                    : 'border-border hover:border-primary/60',
+                  option.availability === 'out_of_stock' &&
+                    'text-muted-foreground decoration-muted-foreground/50 line-through',
                 )}
               >
                 {option.options.map((o) => o.value).join(' / ') || option.title || option.sku}
@@ -89,26 +109,31 @@ export function PurchasePanel({ initial }: { initial: ProductDetail }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Availability variant={variant} />
-        <span className="text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs">
           کد کالا: <span className="ltr font-mono">{variant.sku}</span>
         </span>
       </div>
 
-      <div className="flex items-end justify-between gap-4 border-t border-border pt-4">
-        <span className="text-sm text-muted-foreground">قیمت</span>
+      <div className="border-border flex items-end justify-between gap-4 border-t pt-4">
+        <span className="text-muted-foreground text-sm">قیمت</span>
         {soldOut ? (
-          <span className="text-lg font-bold text-muted-foreground">ناموجود</span>
+          <span className="text-muted-foreground text-lg font-bold">ناموجود</span>
         ) : (
-          <PriceTag price={variant.price} compareAtPrice={variant.compareAtPrice} discountPercent={variant.discountPercent} size="lg" />
+          <PriceTag
+            price={variant.price}
+            compareAtPrice={variant.compareAtPrice}
+            discountPercent={variant.discountPercent}
+            size="lg"
+          />
         )}
       </div>
 
       {!soldOut ? (
         <div className="flex gap-2">
-          <div className="flex shrink-0 items-center rounded-md border border-input">
+          <div className="border-input flex shrink-0 items-center rounded-md border">
             <button
               type="button"
-              className="flex h-11 w-9 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40"
+              className="text-muted-foreground hover:text-foreground flex h-11 w-9 items-center justify-center disabled:opacity-40"
               onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
               disabled={quantity >= maxQuantity}
               aria-label="افزایش تعداد"
@@ -120,7 +145,7 @@ export function PurchasePanel({ initial }: { initial: ProductDetail }) {
             </span>
             <button
               type="button"
-              className="flex h-11 w-9 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40"
+              className="text-muted-foreground hover:text-foreground flex h-11 w-9 items-center justify-center disabled:opacity-40"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               disabled={quantity <= 1}
               aria-label="کاهش تعداد"
@@ -139,36 +164,47 @@ export function PurchasePanel({ initial }: { initial: ProductDetail }) {
           </Button>
         </div>
       ) : (
-        <p className="rounded-md bg-muted px-3 py-2.5 text-sm text-muted-foreground">
+        <p className="bg-muted text-muted-foreground rounded-md px-3 py-2.5 text-sm">
           این کالا در حال حاضر موجود نیست. برای اطلاع از زمان تأمین با پشتیبانی تماس بگیرید.
         </p>
       )}
 
       {addToCart.isSuccess ? (
-        <Link href="/cart" className="text-center text-sm font-medium text-info hover:underline">
+        <Link href="/cart" className="text-info text-center text-sm font-medium hover:underline">
           مشاهده سبد خرید و ادامه خرید
         </Link>
       ) : null}
 
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="flex-1" onClick={() => wishlistToggle.toggle(product.id, !inWishlist)}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => wishlistToggle.toggle(product.id, !inWishlist)}
+        >
           <Heart className={cn(inWishlist && 'fill-destructive text-destructive')} />
           {inWishlist ? 'در علاقه‌مندی‌ها' : 'علاقه‌مندی'}
         </Button>
-        <Button variant="outline" size="sm" className="flex-1" onClick={() => compare.toggle(product.id)}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => compare.toggle(product.id)}
+        >
           <GitCompareArrows className={cn(compare.has(product.id) && 'text-info')} />
           {compare.has(product.id) ? 'در لیست مقایسه' : 'مقایسه'}
         </Button>
       </div>
 
-      <ul className="space-y-2 border-t border-border pt-4 text-[13px] text-muted-foreground">
+      <ul className="border-border text-muted-foreground space-y-2 border-t pt-4 text-[13px]">
         {product.warranty ? (
           <li className="flex items-start gap-2">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" /> {product.warranty}
+            <ShieldCheck className="text-success mt-0.5 size-4 shrink-0" /> {product.warranty}
           </li>
         ) : null}
         <li className="flex items-start gap-2">
-          <Truck className="mt-0.5 size-4 shrink-0 text-info" /> ارسال به سراسر کشور؛ تحویل سریع در تهران
+          <Truck className="text-info mt-0.5 size-4 shrink-0" /> ارسال به سراسر کشور؛ تحویل سریع در
+          تهران
         </li>
       </ul>
     </div>

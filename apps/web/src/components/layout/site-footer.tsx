@@ -27,22 +27,41 @@ const SOCIAL_LABELS: Record<string, string> = {
   linkedin: 'لینکدین',
 };
 
-export function SiteFooter({ settings, tree }: { settings: PublicSettings; tree: CategoryTreeNode[] }) {
+export function SiteFooter({
+  settings,
+  tree,
+}: {
+  settings: PublicSettings;
+  tree: CategoryTreeNode[];
+}) {
   const { store, legal } = settings;
-  const socials = Object.entries(store.socials).filter((entry): entry is [string, string] => Boolean(entry[1]));
-  const year = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric', timeZone: 'Asia/Tehran' }).format(new Date());
+  const socials = Object.entries(store.socials).filter((entry): entry is [string, string] =>
+    Boolean(entry[1]),
+  );
+  const year = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+    year: 'numeric',
+    timeZone: 'Asia/Tehran',
+  }).format(new Date());
 
   return (
-    <footer className="mt-16 bg-footer text-footer-foreground">
+    <footer className="bg-footer text-footer-foreground mt-16">
       <div className="border-b border-white/10">
         <div className="container-page grid gap-4 py-6 text-sm sm:grid-cols-3">
           {[
-            { icon: ShieldCheck, title: 'ضمانت اصالت کالا', text: 'تأمین مستقیم از نمایندگی‌های معتبر' },
-            { icon: Headphones, title: 'مشاوره فنی پیش از خرید', text: 'انتخاب ابزار مناسب کار شما' },
+            {
+              icon: ShieldCheck,
+              title: 'ضمانت اصالت کالا',
+              text: 'تأمین مستقیم از نمایندگی‌های معتبر',
+            },
+            {
+              icon: Headphones,
+              title: 'مشاوره فنی پیش از خرید',
+              text: 'انتخاب ابزار مناسب کار شما',
+            },
             { icon: MapPin, title: 'ارسال به سراسر کشور', text: 'پست، تیپاکس، باربری و پیک' },
           ].map((item) => (
             <div key={item.title} className="flex items-center gap-3">
-              <item.icon className="size-8 shrink-0 text-accent" strokeWidth={1.6} />
+              <item.icon className="text-accent size-8 shrink-0" strokeWidth={1.6} />
               <div>
                 <p className="font-bold text-white">{item.title}</p>
                 <p className="text-xs">{item.text}</p>
@@ -59,15 +78,18 @@ export function SiteFooter({ settings, tree }: { settings: PublicSettings; tree:
           <ul className="mt-5 space-y-2.5 text-sm">
             {store.supportPhone ? (
               <li className="flex items-center gap-2">
-                <Phone className="size-4 text-accent" />
-                <a href={`tel:${store.supportPhone.replace(/[^\d+]/g, '')}`} className="ltr hover:text-white">
+                <Phone className="text-accent size-4" />
+                <a
+                  href={`tel:${store.supportPhone.replace(/[^\d+]/g, '')}`}
+                  className="ltr hover:text-white"
+                >
                   {store.supportPhone}
                 </a>
               </li>
             ) : null}
             {store.supportEmail ? (
               <li className="flex items-center gap-2">
-                <Mail className="size-4 text-accent" />
+                <Mail className="text-accent size-4" />
                 <a href={`mailto:${store.supportEmail}`} className="hover:text-white">
                   {store.supportEmail}
                 </a>
@@ -75,7 +97,7 @@ export function SiteFooter({ settings, tree }: { settings: PublicSettings; tree:
             ) : null}
             {store.address ? (
               <li className="flex items-start gap-2">
-                <MapPin className="mt-1 size-4 shrink-0 text-accent" />
+                <MapPin className="text-accent mt-1 size-4 shrink-0" />
                 <span>{store.address}</span>
               </li>
             ) : null}
@@ -85,7 +107,10 @@ export function SiteFooter({ settings, tree }: { settings: PublicSettings; tree:
         <FooterColumn title="خدمات مشتریان" links={SERVICE_LINKS} className="lg:col-span-2" />
         <FooterColumn
           title="دسته‌بندی‌ها"
-          links={tree.map((category) => ({ href: `/category/${category.slug}`, label: category.name }))}
+          links={tree.map((category) => ({
+            href: `/category/${category.slug}`,
+            label: category.name,
+          }))}
           className="lg:col-span-2"
         />
         <FooterColumn title="فروشگاه" links={ABOUT_LINKS} className="lg:col-span-2" />
@@ -104,7 +129,12 @@ export function SiteFooter({ settings, tree }: { settings: PublicSettings; tree:
                     className="flex size-24 items-center justify-center rounded-md bg-white p-2"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={badge.imageUrl} alt={badge.title} referrerPolicy="origin" className="max-h-full max-w-full" />
+                    <img
+                      src={badge.imageUrl}
+                      alt={badge.title}
+                      referrerPolicy="origin"
+                      className="max-h-full max-w-full"
+                    />
                   </a>
                 ))
               : ['اینماد', 'ساماندهی'].map((label) => (
@@ -120,7 +150,13 @@ export function SiteFooter({ settings, tree }: { settings: PublicSettings; tree:
           {socials.length > 0 ? (
             <div className="mt-6 flex flex-wrap gap-2 text-xs">
               {socials.map(([key, url]) => (
-                <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="rounded-sm border border-white/20 px-2.5 py-1 hover:border-accent hover:text-white">
+                <a
+                  key={key}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:border-accent rounded-sm border border-white/20 px-2.5 py-1 hover:text-white"
+                >
                   {SOCIAL_LABELS[key] ?? key}
                 </a>
               ))}
@@ -136,7 +172,11 @@ export function SiteFooter({ settings, tree }: { settings: PublicSettings; tree:
           </p>
           {legal.companyName || legal.licenses ? (
             <p className="text-footer-foreground/70">
-              {[legal.companyName, legal.registrationNumber && `شماره ثبت ${legal.registrationNumber}`, legal.licenses]
+              {[
+                legal.companyName,
+                legal.registrationNumber && `شماره ثبت ${legal.registrationNumber}`,
+                legal.licenses,
+              ]
                 .filter(Boolean)
                 .join(' — ')}
             </p>

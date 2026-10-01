@@ -21,7 +21,14 @@ export const storeSettingsSchema = z.object({
       aparat: optionalUrl,
       linkedin: optionalUrl,
     })
-    .default({ instagram: null, telegram: null, eitaa: null, bale: null, aparat: null, linkedin: null }),
+    .default({
+      instagram: null,
+      telegram: null,
+      eitaa: null,
+      bale: null,
+      aparat: null,
+      linkedin: null,
+    }),
 });
 export type StoreSettings = z.infer<typeof storeSettingsSchema>;
 

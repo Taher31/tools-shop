@@ -10,7 +10,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@toolshop/ui';
-import { Heart, LayoutDashboard, LogOut, Package, ShoppingCart, User, UserRound } from 'lucide-react';
+import {
+  Heart,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  ShoppingCart,
+  User,
+  UserRound,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, useLogout } from '@/hooks/use-auth';
@@ -77,17 +85,32 @@ export function HeaderActions() {
         </Button>
       )}
 
-      <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex" aria-label="علاقه‌مندی‌ها">
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
+        className="hidden sm:inline-flex"
+        aria-label="علاقه‌مندی‌ها"
+      >
         <Link href="/wishlist">
           <Heart className="size-5" />
         </Link>
       </Button>
 
-      <Button asChild variant="ghost" size="icon" className="relative" aria-label={`سبد خرید، ${count} کالا`}>
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
+        className="relative"
+        aria-label={`سبد خرید، ${count} کالا`}
+      >
         <Link href="/cart">
           <ShoppingCart className="size-5" />
           {count > 0 ? (
-            <Badge variant="accent" className="absolute -top-1 -end-1 min-w-5 justify-center rounded-full px-1 text-[11px] leading-4">
+            <Badge
+              variant="accent"
+              className="absolute -end-1 -top-1 min-w-5 justify-center rounded-full px-1 text-[11px] leading-4"
+            >
               {faNumber(count)}
             </Badge>
           ) : null}

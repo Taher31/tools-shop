@@ -9,10 +9,17 @@ import { errorMessage } from '@/lib/api/errors';
 export const CART_QUERY_KEY = ['cart'] as const;
 
 export function useCart() {
-  return useQuery({ queryKey: CART_QUERY_KEY, queryFn: () => api.get<CartView>('/cart'), staleTime: 10_000 });
+  return useQuery({
+    queryKey: CART_QUERY_KEY,
+    queryFn: () => api.get<CartView>('/cart'),
+    staleTime: 10_000,
+  });
 }
 
-function useCartMutation<TInput>(request: (input: TInput) => Promise<CartView>, successMessage?: string) {
+function useCartMutation<TInput>(
+  request: (input: TInput) => Promise<CartView>,
+  successMessage?: string,
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: request,
@@ -38,11 +45,17 @@ export function useUpdateCartItem() {
 }
 
 export function useRemoveCartItem() {
-  return useCartMutation((itemId: string) => api.delete<CartView>(`/cart/items/${itemId}`), 'از سبد خرید حذف شد.');
+  return useCartMutation(
+    (itemId: string) => api.delete<CartView>(`/cart/items/${itemId}`),
+    'از سبد خرید حذف شد.',
+  );
 }
 
 export function useApplyCoupon() {
-  return useCartMutation((code: string) => api.post<CartView>('/cart/coupon', { code }), 'کد تخفیف اعمال شد.');
+  return useCartMutation(
+    (code: string) => api.post<CartView>('/cart/coupon', { code }),
+    'کد تخفیف اعمال شد.',
+  );
 }
 
 export function useRemoveCoupon() {

@@ -58,7 +58,10 @@ export class ContentService {
 
   faq(): Promise<FaqItemView[]> {
     return this.cache.wrap(FAQ_KEY, 300, async () => {
-      const items = await this.prisma.faqItem.findMany({ where: { isPublished: true }, orderBy: { sortOrder: 'asc' } });
+      const items = await this.prisma.faqItem.findMany({
+        where: { isPublished: true },
+        orderBy: { sortOrder: 'asc' },
+      });
       return items.map(toFaq);
     });
   }
@@ -75,13 +78,22 @@ export class ContentService {
       update: { ...input, body },
       create: { ...input, body, slug },
     });
-    await this.audit.record({ action: 'content.page', entityType: 'page', entityId: slug, summary: `ویرایش صفحه ${input.title}` });
+    await this.audit.record({
+      action: 'content.page',
+      entityType: 'page',
+      entityId: slug,
+      summary: `ویرایش صفحه ${input.title}`,
+    });
     return toPage(page);
   }
 
   async adminFaq(): Promise<(FaqItemView & { sortOrder: number; isPublished: boolean })[]> {
     const items = await this.prisma.faqItem.findMany({ orderBy: { sortOrder: 'asc' } });
-    return items.map((item) => ({ ...toFaq(item), sortOrder: item.sortOrder, isPublished: item.isPublished }));
+    return items.map((item) => ({
+      ...toFaq(item),
+      sortOrder: item.sortOrder,
+      isPublished: item.isPublished,
+    }));
   }
 
   async createFaq(input: FaqInput): Promise<FaqItemView> {

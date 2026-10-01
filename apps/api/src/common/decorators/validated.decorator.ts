@@ -20,7 +20,8 @@ export function isUuid(value: string): boolean {
 export const ZBody = (schema: z.ZodType): ParameterDecorator => Body(new ZodValidationPipe(schema));
 
 /** `@ZQuery(schema) query: z.output<typeof schema>` */
-export const ZQuery = (schema: z.ZodType): ParameterDecorator => Query(new ZodValidationPipe(schema));
+export const ZQuery = (schema: z.ZodType): ParameterDecorator =>
+  Query(new ZodValidationPipe(schema));
 
 /** UUID route parameter; malformed ids become a 404 instead of a database error. */
 export const UuidParam = (name = 'id'): ParameterDecorator => Param(name, new UuidPipe());

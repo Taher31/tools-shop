@@ -59,7 +59,7 @@ export function SalesChart({ data }: { data: Point[] }) {
       </div>
       {asTable ? (
         <table className="w-full text-sm">
-          <thead className="text-xs text-muted-foreground">
+          <thead className="text-muted-foreground text-xs">
             <tr>
               <th className="py-2 text-start font-medium">تاریخ</th>
               <th className="py-2 text-start font-medium">سفارش</th>
@@ -68,7 +68,7 @@ export function SalesChart({ data }: { data: Point[] }) {
           </thead>
           <tbody>
             {data.map((d) => (
-              <tr key={d.date} className="border-t border-border">
+              <tr key={d.date} className="border-border border-t">
                 <td className="py-1.5">{date(d.date)}</td>
                 <td className="py-1.5">{faNumber(d.orders)}</td>
                 <td className="py-1.5">{price(d.total)}</td>
@@ -78,11 +78,29 @@ export function SalesChart({ data }: { data: Point[] }) {
         </table>
       ) : (
         <div className="relative">
-          <svg viewBox={`0 0 ${width} ${HEIGHT}`} className="h-auto w-full" role="img" aria-label="نمودار فروش روزانه ۱۴ روز اخیر">
+          <svg
+            viewBox={`0 0 ${width} ${HEIGHT}`}
+            className="h-auto w-full"
+            role="img"
+            aria-label="نمودار فروش روزانه ۱۴ روز اخیر"
+          >
             {ticks.map((tick) => (
               <g key={tick}>
-                <line x1={PAD.start} x2={width - PAD.end} y1={y(tick)} y2={y(tick)} stroke="var(--chart-grid)" strokeWidth={1} />
-                <text x={PAD.start - 8} y={y(tick)} textAnchor="end" dominantBaseline="middle" className="fill-muted-foreground text-[11px]">
+                <line
+                  x1={PAD.start}
+                  x2={width - PAD.end}
+                  y1={y(tick)}
+                  y2={y(tick)}
+                  stroke="var(--chart-grid)"
+                  strokeWidth={1}
+                />
+                <text
+                  x={PAD.start - 8}
+                  y={y(tick)}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  className="fill-muted-foreground text-[11px]"
+                >
                   {compact(tick)}
                 </text>
               </g>
@@ -95,21 +113,42 @@ export function SalesChart({ data }: { data: Point[] }) {
               const x0 = cx - barWidth / 2;
               const x1 = cx + barWidth / 2;
               const base = PAD.top + plotHeight;
-              const path = h > 0
-                ? `M${x0},${base} V${barTop + r} Q${x0},${barTop} ${x0 + r},${barTop} H${x1 - r} Q${x1},${barTop} ${x1},${barTop + r} V${base} Z`
-                : '';
+              const path =
+                h > 0
+                  ? `M${x0},${base} V${barTop + r} Q${x0},${barTop} ${x0 + r},${barTop} H${x1 - r} Q${x1},${barTop} ${x1},${barTop + r} V${base} Z`
+                  : '';
               const showLabel = index === maxIndex && d.total > 0;
               return (
                 <g key={d.date}>
-                  {path ? <path d={path} fill="var(--chart-1)" opacity={hover === null || hover === index ? 1 : 0.55} /> : null}
+                  {path ? (
+                    <path
+                      d={path}
+                      fill="var(--chart-1)"
+                      opacity={hover === null || hover === index ? 1 : 0.55}
+                    />
+                  ) : null}
                   {showLabel ? (
-                    <text x={cx} y={barTop - 6} textAnchor="middle" className="fill-foreground text-[11px] font-semibold">
+                    <text
+                      x={cx}
+                      y={barTop - 6}
+                      textAnchor="middle"
+                      className="fill-foreground text-[11px] font-semibold"
+                    >
                       {compact(d.total)}
                     </text>
                   ) : null}
                   {index % 2 === 0 || data.length <= 7 ? (
-                    <text x={cx} y={HEIGHT - 8} textAnchor="middle" className="fill-muted-foreground text-[10px]">
-                      {new Intl.DateTimeFormat('fa-IR', { day: 'numeric', month: 'short', timeZone: 'Asia/Tehran' }).format(new Date(d.date))}
+                    <text
+                      x={cx}
+                      y={HEIGHT - 8}
+                      textAnchor="middle"
+                      className="fill-muted-foreground text-[10px]"
+                    >
+                      {new Intl.DateTimeFormat('fa-IR', {
+                        day: 'numeric',
+                        month: 'short',
+                        timeZone: 'Asia/Tehran',
+                      }).format(new Date(d.date))}
                     </text>
                   ) : null}
                   <rect
@@ -129,19 +168,30 @@ export function SalesChart({ data }: { data: Point[] }) {
                 </g>
               );
             })}
-            <line x1={PAD.start} x2={width - PAD.end} y1={PAD.top + plotHeight} y2={PAD.top + plotHeight} stroke="var(--border)" strokeWidth={1} />
+            <line
+              x1={PAD.start}
+              x2={width - PAD.end}
+              y1={PAD.top + plotHeight}
+              y2={PAD.top + plotHeight}
+              stroke="var(--border)"
+              strokeWidth={1}
+            />
           </svg>
           {hover !== null && data[hover] ? (
             <div
-              className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 rounded-md border border-border bg-popover px-3 py-2 text-xs shadow-lg"
+              className="border-border bg-popover pointer-events-none absolute top-0 z-10 -translate-x-1/2 rounded-md border px-3 py-2 text-xs shadow-lg"
               style={{ left: `${(xCenter(hover) / width) * 100}%` }}
             >
               <p className="font-bold">{date(data[hover].date)}</p>
               <p className="text-muted-foreground">
-                فروش: <span className="font-semibold text-foreground">{price(data[hover].total)}</span>
+                فروش:{' '}
+                <span className="text-foreground font-semibold">{price(data[hover].total)}</span>
               </p>
               <p className="text-muted-foreground">
-                سفارش: <span className="font-semibold text-foreground">{faNumber(data[hover].orders)}</span>
+                سفارش:{' '}
+                <span className="text-foreground font-semibold">
+                  {faNumber(data[hover].orders)}
+                </span>
               </p>
             </div>
           ) : null}

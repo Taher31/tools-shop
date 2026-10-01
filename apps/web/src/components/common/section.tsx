@@ -17,12 +17,15 @@ export function Section({
 }) {
   return (
     <section className={className}>
-      <div className="mb-4 flex items-center justify-between gap-4 border-b border-border pb-3">
-        <h2 className="relative ps-3 text-lg font-extrabold before:absolute before:inset-y-1 before:start-0 before:w-1 before:rounded-full before:bg-accent">
+      <div className="border-border mb-4 flex items-center justify-between gap-4 border-b pb-3">
+        <h2 className="before:bg-accent relative ps-3 text-lg font-extrabold before:absolute before:inset-y-1 before:start-0 before:w-1 before:rounded-full">
           {title}
         </h2>
         {href ? (
-          <Link href={href} className="flex items-center gap-0.5 text-sm font-medium text-info hover:underline">
+          <Link
+            href={href}
+            className="text-info flex items-center gap-0.5 text-sm font-medium hover:underline"
+          >
             {linkLabel}
             <ChevronLeft className="size-4" />
           </Link>

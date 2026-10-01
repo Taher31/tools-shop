@@ -14,7 +14,8 @@ export interface ListingState {
   page: number;
 }
 
-const first = (value: string | string[] | undefined): string | undefined => (Array.isArray(value) ? value[0] : value);
+const first = (value: string | string[] | undefined): string | undefined =>
+  Array.isArray(value) ? value[0] : value;
 const list = (value: string | string[] | undefined): string[] =>
   (Array.isArray(value) ? value : value ? [value] : [])
     .flatMap((v) => v.split(','))

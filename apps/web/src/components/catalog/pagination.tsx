@@ -12,19 +12,33 @@ function pages(current: number, total: number): (number | 'gap')[] {
   return result;
 }
 
-export function Pagination({ page, totalPages, hrefFor }: { page: number; totalPages: number; hrefFor: (page: number) => string }) {
+export function Pagination({
+  page,
+  totalPages,
+  hrefFor,
+}: {
+  page: number;
+  totalPages: number;
+  hrefFor: (page: number) => string;
+}) {
   if (totalPages <= 1) return null;
-  const item = 'flex h-9 min-w-9 items-center justify-center rounded-md border border-border bg-card px-2 text-sm';
+  const item =
+    'flex h-9 min-w-9 items-center justify-center rounded-md border border-border bg-card px-2 text-sm';
   return (
     <nav aria-label="صفحه‌بندی" className="mt-8 flex items-center justify-center gap-1.5">
       {page > 1 ? (
-        <Link href={hrefFor(page - 1)} className={cn(item, 'hover:border-primary')} aria-label="صفحه قبل" rel="prev">
+        <Link
+          href={hrefFor(page - 1)}
+          className={cn(item, 'hover:border-primary')}
+          aria-label="صفحه قبل"
+          rel="prev"
+        >
           <ChevronRight className="size-4" />
         </Link>
       ) : null}
       {pages(page, totalPages).map((entry, index) =>
         entry === 'gap' ? (
-          <span key={`gap-${index}`} className="px-1 text-muted-foreground">
+          <span key={`gap-${index}`} className="text-muted-foreground px-1">
             …
           </span>
         ) : (
@@ -32,14 +46,24 @@ export function Pagination({ page, totalPages, hrefFor }: { page: number; totalP
             key={entry}
             href={hrefFor(entry)}
             aria-current={entry === page ? 'page' : undefined}
-            className={cn(item, entry === page ? 'border-primary bg-primary text-primary-foreground' : 'hover:border-primary')}
+            className={cn(
+              item,
+              entry === page
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'hover:border-primary',
+            )}
           >
             {faNumber(entry)}
           </Link>
         ),
       )}
       {page < totalPages ? (
-        <Link href={hrefFor(page + 1)} className={cn(item, 'hover:border-primary')} aria-label="صفحه بعد" rel="next">
+        <Link
+          href={hrefFor(page + 1)}
+          className={cn(item, 'hover:border-primary')}
+          aria-label="صفحه بعد"
+          rel="next"
+        >
           <ChevronLeft className="size-4" />
         </Link>
       ) : null}

@@ -74,10 +74,12 @@ export class SearchService {
       .slice(0, 4)
       .map((c) => ({ name: c.name, slug: c.slug }));
     try {
-      const response = await this.meili.index<ProductSearchDocument>(this.indexService.indexUid).search(q, {
-        limit: 6,
-        attributesToRetrieve: ['id', 'slug', 'title', 'imageUrl', 'price', 'inStock'],
-      });
+      const response = await this.meili
+        .index<ProductSearchDocument>(this.indexService.indexUid)
+        .search(q, {
+          limit: 6,
+          attributesToRetrieve: ['id', 'slug', 'title', 'imageUrl', 'price', 'inStock'],
+        });
       return {
         products: response.hits.map((hit) => ({
           id: hit.id,
@@ -120,7 +122,9 @@ export class SearchService {
     const combine = (exclude?: { brand?: boolean; attribute?: string }): string[] => [
       ...groups.base,
       ...(groups.brand && !exclude?.brand ? [groups.brand] : []),
-      ...[...groups.attributes.entries()].filter(([code]) => code !== exclude?.attribute).map(([, filter]) => filter),
+      ...[...groups.attributes.entries()]
+        .filter(([code]) => code !== exclude?.attribute)
+        .map(([, filter]) => filter),
     ];
 
     const queries: MultiSearchQuery[] = [
@@ -136,13 +140,29 @@ export class SearchService {
     ];
     // Disjunctive faceting: each selected group is counted without its own filter so
     // the other options of that group stay visible.
-    if (groups.brand) queries.push({ indexUid, q, filter: combine({ brand: true }), hitsPerPage: 0, facets: ['brandSlug'] });
+    if (groups.brand)
+      queries.push({
+        indexUid,
+        q,
+        filter: combine({ brand: true }),
+        hitsPerPage: 0,
+        facets: ['brandSlug'],
+      });
     const attributeCodes = [...groups.attributes.keys()];
     for (const code of attributeCodes) {
-      queries.push({ indexUid, q, filter: combine({ attribute: code }), hitsPerPage: 0, facets: ['facets'] });
+      queries.push({
+        indexUid,
+        q,
+        filter: combine({ attribute: code }),
+        hitsPerPage: 0,
+        facets: ['facets'],
+      });
     }
 
-    const { results } = await this.meili.multiSearch<{ queries: MultiSearchQuery[] }, ProductSearchDocument>({ queries });
+    const { results } = await this.meili.multiSearch<
+      { queries: MultiSearchQuery[] },
+      ProductSearchDocument
+    >({ queries });
     const [main, ...extra] = results as unknown as (SearchResponse<ProductSearchDocument> & {
       totalHits?: number;
       totalPages?: number;
@@ -151,7 +171,8 @@ export class SearchService {
 
     const distribution: FacetDistribution = { ...(main.facetDistribution ?? {}) };
     let cursor = 0;
-    if (groups.brand) distribution['brandSlug'] = extra[cursor++]?.facetDistribution?.['brandSlug'] ?? {};
+    if (groups.brand)
+      distribution['brandSlug'] = extra[cursor++]?.facetDistribution?.['brandSlug'] ?? {};
     const attributeDistributions = new Map<string, Record<string, number>>();
     for (const code of attributeCodes) {
       attributeDistributions.set(code, extra[cursor++]?.facetDistribution?.['facets'] ?? {});
@@ -170,13 +191,22 @@ export class SearchService {
       facets: {
         brands: this.brandFacet(distribution['brandSlug'] ?? {}, taxonomy),
         categories: this.categoryFacet(distribution['categoryIds'] ?? {}, taxonomy, categoryId),
-        attributes: this.attributeFacets(distribution['facets'] ?? {}, attributeDistributions, taxonomy, categoryId),
+        attributes: this.attributeFacets(
+          distribution['facets'] ?? {},
+          attributeDistributions,
+          taxonomy,
+          categoryId,
+        ),
         price: priceStats ? { min: priceStats.min, max: priceStats.max } : null,
       },
     };
   }
 
-  private filters(query: ProductSearchQuery, taxonomy: Taxonomy, categoryId: string | undefined): FilterGroups {
+  private filters(
+    query: ProductSearchQuery,
+    taxonomy: Taxonomy,
+    categoryId: string | undefined,
+  ): FilterGroups {
     const base: string[] = [];
     if (categoryId) base.push(`categoryIds = ${quote(categoryId)}`);
     if (query.minPrice !== undefined) base.push(`price >= ${query.minPrice}`);
@@ -188,7 +218,10 @@ export class SearchService {
     const attributes = new Map<string, string>();
     for (const [code, values] of Object.entries(query.attributes)) {
       if (!taxonomy.attributesByCode.has(code) || values.length === 0) continue;
-      attributes.set(code, `facets IN [${values.map((value) => quote(`${code}:${value}`)).join(', ')}]`);
+      attributes.set(
+        code,
+        `facets IN [${values.map((value) => quote(`${code}:${value}`)).join(', ')}]`,
+      );
     }
     return {
       base,
@@ -227,7 +260,11 @@ export class SearchService {
   }
 
   /** Counts for the direct children of the current category (or the root categories). */
-  private categoryFacet(counts: Record<string, number>, taxonomy: Taxonomy, categoryId: string | undefined): FacetValue[] {
+  private categoryFacet(
+    counts: Record<string, number>,
+    taxonomy: Taxonomy,
+    categoryId: string | undefined,
+  ): FacetValue[] {
     return taxonomy
       .children(categoryId ?? null, true)
       .map((child) => ({ value: child.slug, label: child.name, count: counts[child.id] ?? 0 }))
@@ -241,7 +278,10 @@ export class SearchService {
     categoryId: string | undefined,
   ): AttributeFacet[] {
     const attributes: TaxonomyAttribute[] = categoryId
-      ? taxonomy.effectiveAttributes(categoryId).filter((e) => e.isFilterable).map((e) => e.attribute)
+      ? taxonomy
+          .effectiveAttributes(categoryId)
+          .filter((e) => e.isFilterable)
+          .map((e) => e.attribute)
       : taxonomy.snapshot.attributes.filter((a) => a.isFilterable);
 
     return attributes.flatMap((attribute) => {
@@ -280,7 +320,10 @@ export class SearchService {
         ...(query.maxPrice !== undefined ? { lte: BigInt(query.maxPrice) } : {}),
       };
     }
-    for (const token of normalizeForSearch(query.q ?? '').split(' ').filter((t) => t.length > 0).slice(0, 8)) {
+    for (const token of normalizeForSearch(query.q ?? '')
+      .split(' ')
+      .filter((t) => t.length > 0)
+      .slice(0, 8)) {
       const variants = [...new Set([token, toPersianDigits(token), toEnglishDigits(token)])];
       and.push({
         OR: variants.flatMap((variant) => [
@@ -320,7 +363,10 @@ export class SearchService {
     };
   }
 
-  private empty(query: ProductSearchQuery, engine: ProductSearchResult['engine']): ProductSearchResult {
+  private empty(
+    query: ProductSearchQuery,
+    engine: ProductSearchResult['engine'],
+  ): ProductSearchResult {
     return {
       items: [],
       total: 0,

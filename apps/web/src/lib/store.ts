@@ -12,16 +12,33 @@ const FALLBACK_SETTINGS: PublicSettings = {
     supportEmail: null,
     address: null,
     workingHours: null,
-    socials: { instagram: null, telegram: null, eitaa: null, bale: null, aparat: null, linkedin: null },
+    socials: {
+      instagram: null,
+      telegram: null,
+      eitaa: null,
+      bale: null,
+      aparat: null,
+      linkedin: null,
+    },
   },
-  legal: { companyName: null, registrationNumber: null, nationalId: null, economicCode: null, licenses: null, trustBadges: [] },
+  legal: {
+    companyName: null,
+    registrationNumber: null,
+    nationalId: null,
+    economicCode: null,
+    licenses: null,
+    trustBadges: [],
+  },
   commerce: { displayCurrency: 'IRT', pricesIncludeTax: true, taxRatePercent: 10 },
 };
 
 /** Store identity from Admin → Settings (cached; falls back gracefully if the API is down). */
 export const getSettings = cache(async (): Promise<PublicSettings> => {
   try {
-    return await serverApi<PublicSettings>('/settings/public', { revalidate: 300, tags: ['settings'] });
+    return await serverApi<PublicSettings>('/settings/public', {
+      revalidate: 300,
+      tags: ['settings'],
+    });
   } catch {
     return FALLBACK_SETTINGS;
   }
@@ -29,7 +46,10 @@ export const getSettings = cache(async (): Promise<PublicSettings> => {
 
 export const getCategoryTree = cache(async (): Promise<CategoryTreeNode[]> => {
   try {
-    return await serverApi<CategoryTreeNode[]>('/categories', { revalidate: 300, tags: ['categories'] });
+    return await serverApi<CategoryTreeNode[]>('/categories', {
+      revalidate: 300,
+      tags: ['categories'],
+    });
   } catch {
     return [];
   }

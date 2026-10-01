@@ -74,7 +74,10 @@ export const attributeUpsertSchema = z
     code: z
       .string()
       .trim()
-      .regex(ATTRIBUTE_CODE_PATTERN, 'کد ویژگی باید انگلیسی، با حروف کوچک و زیرخط باشد (مثال: chuck_size).'),
+      .regex(
+        ATTRIBUTE_CODE_PATTERN,
+        'کد ویژگی باید انگلیسی، با حروف کوچک و زیرخط باشد (مثال: chuck_size).',
+      ),
     name: textSchema({ max: 120 }),
     type: z.enum(ATTRIBUTE_TYPES),
     unit: optionalTextSchema(30),
@@ -89,11 +92,19 @@ export const attributeUpsertSchema = z
   .superRefine((value, ctx) => {
     const needsOptions = value.type === 'select' || value.type === 'multiselect';
     if (needsOptions && value.options.length === 0) {
-      ctx.addIssue({ code: 'custom', path: ['options'], message: 'برای ویژگی انتخابی حداقل یک گزینه لازم است.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['options'],
+        message: 'برای ویژگی انتخابی حداقل یک گزینه لازم است.',
+      });
     }
     const values = value.options.map((option) => option.value);
     if (new Set(values).size !== values.length) {
-      ctx.addIssue({ code: 'custom', path: ['options'], message: 'مقدار گزینه‌ها نباید تکراری باشد.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['options'],
+        message: 'مقدار گزینه‌ها نباید تکراری باشد.',
+      });
     }
   });
 export type AttributeUpsertInput = z.infer<typeof attributeUpsertSchema>;
@@ -124,7 +135,10 @@ export const productVariantInputSchema = z
       .string()
       .trim()
       .toUpperCase()
-      .regex(SKU_PATTERN, 'SKU باید انگلیسی باشد و فقط شامل حروف، اعداد، نقطه، خط تیره و زیرخط باشد.'),
+      .regex(
+        SKU_PATTERN,
+        'SKU باید انگلیسی باشد و فقط شامل حروف، اعداد، نقطه، خط تیره و زیرخط باشد.',
+      ),
     barcode: z
       .string()
       .trim()
@@ -161,12 +175,20 @@ export const productUpsertSchema = z
     model: optionalTextSchema(120),
     manufacturer: optionalTextSchema(120),
     countryOfOrigin: optionalTextSchema(80),
-    usageType: z.enum(USAGE_TYPES).nullish().transform((value) => value ?? null),
+    usageType: z
+      .enum(USAGE_TYPES)
+      .nullish()
+      .transform((value) => value ?? null),
     warranty: optionalTextSchema(200),
     shortDescription: optionalTextSchema(600),
-    description: longTextSchema(50000).nullish().transform((value) => value || null),
+    description: longTextSchema(50000)
+      .nullish()
+      .transform((value) => value || null),
     videoUrl: urlSchema.nullish().or(z.literal('').transform(() => null)),
-    tags: z.array(textSchema({ max: 40 })).max(30).default([]),
+    tags: z
+      .array(textSchema({ max: 40 }))
+      .max(30)
+      .default([]),
     images: z.array(productImageInputSchema).max(20).default([]),
     attributes: z.array(attributeValueInputSchema).max(100).default([]),
     variants: z.array(productVariantInputSchema).min(1, 'حداقل یک تنوع (SKU) لازم است.').max(100),
@@ -179,11 +201,19 @@ export const productUpsertSchema = z
   .superRefine((value, ctx) => {
     const skus = value.variants.map((variant) => variant.sku);
     if (new Set(skus).size !== skus.length) {
-      ctx.addIssue({ code: 'custom', path: ['variants'], message: 'SKU تنوع‌ها نباید تکراری باشد.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['variants'],
+        message: 'SKU تنوع‌ها نباید تکراری باشد.',
+      });
     }
     const attributeIds = value.attributes.map((attribute) => attribute.attributeId);
     if (new Set(attributeIds).size !== attributeIds.length) {
-      ctx.addIssue({ code: 'custom', path: ['attributes'], message: 'هر ویژگی فقط یک بار قابل ثبت است.' });
+      ctx.addIssue({
+        code: 'custom',
+        path: ['attributes'],
+        message: 'هر ویژگی فقط یک بار قابل ثبت است.',
+      });
     }
   });
 export type ProductUpsertInput = z.infer<typeof productUpsertSchema>;

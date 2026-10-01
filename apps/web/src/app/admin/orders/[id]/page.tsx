@@ -32,17 +32,28 @@ import { dateTime, faNumber, price } from '@/lib/format';
 export default function AdminOrderPage() {
   const { id } = useParams<{ id: string }>();
   const { can } = usePermissions();
-  const order = useQuery({ queryKey: ['admin', 'order', id], queryFn: () => api.get<AdminOrderDetail>(`/admin/orders/${id}`) });
+  const order = useQuery({
+    queryKey: ['admin', 'order', id],
+    queryFn: () => api.get<AdminOrderDetail>(`/admin/orders/${id}`),
+  });
   const [target, setTarget] = useState<OrderStatus | null>(null);
   const [note, setNote] = useState('');
   const [tracking, setTracking] = useState('');
   const [adminNote, setAdminNote] = useState<string | null>(null);
   const transition = useAdminMutation(
-    (input: { status: OrderStatus; note?: string; trackingCode?: string }) => api.post<AdminOrderDetail>(`/admin/orders/${id}/status`, input),
+    (input: { status: OrderStatus; note?: string; trackingCode?: string }) =>
+      api.post<AdminOrderDetail>(`/admin/orders/${id}/status`, input),
     { success: 'وضعیت سفارش به‌روز شد.', onSuccess: () => setTarget(null) },
   );
-  const saveNote = useAdminMutation((value: string) => api.put(`/admin/orders/${id}/note`, { note: value }), { success: 'یادداشت ذخیره شد.' });
-  const refund = useAdminMutation((paymentId: string) => api.post(`/admin/payments/${paymentId}/refund`, { reason: note || undefined }), { success: 'بازپرداخت ثبت شد.' });
+  const saveNote = useAdminMutation(
+    (value: string) => api.put(`/admin/orders/${id}/note`, { note: value }),
+    { success: 'یادداشت ذخیره شد.' },
+  );
+  const refund = useAdminMutation(
+    (paymentId: string) =>
+      api.post(`/admin/payments/${paymentId}/refund`, { reason: note || undefined }),
+    { success: 'بازپرداخت ثبت شد.' },
+  );
 
   if (!order.data) return <Skeleton className="h-96" />;
   const o = order.data;
@@ -60,13 +71,31 @@ export default function AdminOrderPage() {
               ? o.allowedTransitions
                   .filter((s) => s !== 'cancelled' || can('order.cancel'))
                   .map((status) => (
-                    <Button key={status} size="sm" variant={status === 'cancelled' ? 'destructive' : 'default'} onClick={() => { setTarget(status); setNote(''); setTracking(o.trackingCode ?? ''); }}>
-                      {status === 'cancelled' ? 'لغو سفارش' : `تغییر به «${ORDER_STATUS_LABELS[status]}»`}
+                    <Button
+                      key={status}
+                      size="sm"
+                      variant={status === 'cancelled' ? 'destructive' : 'default'}
+                      onClick={() => {
+                        setTarget(status);
+                        setNote('');
+                        setTracking(o.trackingCode ?? '');
+                      }}
+                    >
+                      {status === 'cancelled'
+                        ? 'لغو سفارش'
+                        : `تغییر به «${ORDER_STATUS_LABELS[status]}»`}
                     </Button>
                   ))
               : null}
-            {refundable && (o.status === 'cancelled' || o.status === 'returned') && can('payment.refund') ? (
-              <Button size="sm" variant="outline" loading={refund.isPending} onClick={() => refund.mutate(refundable.id)}>
+            {refundable &&
+            (o.status === 'cancelled' || o.status === 'returned') &&
+            can('payment.refund') ? (
+              <Button
+                size="sm"
+                variant="outline"
+                loading={refund.isPending}
+                onClick={() => refund.mutate(refundable.id)}
+              >
                 بازپرداخت وجه
               </Button>
             ) : null}
@@ -81,7 +110,7 @@ export default function AdminOrderPage() {
               <CardTitle>اقلام سفارش</CardTitle>
             </CardHeader>
             <table className="w-full text-sm">
-              <thead className="bg-muted/60 text-xs text-muted-foreground">
+              <thead className="bg-muted/60 text-muted-foreground text-xs">
                 <tr>
                   <th className="p-3 text-start">کالا</th>
                   <th className="p-3 text-start">SKU</th>
@@ -92,10 +121,23 @@ export default function AdminOrderPage() {
               </thead>
               <tbody>
                 {o.items.map((item) => (
-                  <tr key={item.id} className="border-t border-border">
+                  <tr key={item.id} className="border-border border-t">
                     <td className="p-3">
-                      {item.productId ? <Link href={`/admin/products/${item.productId}`} className="hover:text-primary">{item.title}</Link> : item.title}
-                      {item.variantTitle ? <span className="block text-xs text-muted-foreground">{item.variantTitle}</span> : null}
+                      {item.productId ? (
+                        <Link
+                          href={`/admin/products/${item.productId}`}
+                          className="hover:text-primary"
+                        >
+                          {item.title}
+                        </Link>
+                      ) : (
+                        item.title
+                      )}
+                      {item.variantTitle ? (
+                        <span className="text-muted-foreground block text-xs">
+                          {item.variantTitle}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="ltr p-3 text-end font-mono text-xs">{item.sku}</td>
                     <td className="p-3">{faNumber(item.quantity)}</td>
@@ -105,12 +147,31 @@ export default function AdminOrderPage() {
                 ))}
               </tbody>
             </table>
-            <CardContent className="space-y-1.5 border-t border-border text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">جمع کالاها</span><span>{price(o.subtotal)}</span></div>
-              {o.discountTotal > 0 ? <div className="flex justify-between"><span className="text-muted-foreground">تخفیف ({o.couponCode})</span><span className="text-destructive">− {price(o.discountTotal)}</span></div> : null}
-              <div className="flex justify-between"><span className="text-muted-foreground">ارسال ({o.shippingMethodName})</span><span>{price(o.shippingCost)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">مالیات بر ارزش افزوده {o.taxIncluded ? '(در قیمت)' : ''}</span><span>{price(o.taxTotal)}</span></div>
-              <div className="flex justify-between border-t border-border pt-2 text-base font-extrabold"><span>مبلغ کل</span><span>{price(o.total)}</span></div>
+            <CardContent className="border-border space-y-1.5 border-t text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">جمع کالاها</span>
+                <span>{price(o.subtotal)}</span>
+              </div>
+              {o.discountTotal > 0 ? (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">تخفیف ({o.couponCode})</span>
+                  <span className="text-destructive">− {price(o.discountTotal)}</span>
+                </div>
+              ) : null}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">ارسال ({o.shippingMethodName})</span>
+                <span>{price(o.shippingCost)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  مالیات بر ارزش افزوده {o.taxIncluded ? '(در قیمت)' : ''}
+                </span>
+                <span>{price(o.taxTotal)}</span>
+              </div>
+              <div className="border-border flex justify-between border-t pt-2 text-base font-extrabold">
+                <span>مبلغ کل</span>
+                <span>{price(o.total)}</span>
+              </div>
             </CardContent>
           </Card>
 
@@ -119,12 +180,12 @@ export default function AdminOrderPage() {
               <CardTitle>تاریخچه وضعیت</CardTitle>
             </CardHeader>
             <CardContent>
-              <ol className="relative space-y-4 border-s border-border ps-5">
+              <ol className="border-border relative space-y-4 border-s ps-5">
                 {o.history.map((entry, index) => (
                   <li key={index} className="relative">
-                    <span className="absolute -start-[1.6rem] top-1.5 size-2.5 rounded-full bg-primary" />
+                    <span className="bg-primary absolute -start-[1.6rem] top-1.5 size-2.5 rounded-full" />
                     <p className="text-sm font-semibold">{ORDER_STATUS_LABELS[entry.toStatus]}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {dateTime(entry.createdAt)} · {entry.actorName ?? 'سیستم/مشتری'}
                       {entry.note ? ` · ${entry.note}` : ''}
                     </p>
@@ -141,9 +202,16 @@ export default function AdminOrderPage() {
               <CardTitle>مشتری</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
-              <Link href={`/admin/customers/${o.customer.id}`} className="font-bold text-info hover:underline">{o.customer.fullName}</Link>
+              <Link
+                href={`/admin/customers/${o.customer.id}`}
+                className="text-info font-bold hover:underline"
+              >
+                {o.customer.fullName}
+              </Link>
               <p className="ltr text-end">{o.customer.mobile}</p>
-              {o.customer.email ? <p className="ltr text-end text-muted-foreground">{o.customer.email}</p> : null}
+              {o.customer.email ? (
+                <p className="ltr text-muted-foreground text-end">{o.customer.email}</p>
+              ) : null}
             </CardContent>
           </Card>
           <Card>
@@ -153,8 +221,16 @@ export default function AdminOrderPage() {
             <CardContent className="space-y-2">
               <p className="text-sm font-semibold">{o.shippingMethodName}</p>
               <AddressText address={o.shippingAddress} />
-              {o.trackingCode ? <p className="text-sm">کد رهگیری: <span className="ltr font-mono">{o.trackingCode}</span></p> : null}
-              {o.customerNote ? <p className="rounded-md bg-warning-soft p-2 text-xs">یادداشت مشتری: {o.customerNote}</p> : null}
+              {o.trackingCode ? (
+                <p className="text-sm">
+                  کد رهگیری: <span className="ltr font-mono">{o.trackingCode}</span>
+                </p>
+              ) : null}
+              {o.customerNote ? (
+                <p className="bg-warning-soft rounded-md p-2 text-xs">
+                  یادداشت مشتری: {o.customerNote}
+                </p>
+              ) : null}
             </CardContent>
           </Card>
           <Card>
@@ -162,17 +238,34 @@ export default function AdminOrderPage() {
               <CardTitle>پرداخت‌ها</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {o.payments.length === 0 ? <p className="text-sm text-muted-foreground">پرداختی ثبت نشده است.</p> : null}
+              {o.payments.length === 0 ? (
+                <p className="text-muted-foreground text-sm">پرداختی ثبت نشده است.</p>
+              ) : null}
               {o.payments.map((payment) => (
-                <div key={payment.id} className="space-y-1 rounded-md border border-border p-3 text-xs">
+                <div
+                  key={payment.id}
+                  className="border-border space-y-1 rounded-md border p-3 text-xs"
+                >
                   <div className="flex items-center justify-between">
                     <PaymentStatusBadge status={payment.status} />
                     <span className="font-semibold">{price(payment.amount)}</span>
                   </div>
-                  <p className="text-muted-foreground">{dateTime(payment.createdAt)} · {payment.provider}</p>
-                  {payment.referenceId ? <p>کد پیگیری: <span className="ltr font-mono">{payment.referenceId}</span></p> : null}
-                  {payment.cardMask ? <p>کارت: <span className="ltr font-mono">{payment.cardMask}</span></p> : null}
-                  {payment.failureReason ? <p className="text-destructive">{payment.failureReason}</p> : null}
+                  <p className="text-muted-foreground">
+                    {dateTime(payment.createdAt)} · {payment.provider}
+                  </p>
+                  {payment.referenceId ? (
+                    <p>
+                      کد پیگیری: <span className="ltr font-mono">{payment.referenceId}</span>
+                    </p>
+                  ) : null}
+                  {payment.cardMask ? (
+                    <p>
+                      کارت: <span className="ltr font-mono">{payment.cardMask}</span>
+                    </p>
+                  ) : null}
+                  {payment.failureReason ? (
+                    <p className="text-destructive">{payment.failureReason}</p>
+                  ) : null}
                 </div>
               ))}
             </CardContent>
@@ -182,9 +275,19 @@ export default function AdminOrderPage() {
               <CardTitle>یادداشت داخلی</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Textarea rows={3} value={adminNote ?? o.adminNote ?? ''} onChange={(e) => setAdminNote(e.target.value)} disabled={!can('order.update')} />
+              <Textarea
+                rows={3}
+                value={adminNote ?? o.adminNote ?? ''}
+                onChange={(e) => setAdminNote(e.target.value)}
+                disabled={!can('order.update')}
+              />
               {can('order.update') ? (
-                <Button size="sm" variant="secondary" loading={saveNote.isPending} onClick={() => saveNote.mutate(adminNote ?? o.adminNote ?? '')}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  loading={saveNote.isPending}
+                  onClick={() => saveNote.mutate(adminNote ?? o.adminNote ?? '')}
+                >
                   ذخیره یادداشت
                 </Button>
               ) : null}
@@ -196,27 +299,44 @@ export default function AdminOrderPage() {
       <Dialog open={target !== null} onOpenChange={(open) => !open && setTarget(null)}>
         <DialogContent aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle>{target ? `تغییر وضعیت به «${ORDER_STATUS_LABELS[target]}»` : ''}</DialogTitle>
+            <DialogTitle>
+              {target ? `تغییر وضعیت به «${ORDER_STATUS_LABELS[target]}»` : ''}
+            </DialogTitle>
           </DialogHeader>
           {target === 'shipped' ? (
             <Field label="کد رهگیری مرسوله" htmlFor="tracking" required>
-              <Input id="tracking" dir="ltr" value={tracking} onChange={(e) => setTracking(e.target.value)} />
+              <Input
+                id="tracking"
+                dir="ltr"
+                value={tracking}
+                onChange={(e) => setTracking(e.target.value)}
+              />
             </Field>
           ) : null}
           {target === 'cancelled' ? (
-            <p className="rounded-md bg-destructive-soft p-3 text-sm text-destructive">
-              با لغو سفارش، کالاها به انبار بازمی‌گردند. در صورت پرداخت، بازپرداخت را از همین صفحه ثبت کنید.
+            <p className="bg-destructive-soft text-destructive rounded-md p-3 text-sm">
+              با لغو سفارش، کالاها به انبار بازمی‌گردند. در صورت پرداخت، بازپرداخت را از همین صفحه
+              ثبت کنید.
             </p>
           ) : null}
           <Field label="توضیحات (در تاریخچه ثبت می‌شود)" htmlFor="note">
             <Textarea id="note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
           </Field>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTarget(null)}>انصراف</Button>
+            <Button variant="outline" onClick={() => setTarget(null)}>
+              انصراف
+            </Button>
             <Button
               variant={target === 'cancelled' ? 'destructive' : 'default'}
               loading={transition.isPending}
-              onClick={() => target && transition.mutate({ status: target, note: note || undefined, trackingCode: tracking || undefined })}
+              onClick={() =>
+                target &&
+                transition.mutate({
+                  status: target,
+                  note: note || undefined,
+                  trackingCode: tracking || undefined,
+                })
+              }
             >
               تأیید
             </Button>

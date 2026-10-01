@@ -21,7 +21,9 @@ export type AuthenticatedRequest = Request & { user?: AuthContext; id?: string |
 export const Public = (): MethodDecorator & ClassDecorator => SetMetadata(IS_PUBLIC_KEY, true);
 
 /** Staff-only route that requires every listed permission. */
-export const RequirePermissions = (...permissions: Permission[]): MethodDecorator & ClassDecorator =>
+export const RequirePermissions = (
+  ...permissions: Permission[]
+): MethodDecorator & ClassDecorator =>
   applyDecorators(SetMetadata(PERMISSIONS_KEY, permissions), SetMetadata(STAFF_ONLY_KEY, true));
 
 /**
@@ -36,11 +38,13 @@ export const AdminController = (path: string): ClassDecorator =>
   );
 
 /** Injects the authenticated user; throws 401 when the route is public and nobody is logged in. */
-export const CurrentUser = createParamDecorator((_data: unknown, context: ExecutionContext): AuthContext => {
-  const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-  if (!request.user) throw new AppException('UNAUTHENTICATED');
-  return request.user;
-});
+export const CurrentUser = createParamDecorator(
+  (_data: unknown, context: ExecutionContext): AuthContext => {
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    if (!request.user) throw new AppException('UNAUTHENTICATED');
+    return request.user;
+  },
+);
 
 /** Injects the user if logged in, otherwise undefined (for public routes). */
 export const OptionalUser = createParamDecorator(

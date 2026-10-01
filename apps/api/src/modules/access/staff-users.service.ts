@@ -17,7 +17,9 @@ import { PasswordService } from '../auth/password.service';
 import { PrincipalService } from '../auth/principal.service';
 import { SessionService } from '../auth/session.service';
 
-const STAFF_INCLUDE = { roles: { include: { role: { select: { id: true, key: true, name: true } } } } } as const;
+const STAFF_INCLUDE = {
+  roles: { include: { role: { select: { id: true, key: true, name: true } } } },
+} as const;
 type StaffRecord = Prisma.UserGetPayload<{ include: typeof STAFF_INCLUDE }>;
 
 function toView(user: StaffRecord): StaffUserView {
@@ -59,7 +61,12 @@ export class StaffUsersService {
         : {}),
     };
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({ where, include: STAFF_INCLUDE, orderBy: { createdAt: 'asc' }, ...paginationArgs(query) }),
+      this.prisma.user.findMany({
+        where,
+        include: STAFF_INCLUDE,
+        orderBy: { createdAt: 'asc' },
+        ...paginationArgs(query),
+      }),
       this.prisma.user.count({ where }),
     ]);
     return paginate(users.map(toView), total, query);
@@ -96,11 +103,19 @@ export class StaffUsersService {
     return toView(user);
   }
 
-  async update(id: string, input: StaffUserUpdateInput, actor: AuthContext): Promise<StaffUserView> {
-    const existing = await this.prisma.user.findFirst({ where: { id, type: 'staff' }, include: STAFF_INCLUDE });
+  async update(
+    id: string,
+    input: StaffUserUpdateInput,
+    actor: AuthContext,
+  ): Promise<StaffUserView> {
+    const existing = await this.prisma.user.findFirst({
+      where: { id, type: 'staff' },
+      include: STAFF_INCLUDE,
+    });
     if (!existing) throw AppException.notFound('کاربر یافت نشد.');
     await this.assertRolesExist(input.roleIds);
-    if (id === actor.userId && !input.isActive) throw AppException.forbidden('نمی‌توانید حساب خود را غیرفعال کنید.');
+    if (id === actor.userId && !input.isActive)
+      throw AppException.forbidden('نمی‌توانید حساب خود را غیرفعال کنید.');
 
     const user = await this.prisma.$transaction(async (tx) => {
       await tx.userRole.deleteMany({ where: { userId: id } });
@@ -122,7 +137,10 @@ export class StaffUsersService {
           entityType: 'user',
           entityId: id,
           summary: `ویرایش کاربر مدیریتی ${existing.email}`,
-          before: { isActive: existing.isActive, roles: existing.roles.map((r) => r.role.key).sort() },
+          before: {
+            isActive: existing.isActive,
+            roles: existing.roles.map((r) => r.role.key).sort(),
+          },
           after: {
             isActive: updated.isActive,
             roles: updated.roles.map((r) => r.role.key).sort(),
@@ -148,8 +166,13 @@ export class StaffUsersService {
 
   private async assertSuperAdminRemains(tx: Tx): Promise<void> {
     const remaining = await tx.user.count({
-      where: { type: 'staff', isActive: true, roles: { some: { role: { key: SUPER_ADMIN_ROLE } } } },
+      where: {
+        type: 'staff',
+        isActive: true,
+        roles: { some: { role: { key: SUPER_ADMIN_ROLE } } },
+      },
     });
-    if (remaining === 0) throw AppException.conflict('حداقل یک مدیر ارشد فعال باید وجود داشته باشد.');
+    if (remaining === 0)
+      throw AppException.conflict('حداقل یک مدیر ارشد فعال باید وجود داشته باشد.');
   }
 }

@@ -50,7 +50,10 @@ export function calculateTotals(input: PricingInput): PricingResult {
   const itemsCount = input.lines.reduce((sum, line) => sum + line.quantity, 0);
   const productSavings = input.lines.reduce(
     (sum, line) =>
-      sum + (line.compareAtPrice && line.compareAtPrice > line.unitPrice ? (line.compareAtPrice - line.unitPrice) * line.quantity : 0),
+      sum +
+      (line.compareAtPrice && line.compareAtPrice > line.unitPrice
+        ? (line.compareAtPrice - line.unitPrice) * line.quantity
+        : 0),
     0,
   );
 
@@ -71,7 +74,8 @@ export function calculateTotals(input: PricingInput): PricingResult {
       } else {
         freeShipping = true;
       }
-      if (coupon.maxDiscount !== null) couponDiscount = Math.min(couponDiscount, coupon.maxDiscount);
+      if (coupon.maxDiscount !== null)
+        couponDiscount = Math.min(couponDiscount, coupon.maxDiscount);
       couponDiscount = Math.min(couponDiscount, subtotal);
     }
   }
@@ -80,7 +84,8 @@ export function calculateTotals(input: PricingInput): PricingResult {
   let shippingCost: number | null = null;
   if (input.shipping) {
     const threshold = input.shipping.freeShippingThreshold;
-    shippingCost = freeShipping || (threshold !== null && merchandise >= threshold) ? 0 : input.shipping.cost;
+    shippingCost =
+      freeShipping || (threshold !== null && merchandise >= threshold) ? 0 : input.shipping.cost;
   }
 
   const rate = Math.max(0, input.tax.ratePercent);

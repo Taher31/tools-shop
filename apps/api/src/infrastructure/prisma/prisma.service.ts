@@ -10,7 +10,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readonly logger = new Logger(PrismaService.name);
 
   constructor(config: AppConfig) {
-    super({ adapter: createPgAdapter({ url: config.database.url, poolSize: config.database.poolSize }) });
+    super({
+      adapter: createPgAdapter({ url: config.database.url, poolSize: config.database.poolSize }),
+    });
   }
 
   async onModuleInit(): Promise<void> {

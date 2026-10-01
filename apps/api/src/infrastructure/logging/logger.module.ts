@@ -16,7 +16,9 @@ const REQUEST_ID_PATTERN = /^[A-Za-z0-9._-]{8,64}$/;
           level: config.logLevel,
           genReqId: (request: IncomingMessage) => {
             const incoming = request.headers['x-request-id'];
-            return typeof incoming === 'string' && REQUEST_ID_PATTERN.test(incoming) ? incoming : randomUUID();
+            return typeof incoming === 'string' && REQUEST_ID_PATTERN.test(incoming)
+              ? incoming
+              : randomUUID();
           },
           redact: {
             paths: [
@@ -31,9 +33,14 @@ const REQUEST_ID_PATTERN = /^[A-Za-z0-9._-]{8,64}$/;
             censor: '[redacted]',
           },
           autoLogging: {
-            ignore: (request: IncomingMessage) => request.url === '/api/health' || request.url === '/api/v1/health',
+            ignore: (request: IncomingMessage) =>
+              request.url === '/api/health' || request.url === '/api/v1/health',
           },
-          customLogLevel: (_request: IncomingMessage, response: { statusCode: number }, error?: Error) => {
+          customLogLevel: (
+            _request: IncomingMessage,
+            response: { statusCode: number },
+            error?: Error,
+          ) => {
             if (error || response.statusCode >= 500) return 'error';
             if (response.statusCode >= 400) return 'warn';
             return 'info';
@@ -45,9 +52,13 @@ const REQUEST_ID_PATTERN = /^[A-Za-z0-9._-]{8,64}$/;
               url: request.url,
             }),
           },
-          transport: config.isProduction || config.isTest
-            ? undefined
-            : { target: 'pino-pretty', options: { singleLine: true, translateTime: 'SYS:HH:MM:ss' } },
+          transport:
+            config.isProduction || config.isTest
+              ? undefined
+              : {
+                  target: 'pino-pretty',
+                  options: { singleLine: true, translateTime: 'SYS:HH:MM:ss' },
+                },
         },
       }),
     }),

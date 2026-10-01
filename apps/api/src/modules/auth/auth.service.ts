@@ -45,9 +45,18 @@ export class AuthService {
     });
     if (duplicate) {
       const field = duplicate.mobile === input.mobile ? 'mobile' : 'email';
-      throw AppException.conflict('با این اطلاعات قبلاً حساب کاربری ساخته شده است. لطفاً وارد شوید.', [
-        { path: field, message: field === 'mobile' ? 'این شماره موبایل قبلاً ثبت شده است.' : 'این ایمیل قبلاً ثبت شده است.' },
-      ]);
+      throw AppException.conflict(
+        'با این اطلاعات قبلاً حساب کاربری ساخته شده است. لطفاً وارد شوید.',
+        [
+          {
+            path: field,
+            message:
+              field === 'mobile'
+                ? 'این شماره موبایل قبلاً ثبت شده است.'
+                : 'این ایمیل قبلاً ثبت شده است.',
+          },
+        ],
+      );
     }
     const user = await this.prisma.user.create({
       data: {
@@ -111,7 +120,10 @@ export class AuthService {
         where: { email: input.email, id: { not: userId } },
         select: { id: true },
       });
-      if (taken) throw AppException.conflict('این ایمیل قبلاً ثبت شده است.', [{ path: 'email', message: 'تکراری' }]);
+      if (taken)
+        throw AppException.conflict('این ایمیل قبلاً ثبت شده است.', [
+          { path: 'email', message: 'تکراری' },
+        ]);
     }
     await this.prisma.user.update({
       where: { id: userId },
@@ -126,10 +138,19 @@ export class AuthService {
     return this.getAuthUser(userId);
   }
 
-  async changePassword(userId: string, sessionId: string, input: ChangePasswordInput): Promise<void> {
-    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { passwordHash: true } });
+  async changePassword(
+    userId: string,
+    sessionId: string,
+    input: ChangePasswordInput,
+  ): Promise<void> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
     if (!(await this.passwords.verify(user.passwordHash, input.currentPassword))) {
-      throw AppException.validation([{ path: 'currentPassword', message: 'رمز عبور فعلی اشتباه است.' }]);
+      throw AppException.validation([
+        { path: 'currentPassword', message: 'رمز عبور فعلی اشتباه است.' },
+      ]);
     }
     await this.prisma.user.update({
       where: { id: userId },

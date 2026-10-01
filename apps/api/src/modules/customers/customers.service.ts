@@ -38,7 +38,11 @@ export class CustomersService {
         : {}),
     };
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({ where, orderBy: { createdAt: 'desc' }, ...paginationArgs(query) }),
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        ...paginationArgs(query),
+      }),
       this.prisma.user.count({ where }),
     ]);
     const stats = await this.stats(users.map((user) => user.id));
@@ -63,7 +67,11 @@ export class CustomersService {
       where: { id, type: 'customer' },
       include: {
         addresses: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' } },
-        orders: { orderBy: { createdAt: 'desc' }, take: 10, include: { items: { select: { quantity: true } } } },
+        orders: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          include: { items: { select: { quantity: true } } },
+        },
       },
     });
     if (!user) throw AppException.notFound('مشتری یافت نشد.');
@@ -109,6 +117,11 @@ export class CustomersService {
       _count: { _all: true },
       _sum: { total: true },
     });
-    return new Map(rows.map((row) => [row.userId, { count: row._count._all, total: toRial(row._sum.total ?? 0n) }]));
+    return new Map(
+      rows.map((row) => [
+        row.userId,
+        { count: row._count._all, total: toRial(row._sum.total ?? 0n) },
+      ]),
+    );
   }
 }

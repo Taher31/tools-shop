@@ -60,7 +60,8 @@ export class CategoriesService {
           sortOrder: category.sortOrder,
           isActive: category.isActive,
           productCount:
-            (counts[category.id] ?? 0) + children.reduce((sum, child) => sum + child.productCount, 0),
+            (counts[category.id] ?? 0) +
+            children.reduce((sum, child) => sum + child.productCount, 0),
           children,
         };
       });
@@ -70,7 +71,8 @@ export class CategoriesService {
   async publicPage(slug: string): Promise<CategoryPage> {
     const taxonomy = await this.taxonomyService.get();
     const category = taxonomy.categoriesBySlug.get(slug);
-    if (!category || !taxonomy.isCategoryVisible(category.id)) throw AppException.notFound('دسته‌بندی یافت نشد.');
+    if (!category || !taxonomy.isCategoryVisible(category.id))
+      throw AppException.notFound('دسته‌بندی یافت نشد.');
     return {
       category: {
         ...this.summary(category),
@@ -121,7 +123,8 @@ export class CategoriesService {
   /** Attributes a product of this category can have (own + inherited). */
   async effectiveAttributes(categoryId: string) {
     const taxonomy = await this.taxonomyService.get();
-    if (!taxonomy.categoriesById.has(categoryId)) throw AppException.notFound('دسته‌بندی یافت نشد.');
+    if (!taxonomy.categoriesById.has(categoryId))
+      throw AppException.notFound('دسته‌بندی یافت نشد.');
     return taxonomy.effectiveAttributes(categoryId).map((entry) => ({
       attribute: toAttributeView(entry.attribute),
       isRequired: entry.isRequired,
@@ -164,7 +167,9 @@ export class CategoriesService {
         throw AppException.validation([{ path: 'parentId', message: 'دسته والد یافت نشد.' }]);
       }
       if (taxonomy.descendantIds(id).includes(input.parentId)) {
-        throw AppException.validation([{ path: 'parentId', message: 'دسته نمی‌تواند زیرمجموعه خودش باشد.' }]);
+        throw AppException.validation([
+          { path: 'parentId', message: 'دسته نمی‌تواند زیرمجموعه خودش باشد.' },
+        ]);
       }
     }
     const slug = input.slug ?? existing.slug;
@@ -178,8 +183,18 @@ export class CategoriesService {
           entityType: 'category',
           entityId: id,
           summary: `ویرایش دسته‌بندی ${updated.name}`,
-          before: { name: existing.name, slug: existing.slug, parentId: existing.parentId, isActive: existing.isActive },
-          after: { name: updated.name, slug: updated.slug, parentId: updated.parentId, isActive: updated.isActive },
+          before: {
+            name: existing.name,
+            slug: existing.slug,
+            parentId: existing.parentId,
+            isActive: existing.isActive,
+          },
+          after: {
+            name: updated.name,
+            slug: updated.slug,
+            parentId: updated.parentId,
+            isActive: updated.isActive,
+          },
         },
         tx,
       );
@@ -203,12 +218,19 @@ export class CategoriesService {
       include: { _count: { select: { children: true, products: true } } },
     });
     if (!category) throw AppException.notFound('دسته‌بندی یافت نشد.');
-    if (category._count.children > 0) throw AppException.conflict('ابتدا زیرمجموعه‌های این دسته را حذف یا منتقل کنید.');
-    if (category._count.products > 0) throw AppException.conflict('محصولاتی در این دسته وجود دارد.');
+    if (category._count.children > 0)
+      throw AppException.conflict('ابتدا زیرمجموعه‌های این دسته را حذف یا منتقل کنید.');
+    if (category._count.products > 0)
+      throw AppException.conflict('محصولاتی در این دسته وجود دارد.');
     await this.prisma.$transaction(async (tx) => {
       await tx.category.delete({ where: { id } });
       await this.audit.record(
-        { action: 'category.delete', entityType: 'category', entityId: id, summary: `حذف دسته‌بندی ${category.name}` },
+        {
+          action: 'category.delete',
+          entityType: 'category',
+          entityId: id,
+          summary: `حذف دسته‌بندی ${category.name}`,
+        },
         tx,
       );
     });
@@ -219,7 +241,8 @@ export class CategoriesService {
     const taxonomy = await this.taxonomyService.get();
     if (!taxonomy.categoriesById.has(id)) throw AppException.notFound('دسته‌بندی یافت نشد.');
     const unknown = input.attributes.filter((a) => !taxonomy.attributesById.has(a.attributeId));
-    if (unknown.length > 0) throw AppException.validation([{ path: 'attributes', message: 'ویژگی نامعتبر است.' }]);
+    if (unknown.length > 0)
+      throw AppException.validation([{ path: 'attributes', message: 'ویژگی نامعتبر است.' }]);
 
     await this.prisma.$transaction(async (tx) => {
       await tx.categoryAttribute.deleteMany({ where: { categoryId: id } });
@@ -233,7 +256,11 @@ export class CategoriesService {
           entityType: 'category',
           entityId: id,
           summary: 'تغییر ویژگی‌های دسته‌بندی',
-          after: { attributes: input.attributes.map((a) => taxonomy.attributesById.get(a.attributeId)?.code) },
+          after: {
+            attributes: input.attributes.map(
+              (a) => taxonomy.attributesById.get(a.attributeId)?.code,
+            ),
+          },
         },
         tx,
       );
@@ -266,7 +293,12 @@ export class CategoriesService {
   }
 
   private summary(category: TaxonomyCategory) {
-    return { id: category.id, name: category.name, slug: category.slug, imageUrl: category.imageUrl };
+    return {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      imageUrl: category.imageUrl,
+    };
   }
 
   private async productCounts(includeHidden = false): Promise<Record<string, number>> {
@@ -286,7 +318,8 @@ export class CategoriesService {
   }
 
   private slugConflict(): AppException {
-    return AppException.conflict('این نامک قبلاً استفاده شده است.', [{ path: 'slug', message: 'تکراری' }]);
+    return AppException.conflict('این نامک قبلاً استفاده شده است.', [
+      { path: 'slug', message: 'تکراری' },
+    ]);
   }
 }
-

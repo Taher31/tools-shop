@@ -53,7 +53,10 @@ export const STOCK_COMMITTED_STATUSES: readonly OrderStatus[] = [
 ];
 
 /** Statuses in which the customer may still cancel the order on their own. */
-export const CUSTOMER_CANCELLABLE_STATUSES: readonly OrderStatus[] = ['pending', 'awaiting_payment'];
+export const CUSTOMER_CANCELLABLE_STATUSES: readonly OrderStatus[] = [
+  'pending',
+  'awaiting_payment',
+];
 
 export const TERMINAL_ORDER_STATUSES: readonly OrderStatus[] = ['refunded'];
 

@@ -69,7 +69,8 @@ export const emailSchema = z
 
 /** Amount in Rial. Accepts numeric strings with Persian digits. */
 export const rialSchema = z.preprocess(
-  (value) => (typeof value === 'string' ? Number(toEnglishDigits(value).replace(/[,٬\s]/g, '')) : value),
+  (value) =>
+    typeof value === 'string' ? Number(toEnglishDigits(value).replace(/[,٬\s]/g, '')) : value,
   z
     .number({ message: 'مبلغ معتبر نیست.' })
     .int('مبلغ باید عدد صحیح باشد.')

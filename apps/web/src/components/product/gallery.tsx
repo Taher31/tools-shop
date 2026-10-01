@@ -10,8 +10,14 @@ export function ProductGallery({ images, title }: { images: ProductImageData[]; 
   const current = images[active] ?? images[0];
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative aspect-square overflow-hidden rounded-lg border border-border bg-gradient-to-b from-muted/30 to-muted/80">
-        <ProductImage src={current?.url ?? null} alt={current?.alt ?? title} priority sizes="(max-width: 1024px) 100vw, 40vw" className="p-8" />
+      <div className="border-border from-muted/30 to-muted/80 relative aspect-square overflow-hidden rounded-lg border bg-gradient-to-b">
+        <ProductImage
+          src={current?.url ?? null}
+          alt={current?.alt ?? title}
+          priority
+          sizes="(max-width: 1024px) 100vw, 40vw"
+          className="p-8"
+        />
       </div>
       {images.length > 1 ? (
         <div className="flex gap-2 overflow-x-auto">
@@ -21,8 +27,8 @@ export function ProductGallery({ images, title }: { images: ProductImageData[]; 
               type="button"
               onClick={() => setActive(index)}
               className={cn(
-                'relative size-16 shrink-0 rounded-md border bg-muted',
-                index === active ? 'border-primary ring-2 ring-primary/20' : 'border-border',
+                'bg-muted relative size-16 shrink-0 rounded-md border',
+                index === active ? 'border-primary ring-primary/20 ring-2' : 'border-border',
               )}
               aria-label={`تصویر ${index + 1}`}
             >

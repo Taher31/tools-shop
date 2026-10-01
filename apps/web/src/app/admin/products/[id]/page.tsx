@@ -11,7 +11,10 @@ import { dateTime } from '@/lib/format';
 
 export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
-  const { data } = useQuery({ queryKey: ['admin', 'product', id], queryFn: () => api.get<AdminProductDetail>(`/admin/products/${id}`) });
+  const { data } = useQuery({
+    queryKey: ['admin', 'product', id],
+    queryFn: () => api.get<AdminProductDetail>(`/admin/products/${id}`),
+  });
   if (!data) return <Skeleton className="h-96" />;
   return (
     <>

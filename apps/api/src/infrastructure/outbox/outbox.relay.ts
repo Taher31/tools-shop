@@ -1,4 +1,9 @@
-import { Injectable, Logger, type OnApplicationBootstrap, type OnApplicationShutdown } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  type OnApplicationBootstrap,
+  type OnApplicationShutdown,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -70,8 +75,9 @@ export class OutboxRelay implements OnApplicationBootstrap, OnApplicationShutdow
 
   /** Processes one batch; returns the number of events handled. Exposed for tests. */
   async processBatch(): Promise<number> {
-    return this.prisma.$transaction(async (tx) => {
-      const rows = await tx.$queryRaw<OutboxRow[]>`
+    return this.prisma.$transaction(
+      async (tx) => {
+        const rows = await tx.$queryRaw<OutboxRow[]>`
         SELECT "id", "type", "payload", "attempts"
         FROM "OutboxEvent"
         WHERE "publishedAt" IS NULL AND "availableAt" <= now()
@@ -79,23 +85,35 @@ export class OutboxRelay implements OnApplicationBootstrap, OnApplicationShutdow
         LIMIT ${BATCH_SIZE}
         FOR UPDATE SKIP LOCKED`;
 
-      for (const row of rows) {
-        try {
-          await withTimeout(this.events.emitAsync(row.type, row.payload), LISTENER_TIMEOUT_MS);
-          await tx.outboxEvent.update({ where: { id: row.id }, data: { publishedAt: new Date(), lastError: null } });
-        } catch (error) {
-          const attempts = row.attempts + 1;
-          const delay = Math.min(MAX_BACKOFF_MS, 2 ** attempts * 1_000);
-          const message = error instanceof Error ? error.message : String(error);
-          this.logger.warn({ eventId: row.id, type: row.type, attempts, err: error }, 'Outbox dispatch failed');
-          await tx.outboxEvent.update({
-            where: { id: row.id },
-            data: { attempts, lastError: message.slice(0, 1000), availableAt: new Date(Date.now() + delay) },
-          });
+        for (const row of rows) {
+          try {
+            await withTimeout(this.events.emitAsync(row.type, row.payload), LISTENER_TIMEOUT_MS);
+            await tx.outboxEvent.update({
+              where: { id: row.id },
+              data: { publishedAt: new Date(), lastError: null },
+            });
+          } catch (error) {
+            const attempts = row.attempts + 1;
+            const delay = Math.min(MAX_BACKOFF_MS, 2 ** attempts * 1_000);
+            const message = error instanceof Error ? error.message : String(error);
+            this.logger.warn(
+              { eventId: row.id, type: row.type, attempts, err: error },
+              'Outbox dispatch failed',
+            );
+            await tx.outboxEvent.update({
+              where: { id: row.id },
+              data: {
+                attempts,
+                lastError: message.slice(0, 1000),
+                availableAt: new Date(Date.now() + delay),
+              },
+            });
+          }
         }
-      }
-      return rows.length;
-    }, { timeout: 60_000, maxWait: 10_000 });
+        return rows.length;
+      },
+      { timeout: 60_000, maxWait: 10_000 },
+    );
   }
 
   private schedule(delay: number): void {

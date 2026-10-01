@@ -31,7 +31,8 @@ export function SearchBox({ className }: { className?: string }) {
 
   const { data } = useQuery({
     queryKey: ['suggest', term],
-    queryFn: ({ signal }) => api.get<SearchSuggestion>(`/search/suggest${toQueryString({ q: term })}`, signal),
+    queryFn: ({ signal }) =>
+      api.get<SearchSuggestion>(`/search/suggest${toQueryString({ q: term })}`, signal),
     enabled: term.length >= 2,
     staleTime: 60_000,
   });
@@ -70,11 +71,11 @@ export function SearchBox({ className }: { className?: string }) {
           aria-controls={listId}
           aria-expanded={open && hasResults}
           autoComplete="off"
-          className="h-11 w-full rounded-md border border-input bg-muted/60 ps-4 pe-12 text-sm transition-colors placeholder:text-muted-foreground focus:border-ring focus:bg-card focus:outline-none focus:ring-2 focus:ring-ring/30"
+          className="border-input bg-muted/60 placeholder:text-muted-foreground focus:border-ring focus:bg-card focus:ring-ring/30 h-11 w-full rounded-md border pe-12 ps-4 text-sm transition-colors focus:outline-none focus:ring-2"
         />
         <button
           type="submit"
-          className="absolute end-1 top-1 flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary-hover"
+          className="bg-primary text-primary-foreground hover:bg-primary-hover absolute end-1 top-1 flex size-9 items-center justify-center rounded-md"
           aria-label="جستجو"
         >
           <Search className="size-4" />
@@ -82,17 +83,20 @@ export function SearchBox({ className }: { className?: string }) {
       </form>
 
       {open && term.length >= 2 && hasResults && data ? (
-        <div id={listId} className="absolute inset-x-0 top-full z-40 mt-1 overflow-hidden rounded-md border border-border bg-popover shadow-xl">
+        <div
+          id={listId}
+          className="border-border bg-popover absolute inset-x-0 top-full z-40 mt-1 overflow-hidden rounded-md border shadow-xl"
+        >
           {data.categories.length > 0 ? (
-            <div className="border-b border-border p-2">
-              <p className="px-2 pb-1 text-xs text-muted-foreground">دسته‌بندی‌ها</p>
+            <div className="border-border border-b p-2">
+              <p className="text-muted-foreground px-2 pb-1 text-xs">دسته‌بندی‌ها</p>
               <div className="flex flex-wrap gap-1.5 px-2">
                 {data.categories.map((category) => (
                   <Link
                     key={category.slug}
                     href={`/category/${category.slug}`}
                     onClick={() => setOpen(false)}
-                    className="rounded-sm bg-secondary px-2.5 py-1 text-xs hover:bg-primary hover:text-primary-foreground"
+                    className="bg-secondary hover:bg-primary hover:text-primary-foreground rounded-sm px-2.5 py-1 text-xs"
                   >
                     {category.name}
                   </Link>
@@ -106,9 +110,9 @@ export function SearchBox({ className }: { className?: string }) {
                 <Link
                   href={`/product/${product.slug}`}
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2 hover:bg-muted"
+                  className="hover:bg-muted flex items-center gap-3 px-3 py-2"
                 >
-                  <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
+                  <span className="bg-muted flex size-11 shrink-0 items-center justify-center overflow-hidden rounded">
                     {product.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={product.imageUrl} alt="" className="size-10 object-contain" />
@@ -116,7 +120,12 @@ export function SearchBox({ className }: { className?: string }) {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="line-clamp-1 text-sm">{product.title}</span>
-                    <span className={cn('text-xs', product.inStock ? 'text-foreground' : 'text-muted-foreground')}>
+                    <span
+                      className={cn(
+                        'text-xs',
+                        product.inStock ? 'text-foreground' : 'text-muted-foreground',
+                      )}
+                    >
                       {product.inStock ? price(product.price) : 'ناموجود'}
                     </span>
                   </span>
@@ -127,7 +136,7 @@ export function SearchBox({ className }: { className?: string }) {
           <button
             type="button"
             onClick={submit}
-            className="w-full border-t border-border bg-muted/50 px-3 py-2 text-center text-xs font-medium text-info hover:bg-muted"
+            className="border-border bg-muted/50 text-info hover:bg-muted w-full border-t px-3 py-2 text-center text-xs font-medium"
           >
             مشاهده همه نتایج «{value.trim()}»
           </button>

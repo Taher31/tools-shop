@@ -22,12 +22,21 @@ export class CheckoutController {
   constructor(private readonly checkout: CheckoutService) {}
 
   @Get()
-  preview(@CurrentUser() user: AuthContext, @Query('addressId') addressId?: string): Promise<CheckoutPreview> {
-    return this.checkout.preview(user.userId, addressId && isUuid(addressId) ? addressId : undefined);
+  preview(
+    @CurrentUser() user: AuthContext,
+    @Query('addressId') addressId?: string,
+  ): Promise<CheckoutPreview> {
+    return this.checkout.preview(
+      user.userId,
+      addressId && isUuid(addressId) ? addressId : undefined,
+    );
   }
 
   @Post('quote')
-  quote(@CurrentUser() user: AuthContext, @ZBody(quoteSchema) input: z.infer<typeof quoteSchema>): Promise<CartTotals> {
+  quote(
+    @CurrentUser() user: AuthContext,
+    @ZBody(quoteSchema) input: z.infer<typeof quoteSchema>,
+  ): Promise<CartTotals> {
     return this.checkout.quote(user.userId, input.addressId, input.shippingMethodId);
   }
 

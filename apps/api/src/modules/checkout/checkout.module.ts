@@ -9,7 +9,14 @@ import { CheckoutController } from './checkout.controller';
 import { CheckoutService } from './checkout.service';
 
 @Module({
-  imports: [CartModule, ShippingModule, InventoryModule, CouponsModule, OrdersModule, PaymentsModule],
+  imports: [
+    CartModule,
+    ShippingModule,
+    InventoryModule,
+    CouponsModule,
+    OrdersModule,
+    PaymentsModule,
+  ],
   controllers: [CheckoutController],
   providers: [CheckoutService],
 })

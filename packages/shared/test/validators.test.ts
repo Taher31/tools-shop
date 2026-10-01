@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  isValidNationalCode,
-  isValidPostalCode,
-  normalizeIranianMobile,
-} from '../src';
+import { isValidNationalCode, isValidPostalCode, normalizeIranianMobile } from '../src';
 
 describe('Iranian validators', () => {
   it('normalizes mobile numbers in different formats', () => {

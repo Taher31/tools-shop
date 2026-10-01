@@ -92,7 +92,13 @@ export const QUESTION_STATUS_LABELS: Record<QuestionStatus, string> = {
   rejected: 'ردشده',
 };
 
-export const MARKETPLACE_SYNC_STATUSES = ['not_synced', 'pending', 'synced', 'failed', 'disabled'] as const;
+export const MARKETPLACE_SYNC_STATUSES = [
+  'not_synced',
+  'pending',
+  'synced',
+  'failed',
+  'disabled',
+] as const;
 export type MarketplaceSyncStatus = (typeof MARKETPLACE_SYNC_STATUSES)[number];
 
 export const AUDIT_ACTOR_TYPES = ['user', 'system', 'ai'] as const;

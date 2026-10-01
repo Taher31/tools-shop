@@ -8,5 +8,6 @@ export const siteConfig = {
   /** Fallback used only if the settings API is unreachable. */
   fallbackName: 'فروشگاه ابزار',
   locale: 'fa_IR',
-  defaultDescription: 'خرید تخصصی ابزار برقی، ابزار دستی و ابزار مصرفی با ضمانت اصالت کالا و ارسال به سراسر ایران.',
+  defaultDescription:
+    'خرید تخصصی ابزار برقی، ابزار دستی و ابزار مصرفی با ضمانت اصالت کالا و ارسال به سراسر ایران.',
 } as const;

@@ -67,16 +67,27 @@ export class CheckoutService {
    * overselling impossible), redeems the coupon and empties the cart – all in one
    * transaction – then opens a payment at the gateway.
    */
-  async placeOrder(userId: string, input: CheckoutInput, client: ClientInfo): Promise<CheckoutResult> {
+  async placeOrder(
+    userId: string,
+    input: CheckoutInput,
+    client: ClientInfo,
+  ): Promise<CheckoutResult> {
     const provider = this.providers.get(input.paymentProvider);
-    const { address, method } = await this.resolveDelivery(userId, input.addressId, input.shippingMethodId);
+    const { address, method } = await this.resolveDelivery(
+      userId,
+      input.addressId,
+      input.shippingMethodId,
+    );
     const expiresAt = new Date(Date.now() + this.config.checkout.reservationTtlMinutes * 60_000);
 
     const order = await this.prisma.$transaction(
       async (tx) => {
         const cart = await this.carts.find({ userId }, tx);
         if (!cart || cart.items.length === 0) throw new AppException('CART_EMPTY');
-        const priced = await this.carts.price(cart, userId, { shipping: shippingRule(method), client: tx });
+        const priced = await this.carts.price(cart, userId, {
+          shipping: shippingRule(method),
+          client: tx,
+        });
 
         if (priced.view.lines.some((line) => line.issue !== null)) {
           throw new AppException('CART_CHANGED', priced.view.warnings.join(' ') || undefined);
@@ -86,7 +97,10 @@ export class CheckoutService {
         }
         const { pricing } = priced;
         if (input.expectedTotal !== undefined && input.expectedTotal !== pricing.total) {
-          throw new AppException('CART_CHANGED', 'مبلغ سفارش تغییر کرده است. لطفاً سبد خرید را دوباره بررسی کنید.');
+          throw new AppException(
+            'CART_CHANGED',
+            'مبلغ سفارش تغییر کرده است. لطفاً سبد خرید را دوباره بررسی کنید.',
+          );
         }
 
         const created = await tx.order.create({
@@ -138,7 +152,11 @@ export class CheckoutService {
         await this.inventory.reserve(
           tx,
           created.id,
-          priced.orderableLines.map(({ line }) => ({ variantId: line.variantId, quantity: line.quantity, label: line.title })),
+          priced.orderableLines.map(({ line }) => ({
+            variantId: line.variantId,
+            quantity: line.quantity,
+            label: line.title,
+          })),
           expiresAt,
         );
         if (priced.coupon) {
@@ -149,10 +167,17 @@ export class CheckoutService {
             amount: pricing.couponDiscount,
           });
         }
-        const awaiting = await this.orders.transition(tx, created, 'awaiting_payment', { type: 'system' });
+        const awaiting = await this.orders.transition(tx, created, 'awaiting_payment', {
+          type: 'system',
+        });
         await this.carts.clear(tx, cart.id);
         await this.outbox.record(tx, [
-          { type: 'order.created', aggregateType: 'order', aggregateId: created.id, payload: { orderId: created.id } },
+          {
+            type: 'order.created',
+            aggregateType: 'order',
+            aggregateId: created.id,
+            payload: { orderId: created.id },
+          },
         ]);
         return awaiting;
       },
@@ -167,18 +192,27 @@ export class CheckoutService {
     } catch (error) {
       // The order exists and stock is reserved; the customer can retry from the order page.
       const message = error instanceof AppException ? error.body.message : undefined;
-      throw new AppException('PAYMENT_PROVIDER_UNAVAILABLE', message, [{ path: 'orderId', message: order.id }]);
+      throw new AppException('PAYMENT_PROVIDER_UNAVAILABLE', message, [
+        { path: 'orderId', message: order.id },
+      ]);
     }
   }
 
   private async resolveDelivery(userId: string, addressId: string, shippingMethodId: string) {
-    const address = await this.prisma.address.findFirst({ where: { id: addressId, userId, deletedAt: null } });
-    if (!address) throw AppException.validation([{ path: 'addressId', message: 'آدرس انتخاب‌شده یافت نشد.' }]);
-    const method = await this.prisma.shippingMethod.findFirst({ where: { id: shippingMethodId, isActive: true } });
+    const address = await this.prisma.address.findFirst({
+      where: { id: addressId, userId, deletedAt: null },
+    });
+    if (!address)
+      throw AppException.validation([{ path: 'addressId', message: 'آدرس انتخاب‌شده یافت نشد.' }]);
+    const method = await this.prisma.shippingMethod.findFirst({
+      where: { id: shippingMethodId, isActive: true },
+    });
     if (!method || !serves(method, address.province)) {
-      throw new AppException('INVALID_SHIPPING_METHOD', 'این روش ارسال برای آدرس انتخاب‌شده در دسترس نیست.');
+      throw new AppException(
+        'INVALID_SHIPPING_METHOD',
+        'این روش ارسال برای آدرس انتخاب‌شده در دسترس نیست.',
+      );
     }
     return { address, method };
   }
 }
-

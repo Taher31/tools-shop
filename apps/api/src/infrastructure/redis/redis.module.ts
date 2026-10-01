@@ -12,7 +12,10 @@ import { REDIS } from './redis.constants';
       inject: [AppConfig],
       useFactory: (config: AppConfig) => {
         const logger = new Logger('Redis');
-        const client = new Redis(config.redisUrl, { maxRetriesPerRequest: 2, enableOfflineQueue: true });
+        const client = new Redis(config.redisUrl, {
+          maxRetriesPerRequest: 2,
+          enableOfflineQueue: true,
+        });
         client.on('error', (error) => logger.warn(`Redis error: ${error.message}`));
         return client;
       },

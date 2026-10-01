@@ -1,7 +1,20 @@
 'use client';
 
 import type { Paginated } from '@toolshop/shared';
-import { Button, Card, EmptyState, Input, Skeleton, Table, TBody, TD, TH, THead, TR, cn } from '@toolshop/ui';
+import {
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  Skeleton,
+  Table,
+  TBody,
+  TD,
+  TH,
+  THead,
+  TR,
+  cn,
+} from '@toolshop/ui';
 import { Inbox, Search } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { faNumber } from '@/lib/format';
@@ -50,7 +63,11 @@ export function DataTable<T>({
       </THead>
       <TBody>
         {rows.map((row) => (
-          <TR key={rowKey(row)} onClick={onRowClick ? () => onRowClick(row) : undefined} className={cn(onRowClick && 'cursor-pointer')}>
+          <TR
+            key={rowKey(row)}
+            onClick={onRowClick ? () => onRowClick(row) : undefined}
+            className={cn(onRowClick && 'cursor-pointer')}
+          >
             {columns.map((column, index) => (
               <TD key={index} className={column.className}>
                 {column.cell(row)}
@@ -63,21 +80,41 @@ export function DataTable<T>({
   );
 }
 
-export function Pager({ data, onPage }: { data: Paginated<unknown> | undefined; onPage: (page: number) => void }) {
+export function Pager({
+  data,
+  onPage,
+}: {
+  data: Paginated<unknown> | undefined;
+  onPage: (page: number) => void;
+}) {
   if (!data || data.totalPages <= 1) {
-    return data ? <p className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground">{faNumber(data.total)} مورد</p> : null;
+    return data ? (
+      <p className="border-border text-muted-foreground border-t px-4 py-2.5 text-xs">
+        {faNumber(data.total)} مورد
+      </p>
+    ) : null;
   }
   return (
-    <div className="flex items-center justify-between border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
+    <div className="border-border text-muted-foreground flex items-center justify-between border-t px-4 py-2.5 text-xs">
       <span>{faNumber(data.total)} مورد</span>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" disabled={data.page <= 1} onClick={() => onPage(data.page - 1)}>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={data.page <= 1}
+          onClick={() => onPage(data.page - 1)}
+        >
           قبلی
         </Button>
         <span>
           صفحه {faNumber(data.page)} از {faNumber(data.totalPages)}
         </span>
-        <Button variant="outline" size="sm" disabled={data.page >= data.totalPages} onClick={() => onPage(data.page + 1)}>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={data.page >= data.totalPages}
+          onClick={() => onPage(data.page + 1)}
+        >
           بعدی
         </Button>
       </div>
@@ -86,7 +123,15 @@ export function Pager({ data, onPage }: { data: Paginated<unknown> | undefined; 
 }
 
 /** Debounced search input for list pages. */
-export function SearchInput({ onSearch, placeholder = 'جستجو…', className }: { onSearch: (q: string) => void; placeholder?: string; className?: string }) {
+export function SearchInput({
+  onSearch,
+  placeholder = 'جستجو…',
+  className,
+}: {
+  onSearch: (q: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
   const [value, setValue] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => onSearch(value.trim()), 300);
@@ -94,8 +139,14 @@ export function SearchInput({ onSearch, placeholder = 'جستجو…', className
   }, [value, onSearch]);
   return (
     <div className={cn('relative', className)}>
-      <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={placeholder} className="h-9 ps-9" aria-label="جستجو" />
+      <Search className="text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2" />
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={placeholder}
+        className="h-9 ps-9"
+        aria-label="جستجو"
+      />
     </div>
   );
 }
@@ -103,7 +154,11 @@ export function SearchInput({ onSearch, placeholder = 'جستجو…', className
 export function TableCard({ toolbar, children }: { toolbar?: ReactNode; children: ReactNode }) {
   return (
     <Card className="overflow-hidden">
-      {toolbar ? <div className="flex flex-wrap items-center gap-2 border-b border-border p-3">{toolbar}</div> : null}
+      {toolbar ? (
+        <div className="border-border flex flex-wrap items-center gap-2 border-b p-3">
+          {toolbar}
+        </div>
+      ) : null}
       {children}
     </Card>
   );

@@ -121,7 +121,9 @@ export class AdminProductsService {
           slug: product.slug,
           status: product.status,
           imageUrl: product.images[0]?.url ?? null,
-          brandName: product.brandId ? (taxonomy.brandsById.get(product.brandId)?.name ?? null) : null,
+          brandName: product.brandId
+            ? (taxonomy.brandsById.get(product.brandId)?.name ?? null)
+            : null,
           categoryName: taxonomy.categoriesById.get(product.categoryId)?.name ?? '—',
           skus: product.variants.map((v) => v.sku),
           minPrice: prices.length ? Math.min(...prices) : 0,
@@ -181,7 +183,11 @@ export class AdminProductsService {
     return this.get(productId);
   }
 
-  async update(id: string, input: ProductUpsertInput, actor: AuthContext): Promise<AdminProductDetail> {
+  async update(
+    id: string,
+    input: ProductUpsertInput,
+    actor: AuthContext,
+  ): Promise<AdminProductDetail> {
     const existing = await this.prisma.product.findFirst({
       where: { id, deletedAt: null },
       include: ADMIN_PRODUCT_INCLUDE,
@@ -240,13 +246,21 @@ export class AdminProductsService {
     return this.get(id);
   }
 
-  async updateVariantPrice(variantId: string, input: VariantPriceUpdateInput): Promise<AdminProductDetail> {
-    const variant = await this.prisma.productVariant.findFirst({ where: { id: variantId, deletedAt: null } });
+  async updateVariantPrice(
+    variantId: string,
+    input: VariantPriceUpdateInput,
+  ): Promise<AdminProductDetail> {
+    const variant = await this.prisma.productVariant.findFirst({
+      where: { id: variantId, deletedAt: null },
+    });
     if (!variant) throw AppException.notFound('تنوع محصول یافت نشد.');
     await this.prisma.$transaction(async (tx) => {
       await tx.productVariant.update({
         where: { id: variantId },
-        data: { price: BigInt(input.price), compareAtPrice: input.compareAtPrice ? BigInt(input.compareAtPrice) : null },
+        data: {
+          price: BigInt(input.price),
+          compareAtPrice: input.compareAtPrice ? BigInt(input.compareAtPrice) : null,
+        },
       });
       await this.refreshPriceRange(tx, variant.productId);
       await this.audit.record(
@@ -255,7 +269,9 @@ export class AdminProductsService {
           entityType: 'product',
           entityId: variant.productId,
           summary: `تغییر قیمت ${variant.sku}`,
-          before: { [variant.sku]: { price: variant.price, compareAtPrice: variant.compareAtPrice } },
+          before: {
+            [variant.sku]: { price: variant.price, compareAtPrice: variant.compareAtPrice },
+          },
           after: { [variant.sku]: { price: input.price, compareAtPrice: input.compareAtPrice } },
         },
         tx,
@@ -271,20 +287,37 @@ export class AdminProductsService {
     const product = await this.prisma.product.findFirst({ where: { id, deletedAt: null } });
     if (!product) throw AppException.notFound('محصول یافت نشد.');
     await this.prisma.$transaction(async (tx) => {
-      await tx.product.update({ where: { id }, data: { deletedAt: new Date(), status: 'archived' } });
+      await tx.product.update({
+        where: { id },
+        data: { deletedAt: new Date(), status: 'archived' },
+      });
       await tx.cartItem.deleteMany({ where: { variant: { productId: id } } });
       await this.audit.record(
-        { action: 'product.delete', entityType: 'product', entityId: id, summary: `حذف محصول ${product.title}` },
+        {
+          action: 'product.delete',
+          entityType: 'product',
+          entityId: id,
+          summary: `حذف محصول ${product.title}`,
+        },
         tx,
       );
       await this.outbox.record(tx, [
-        { type: 'product.deleted', aggregateType: 'product', aggregateId: id, payload: { productIds: [id] } },
+        {
+          type: 'product.deleted',
+          aggregateType: 'product',
+          aggregateId: id,
+          payload: { productIds: [id] },
+        },
       ]);
     });
     this.outbox.flush();
   }
 
-  private async prepare(input: ProductUpsertInput, taxonomy: Taxonomy, existing: AdminProductRecord | null) {
+  private async prepare(
+    input: ProductUpsertInput,
+    taxonomy: Taxonomy,
+    existing: AdminProductRecord | null,
+  ) {
     const errors: FieldError[] = [];
     if (!taxonomy.categoriesById.has(input.categoryId)) {
       errors.push({ path: 'categoryId', message: 'دسته‌بندی یافت نشد.' });
@@ -312,17 +345,25 @@ export class AdminProductsService {
       errors.push({ path: 'relatedProductIds', message: 'محصول نمی‌تواند به خودش مرتبط باشد.' });
     }
     if (relatedIds.length > 0) {
-      const found = await this.prisma.product.count({ where: { id: { in: relatedIds }, deletedAt: null } });
-      if (found !== relatedIds.length) errors.push({ path: 'relatedProductIds', message: 'محصول مرتبط یافت نشد.' });
+      const found = await this.prisma.product.count({
+        where: { id: { in: relatedIds }, deletedAt: null },
+      });
+      if (found !== relatedIds.length)
+        errors.push({ path: 'relatedProductIds', message: 'محصول مرتبط یافت نشد.' });
     }
 
     let slug = input.slug ?? existing?.slug;
     if (input.slug && input.slug !== existing?.slug) {
-      const taken = await this.prisma.product.count({ where: { slug: input.slug, id: { not: existing?.id } } });
+      const taken = await this.prisma.product.count({
+        where: { slug: input.slug, id: { not: existing?.id } },
+      });
       if (taken > 0) errors.push({ path: 'slug', message: 'این نامک قبلاً استفاده شده است.' });
     }
     if (errors.length > 0) throw AppException.validation(errors);
-    slug ??= await uniqueSlug(input.englishTitle ?? input.title, async (s) => (await this.prisma.product.count({ where: { slug: s } })) > 0);
+    slug ??= await uniqueSlug(
+      input.englishTitle ?? input.title,
+      async (s) => (await this.prisma.product.count({ where: { slug: s } })) > 0,
+    );
 
     const activePrices = input.variants.filter((v) => v.isActive).map((v) => v.price);
     const prices = activePrices.length > 0 ? activePrices : input.variants.map((v) => v.price);
@@ -351,12 +392,19 @@ export class AdminProductsService {
         minPrice: BigInt(Math.min(...prices)),
         maxPrice: BigInt(Math.max(...prices)),
       },
-      images: input.images.map((image, index) => ({ url: image.url, alt: image.alt ?? input.title, sortOrder: index })),
+      images: input.images.map((image, index) => ({
+        url: image.url,
+        alt: image.alt ?? input.title,
+        sortOrder: index,
+      })),
       attributeValues: attributes.values,
     };
   }
 
-  private async identifierConflicts(input: ProductUpsertInput, productId: string | null): Promise<FieldError[]> {
+  private async identifierConflicts(
+    input: ProductUpsertInput,
+    productId: string | null,
+  ): Promise<FieldError[]> {
     const skus = input.variants.map((v) => v.sku);
     const barcodes = input.variants.map((v) => v.barcode).filter((b): b is string => Boolean(b));
     const clashes = await this.prisma.productVariant.findMany({
@@ -369,10 +417,16 @@ export class AdminProductsService {
     const errors: FieldError[] = [];
     input.variants.forEach((variant, index) => {
       if (clashes.some((c) => c.sku === variant.sku)) {
-        errors.push({ path: `variants.${index}.sku`, message: `SKU ${variant.sku} برای محصول دیگری ثبت شده است.` });
+        errors.push({
+          path: `variants.${index}.sku`,
+          message: `SKU ${variant.sku} برای محصول دیگری ثبت شده است.`,
+        });
       }
       if (variant.barcode && clashes.some((c) => c.barcode === variant.barcode)) {
-        errors.push({ path: `variants.${index}.barcode`, message: 'این بارکد برای محصول دیگری ثبت شده است.' });
+        errors.push({
+          path: `variants.${index}.barcode`,
+          message: 'این بارکد برای محصول دیگری ثبت شده است.',
+        });
       }
     });
     return errors;
@@ -385,7 +439,8 @@ export class AdminProductsService {
         ? { price: toRial(current.price), compareAtPrice: toRial(current.compareAtPrice) }
         : null;
       const after = { price: variant.price, compareAtPrice: variant.compareAtPrice };
-      if (before && before.price === after.price && before.compareAtPrice === after.compareAtPrice) return [];
+      if (before && before.price === after.price && before.compareAtPrice === after.compareAtPrice)
+        return [];
       return [{ sku: variant.sku, before, after }];
     });
   }
@@ -431,7 +486,11 @@ export class AdminProductsService {
     }
   }
 
-  private async writeRelations(tx: Tx, productId: string, input: ProductUpsertInput): Promise<void> {
+  private async writeRelations(
+    tx: Tx,
+    productId: string,
+    input: ProductUpsertInput,
+  ): Promise<void> {
     await tx.productRelation.deleteMany({ where: { productId } });
     const data = [
       ...input.relatedProductIds.map((relatedProductId, sortOrder) => ({
@@ -469,7 +528,12 @@ export class AdminProductsService {
 
   private async recordChanged(tx: Tx, productId: string): Promise<void> {
     await this.outbox.record(tx, [
-      { type: 'product.changed', aggregateType: 'product', aggregateId: productId, payload: { productIds: [productId] } },
+      {
+        type: 'product.changed',
+        aggregateType: 'product',
+        aggregateId: productId,
+        payload: { productIds: [productId] },
+      },
     ]);
   }
 
@@ -506,7 +570,14 @@ export class AdminProductsService {
       images: product.images.map((image) => ({ url: image.url, alt: image.alt })),
       attributes: product.attributeValues.flatMap((value) => {
         const attribute = taxonomy.attributesById.get(value.attributeId);
-        return attribute ? [{ attributeId: value.attributeId, value: toEditableValue(attribute, toStoredValue(value)) }] : [];
+        return attribute
+          ? [
+              {
+                attributeId: value.attributeId,
+                value: toEditableValue(attribute, toStoredValue(value)),
+              },
+            ]
+          : [];
       }),
       variants: product.variants.map((variant) => ({
         id: variant.id,
@@ -529,8 +600,12 @@ export class AdminProductsService {
           available: Math.max(0, level.onHand - level.reserved),
         })),
       })),
-      relatedProductIds: product.relations.filter((r) => r.type === 'related').map((r) => r.relatedProductId),
-      accessoryProductIds: product.relations.filter((r) => r.type === 'accessory').map((r) => r.relatedProductId),
+      relatedProductIds: product.relations
+        .filter((r) => r.type === 'related')
+        .map((r) => r.relatedProductId),
+      accessoryProductIds: product.relations
+        .filter((r) => r.type === 'accessory')
+        .map((r) => r.relatedProductId),
       isFeatured: product.isFeatured,
       seoTitle: product.seoTitle,
       seoDescription: product.seoDescription,

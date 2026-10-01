@@ -20,7 +20,7 @@ export function CompareView() {
 
   if (compare.ids.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card">
+      <div className="border-border bg-card rounded-lg border">
         <EmptyState
           icon={<GitCompareArrows />}
           title="لیست مقایسه خالی است"
@@ -37,50 +37,62 @@ export function CompareView() {
   if (isLoading || !data) return <Skeleton className="h-96" />;
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+    <div className="border-border bg-card overflow-x-auto rounded-lg border">
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <thead>
           <tr>
-            <th className="w-44 border-b border-border p-3" />
+            <th className="border-border w-44 border-b p-3" />
             {data.products.map((product) => (
-              <th key={product.id} className="border-b border-s border-border p-3 align-top font-normal">
-                <div className="relative mx-auto mb-2 aspect-square w-32 rounded-md bg-muted">
+              <th
+                key={product.id}
+                className="border-border border-b border-s p-3 align-top font-normal"
+              >
+                <div className="bg-muted relative mx-auto mb-2 aspect-square w-32 rounded-md">
                   <ProductImage src={product.imageUrl} alt={product.title} sizes="128px" />
                   <button
                     type="button"
                     onClick={() => compare.remove(product.id)}
-                    className="absolute -top-2 -end-2 flex size-6 items-center justify-center rounded-full border border-border bg-card"
+                    className="border-border bg-card absolute -end-2 -top-2 flex size-6 items-center justify-center rounded-full border"
                     aria-label="حذف از مقایسه"
                   >
                     <X className="size-3.5" />
                   </button>
                 </div>
-                <Link href={`/product/${product.slug}`} className="line-clamp-2 font-semibold hover:text-primary">
+                <Link
+                  href={`/product/${product.slug}`}
+                  className="hover:text-primary line-clamp-2 font-semibold"
+                >
                   {product.title}
                 </Link>
-                <p className="mt-1 font-bold">{product.inStock ? price(product.price) : 'ناموجود'}</p>
+                <p className="mt-1 font-bold">
+                  {product.inStock ? price(product.price) : 'ناموجود'}
+                </p>
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
           <tr className="bg-muted/40">
-            <th className="p-3 text-start font-medium text-muted-foreground">برند</th>
+            <th className="text-muted-foreground p-3 text-start font-medium">برند</th>
             {data.products.map((product) => (
-              <td key={product.id} className="border-s border-border p-3 text-center">{product.brand ?? '—'}</td>
+              <td key={product.id} className="border-border border-s p-3 text-center">
+                {product.brand ?? '—'}
+              </td>
             ))}
           </tr>
           {data.attributes.map((attribute, index) => (
             <tr key={attribute.code} className={index % 2 ? 'bg-muted/40' : undefined}>
-              <th className="p-3 text-start font-medium text-muted-foreground">{attribute.name}</th>
+              <th className="text-muted-foreground p-3 text-start font-medium">{attribute.name}</th>
               {data.products.map((product) => (
-                <td key={product.id} className="border-s border-border p-3 text-center">{product.specs[attribute.code] ?? '—'}</td>
+                <td key={product.id} className="border-border border-s p-3 text-center">
+                  {product.specs[attribute.code] ?? '—'}
+                </td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
-      <div className="flex justify-end border-t border-border p-3">
+      <div className="border-border flex justify-end border-t p-3">
         <Button variant="ghost" size="sm" onClick={compare.clear}>
           پاک کردن لیست مقایسه
         </Button>

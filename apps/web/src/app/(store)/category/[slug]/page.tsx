@@ -14,7 +14,10 @@ interface Props {
 }
 
 const loadCategory = (slug: string) =>
-  serverApiOrNull<CategoryPage>(`/categories/${encodeURIComponent(slug)}`, { revalidate: 300, tags: ['categories'] });
+  serverApiOrNull<CategoryPage>(`/categories/${encodeURIComponent(slug)}`, {
+    revalidate: 300,
+    tags: ['categories'],
+  });
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -29,7 +32,10 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       `خرید انواع ${page.category.name} با مشخصات فنی کامل، مقایسه قیمت و موجودی واقعی.`,
     alternates: { canonical: `/category/${page.category.slug}` },
     robots: hasActiveFilters(state) ? { index: false, follow: true } : undefined,
-    openGraph: { title: page.category.name, images: page.category.imageUrl ? [page.category.imageUrl] : undefined },
+    openGraph: {
+      title: page.category.name,
+      images: page.category.imageUrl ? [page.category.imageUrl] : undefined,
+    },
   };
 }
 
@@ -46,16 +52,24 @@ export default async function CategoryRoute({ params, searchParams }: Props) {
   return (
     <div className="container-page py-6">
       <Breadcrumbs items={crumbs} />
-      <div className="mb-5 flex flex-col gap-4 rounded-lg border border-border bg-card p-5 md:flex-row md:items-center">
+      <div className="border-border bg-card mb-5 flex flex-col gap-4 rounded-lg border p-5 md:flex-row md:items-center">
         {page.category.imageUrl ? (
-          <div className="relative hidden size-16 shrink-0 rounded-full bg-muted md:block">
-            <Image src={page.category.imageUrl} alt="" fill unoptimized className="object-contain p-2" />
+          <div className="bg-muted relative hidden size-16 shrink-0 rounded-full md:block">
+            <Image
+              src={page.category.imageUrl}
+              alt=""
+              fill
+              unoptimized
+              className="object-contain p-2"
+            />
           </div>
         ) : null}
         <div className="flex-1">
           <h1 className="text-xl font-extrabold">{page.category.name}</h1>
           {page.category.description ? (
-            <p className="mt-1 text-sm leading-7 text-muted-foreground">{page.category.description}</p>
+            <p className="text-muted-foreground mt-1 text-sm leading-7">
+              {page.category.description}
+            </p>
           ) : null}
         </div>
       </div>
@@ -65,14 +79,18 @@ export default async function CategoryRoute({ params, searchParams }: Props) {
             <Link
               key={child.id}
               href={`/category/${child.slug}`}
-              className="rounded-full border border-border bg-card px-4 py-1.5 text-sm hover:border-primary hover:text-primary"
+              className="border-border bg-card hover:border-primary hover:text-primary rounded-full border px-4 py-1.5 text-sm"
             >
               {child.name}
             </Link>
           ))}
         </div>
       ) : null}
-      <ProductListing state={state} basePath={`/category/${page.category.slug}`} category={page.category.slug} />
+      <ProductListing
+        state={state}
+        basePath={`/category/${page.category.slug}`}
+        category={page.category.slug}
+      />
     </div>
   );
 }

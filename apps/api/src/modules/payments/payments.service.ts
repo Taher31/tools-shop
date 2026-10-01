@@ -48,7 +48,11 @@ export class PaymentsService {
   ) {}
 
   /** Starts a payment attempt for an order awaiting payment; returns the gateway URL. */
-  async start(orderId: string, userId: string, providerCode?: string): Promise<{ paymentUrl: string; amount: number }> {
+  async start(
+    orderId: string,
+    userId: string,
+    providerCode?: string,
+  ): Promise<{ paymentUrl: string; amount: number }> {
     const provider = this.registry.get(providerCode);
     const order = await this.prisma.order.findFirst({
       where: { id: orderId, userId },
@@ -59,12 +63,20 @@ export class PaymentsService {
       throw new AppException('INVALID_ORDER_TRANSITION', 'این سفارش در انتظار پرداخت نیست.');
     }
     if (!order.reservationExpiresAt || order.reservationExpiresAt <= new Date()) {
-      throw new AppException('INVALID_ORDER_TRANSITION', 'مهلت پرداخت این سفارش به پایان رسیده است.');
+      throw new AppException(
+        'INVALID_ORDER_TRANSITION',
+        'مهلت پرداخت این سفارش به پایان رسیده است.',
+      );
     }
 
     const amount = toRial(order.total);
     const payment = await this.prisma.payment.create({
-      data: { orderId: order.id, provider: provider.code, amount: order.total, status: 'initiated' },
+      data: {
+        orderId: order.id,
+        provider: provider.code,
+        amount: order.total,
+        status: 'initiated',
+      },
     });
     try {
       const created = await provider.createPayment({
@@ -78,11 +90,18 @@ export class PaymentsService {
       });
       await this.prisma.payment.update({
         where: { id: payment.id },
-        data: { status: 'pending', authority: created.authority, providerData: (created.raw ?? undefined) as Prisma.InputJsonValue },
+        data: {
+          status: 'pending',
+          authority: created.authority,
+          providerData: (created.raw ?? undefined) as Prisma.InputJsonValue,
+        },
       });
       return { paymentUrl: created.redirectUrl, amount };
     } catch (error) {
-      this.logger.error({ err: error, paymentId: payment.id, provider: provider.code }, 'Payment creation failed');
+      this.logger.error(
+        { err: error, paymentId: payment.id, provider: provider.code },
+        'Payment creation failed',
+      );
       await this.prisma.payment.update({
         where: { id: payment.id },
         data: { status: 'failed', failureReason: 'خطا در اتصال به درگاه پرداخت' },
@@ -92,12 +111,17 @@ export class PaymentsService {
   }
 
   /** Gateway callback (GET or POST). Always ends in a redirect to the result page. */
-  async handleCallback(providerCode: string, params: Record<string, string>): Promise<CallbackOutcome> {
+  async handleCallback(
+    providerCode: string,
+    params: Record<string, string>,
+  ): Promise<CallbackOutcome> {
     if (!this.registry.has(providerCode)) throw AppException.notFound();
     const provider = this.registry.get(providerCode);
     const { authority } = provider.parseCallback(params);
     const payment = authority
-      ? await this.prisma.payment.findUnique({ where: { provider_authority: { provider: providerCode, authority } } })
+      ? await this.prisma.payment.findUnique({
+          where: { provider_authority: { provider: providerCode, authority } },
+        })
       : null;
     if (!payment) {
       this.logger.warn({ provider: providerCode, authority }, 'Callback for unknown payment');
@@ -108,9 +132,16 @@ export class PaymentsService {
     const verification =
       payment.status === 'pending' || payment.status === 'initiated'
         ? await provider
-            .verifyPayment({ authority: payment.authority ?? '', amount: toRial(payment.amount), callbackParams: params })
+            .verifyPayment({
+              authority: payment.authority ?? '',
+              amount: toRial(payment.amount),
+              callbackParams: params,
+            })
             .catch((error: unknown) => {
-              this.logger.error({ err: error, paymentId: payment.id }, 'Payment verification error');
+              this.logger.error(
+                { err: error, paymentId: payment.id },
+                'Payment verification error',
+              );
               return { status: 'failed' as const, reason: 'خطا در تأیید تراکنش با درگاه' };
             })
         : null;
@@ -134,12 +165,20 @@ export class PaymentsService {
         });
         const order = await this.orders.lock(tx, payment.orderId);
         if (order.status === 'awaiting_payment') {
-          await this.orders.transition(tx, order, 'paid', { type: 'system' }, { note: `پرداخت موفق – کد پیگیری ${verification.referenceId}` });
+          await this.orders.transition(
+            tx,
+            order,
+            'paid',
+            { type: 'system' },
+            { note: `پرداخت موفق – کد پیگیری ${verification.referenceId}` },
+          );
         } else {
           // Money arrived for an order that is no longer payable (e.g. expired): flag for refund.
           await tx.order.update({
             where: { id: order.id },
-            data: { adminNote: `پرداخت موفق پس از لغو سفارش (کد پیگیری ${verification.referenceId}) – نیازمند بازپرداخت` },
+            data: {
+              adminNote: `پرداخت موفق پس از لغو سفارش (کد پیگیری ${verification.referenceId}) – نیازمند بازپرداخت`,
+            },
           });
           await this.outbox.record(tx, [
             {
@@ -188,13 +227,19 @@ export class PaymentsService {
   }
 
   async refund(paymentId: string, input: RefundInput): Promise<AdminPaymentView> {
-    const payment = await this.prisma.payment.findUnique({ where: { id: paymentId }, include: { order: true } });
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { order: true },
+    });
     if (!payment) throw AppException.notFound('پرداخت یافت نشد.');
-    if (payment.status !== 'succeeded') throw AppException.conflict('فقط پرداخت‌های موفق قابل بازپرداخت هستند.');
+    if (payment.status !== 'succeeded')
+      throw AppException.conflict('فقط پرداخت‌های موفق قابل بازپرداخت هستند.');
     const refundable = toRial(payment.amount) - toRial(payment.refundedAmount);
     const amount = input.amount ?? refundable;
     if (amount <= 0 || amount > refundable) {
-      throw AppException.validation([{ path: 'amount', message: `حداکثر مبلغ قابل بازپرداخت ${refundable} ریال است.` }]);
+      throw AppException.validation([
+        { path: 'amount', message: `حداکثر مبلغ قابل بازپرداخت ${refundable} ریال است.` },
+      ]);
     }
 
     const provider = this.registry.get(payment.provider);
@@ -212,7 +257,11 @@ export class PaymentsService {
       const fullyRefunded = refundedAmount >= payment.amount;
       await tx.payment.update({
         where: { id: paymentId },
-        data: { refundedAmount, refundedAt: new Date(), ...(fullyRefunded ? { status: 'refunded' } : {}) },
+        data: {
+          refundedAmount,
+          refundedAt: new Date(),
+          ...(fullyRefunded ? { status: 'refunded' } : {}),
+        },
       });
       await this.audit.record(
         {
@@ -221,14 +270,25 @@ export class PaymentsService {
           entityId: paymentId,
           summary: `بازپرداخت ${amount} ریال برای سفارش ${payment.order.orderNumber}`,
           before: { refundedAmount: payment.refundedAmount, status: payment.status },
-          after: { refundedAmount, status: fullyRefunded ? 'refunded' : payment.status, reason: input.reason, reference: outcome.reference },
+          after: {
+            refundedAmount,
+            status: fullyRefunded ? 'refunded' : payment.status,
+            reason: input.reason,
+            reference: outcome.reference,
+          },
         },
         tx,
       );
       if (fullyRefunded) {
         const order = await this.orders.lock(tx, payment.orderId);
         if (order.status === 'cancelled' || order.status === 'returned') {
-          await this.orders.transition(tx, order, 'refunded', { type: 'system' }, { note: input.reason });
+          await this.orders.transition(
+            tx,
+            order,
+            'refunded',
+            { type: 'system' },
+            { note: input.reason },
+          );
         }
       }
     });
@@ -261,7 +321,10 @@ export class PaymentsService {
   }
 
   private async adminOne(id: string): Promise<AdminPaymentView> {
-    const payment = await this.prisma.payment.findUniqueOrThrow({ where: { id }, include: ADMIN_PAYMENT_INCLUDE });
+    const payment = await this.prisma.payment.findUniqueOrThrow({
+      where: { id },
+      include: ADMIN_PAYMENT_INCLUDE,
+    });
     return toAdminPaymentView(payment);
   }
 
@@ -293,10 +356,14 @@ export class PaymentsService {
 }
 
 const ADMIN_PAYMENT_INCLUDE = {
-  order: { select: { id: true, orderNumber: true, user: { select: { firstName: true, lastName: true } } } },
+  order: {
+    select: { id: true, orderNumber: true, user: { select: { firstName: true, lastName: true } } },
+  },
 } satisfies Prisma.PaymentInclude;
 
-function toAdminPaymentView(payment: Prisma.PaymentGetPayload<{ include: typeof ADMIN_PAYMENT_INCLUDE }>): AdminPaymentView {
+function toAdminPaymentView(
+  payment: Prisma.PaymentGetPayload<{ include: typeof ADMIN_PAYMENT_INCLUDE }>,
+): AdminPaymentView {
   return {
     ...toPaymentView(payment),
     order: { id: payment.order.id, orderNumber: payment.order.orderNumber },

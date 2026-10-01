@@ -79,7 +79,9 @@ function toAddressSnapshot(value: Prisma.JsonValue): AddressSnapshot {
 
 export function toOrderDetail(order: OrderDetailRecord): OrderDetail {
   const reservationOpen =
-    order.status === 'awaiting_payment' && order.reservationExpiresAt !== null && order.reservationExpiresAt > new Date();
+    order.status === 'awaiting_payment' &&
+    order.reservationExpiresAt !== null &&
+    order.reservationExpiresAt > new Date();
   return {
     ...toOrderSummary(order),
     items: order.items.map((item) => ({
@@ -149,6 +151,8 @@ export function toAdminOrderDetail(order: AdminOrderRecord): AdminOrderDetail {
       email: order.user.email,
     },
     adminNote: order.adminNote,
-    allowedTransitions: [...ORDER_TRANSITIONS[order.status]].filter((status) => status !== 'refunded'),
+    allowedTransitions: [...ORDER_TRANSITIONS[order.status]].filter(
+      (status) => status !== 'refunded',
+    ),
   };
 }

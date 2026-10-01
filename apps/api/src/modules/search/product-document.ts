@@ -65,8 +65,12 @@ export interface ProductSearchDocument {
 }
 
 /** Returns null when the product must not be searchable (hidden, archived, no variants). */
-export function buildProductDocument(product: DocumentSource, taxonomy: Taxonomy): ProductSearchDocument | null {
-  if (product.status !== 'active' || product.deletedAt || product.variants.length === 0) return null;
+export function buildProductDocument(
+  product: DocumentSource,
+  taxonomy: Taxonomy,
+): ProductSearchDocument | null {
+  if (product.status !== 'active' || product.deletedAt || product.variants.length === 0)
+    return null;
   if (!taxonomy.isCategoryVisible(product.categoryId)) return null;
   const category = taxonomy.categoriesById.get(product.categoryId);
   if (!category) return null;

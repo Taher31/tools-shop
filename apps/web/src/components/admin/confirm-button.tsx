@@ -1,6 +1,16 @@
 'use client';
 
-import { Button, type ButtonProps, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@toolshop/ui';
+import {
+  Button,
+  type ButtonProps,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@toolshop/ui';
 import { type ReactNode, useState } from 'react';
 
 /** A button that asks for confirmation in a dialog before running a destructive action. */
@@ -34,7 +44,11 @@ export function ConfirmButton({
             انصراف
           </Button>
           <Button
-            variant={props.variant === 'destructive' || props.variant === 'ghost' ? 'destructive' : 'default'}
+            variant={
+              props.variant === 'destructive' || props.variant === 'ghost'
+                ? 'destructive'
+                : 'default'
+            }
             loading={loading}
             onClick={async () => {
               await onConfirm();

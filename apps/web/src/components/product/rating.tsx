@@ -4,9 +4,11 @@ import { faNumber } from '@/lib/format';
 export function RatingSummary({ average, count }: { average: number | null; count: number }) {
   if (!average || count === 0) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-      <Star className="size-3.5 fill-accent text-accent" />
-      <span className="font-semibold text-foreground">{faNumber(Math.round(average * 10) / 10)}</span>
+    <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+      <Star className="fill-accent text-accent size-3.5" />
+      <span className="text-foreground font-semibold">
+        {faNumber(Math.round(average * 10) / 10)}
+      </span>
       <span>({faNumber(count)})</span>
     </span>
   );

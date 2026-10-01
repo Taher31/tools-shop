@@ -1,6 +1,11 @@
 'use client';
 
-import { type AdminOrderSummary, ORDER_STATUS_LABELS, ORDER_STATUSES, type OrderStatus } from '@toolshop/shared';
+import {
+  type AdminOrderSummary,
+  ORDER_STATUS_LABELS,
+  ORDER_STATUSES,
+  type OrderStatus,
+} from '@toolshop/shared';
 import { NativeSelect } from '@toolshop/ui';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -20,7 +25,11 @@ function OrdersList() {
     <TableCard
       toolbar={
         <>
-          <SearchInput onSearch={list.setSearch} placeholder="شماره سفارش، موبایل یا نام خانوادگی" className="w-72" />
+          <SearchInput
+            onSearch={list.setSearch}
+            placeholder="شماره سفارش، موبایل یا نام خانوادگی"
+            className="w-72"
+          />
           <NativeSelect
             className="h-9 w-48"
             value={(list.params.status as string | undefined) ?? ''}
@@ -43,12 +52,32 @@ function OrdersList() {
         rowKey={(o) => o.id}
         onRowClick={(o) => router.push(`/admin/orders/${o.id}`)}
         columns={[
-          { header: 'شماره', cell: (o) => <Link href={`/admin/orders/${o.id}`} className="font-bold text-info">{faNumber(o.orderNumber)}</Link> },
-          { header: 'مشتری', cell: (o) => <div><p>{o.customer.fullName}</p><p className="ltr text-end text-xs text-muted-foreground">{o.customer.mobile}</p></div> },
+          {
+            header: 'شماره',
+            cell: (o) => (
+              <Link href={`/admin/orders/${o.id}`} className="text-info font-bold">
+                {faNumber(o.orderNumber)}
+              </Link>
+            ),
+          },
+          {
+            header: 'مشتری',
+            cell: (o) => (
+              <div>
+                <p>{o.customer.fullName}</p>
+                <p className="ltr text-muted-foreground text-end text-xs">{o.customer.mobile}</p>
+              </div>
+            ),
+          },
           { header: 'اقلام', cell: (o) => faNumber(o.itemsCount) },
           { header: 'مبلغ', cell: (o) => <span className="font-semibold">{price(o.total)}</span> },
           { header: 'وضعیت', cell: (o) => <OrderStatusBadge status={o.status} /> },
-          { header: 'ثبت', cell: (o) => <span className="text-xs text-muted-foreground">{dateTime(o.createdAt)}</span> },
+          {
+            header: 'ثبت',
+            cell: (o) => (
+              <span className="text-muted-foreground text-xs">{dateTime(o.createdAt)}</span>
+            ),
+          },
         ]}
       />
       <Pager data={list.data} onPage={list.setPage} />

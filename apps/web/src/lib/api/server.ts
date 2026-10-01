@@ -23,7 +23,10 @@ export async function serverApi<T>(path: string, options: ServerFetchOptions = {
     headers.cookie = (await cookies()).toString();
     init = { headers, cache: 'no-store' };
   } else {
-    init = { headers, next: { revalidate: options.revalidate ?? DEFAULT_REVALIDATE, tags: options.tags } };
+    init = {
+      headers,
+      next: { revalidate: options.revalidate ?? DEFAULT_REVALIDATE, tags: options.tags },
+    };
   }
   const response = await fetch(`${API_URL}/api/v1${path}`, init);
   const data: unknown = await response.json().catch(() => null);
@@ -32,11 +35,15 @@ export async function serverApi<T>(path: string, options: ServerFetchOptions = {
 }
 
 /** Same as serverApi but resolves to null on 404 (callers then render notFound()). */
-export async function serverApiOrNull<T>(path: string, options: ServerFetchOptions = {}): Promise<T | null> {
+export async function serverApiOrNull<T>(
+  path: string,
+  options: ServerFetchOptions = {},
+): Promise<T | null> {
   try {
     return await serverApi<T>(path, options);
   } catch (error) {
-    if (error instanceof Error && 'status' in error && (error as { status: number }).status === 404) return null;
+    if (error instanceof Error && 'status' in error && (error as { status: number }).status === 404)
+      return null;
     throw error;
   }
 }

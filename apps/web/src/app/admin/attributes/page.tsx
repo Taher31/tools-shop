@@ -1,7 +1,13 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ATTRIBUTE_TYPE_LABELS, ATTRIBUTE_TYPES, type AttributeType, type AttributeUpsertInput, type AttributeView } from '@toolshop/shared';
+import {
+  ATTRIBUTE_TYPE_LABELS,
+  ATTRIBUTE_TYPES,
+  type AttributeType,
+  type AttributeUpsertInput,
+  type AttributeView,
+} from '@toolshop/shared';
 import { Badge, Button, Field, Input, NativeSelect, Switch } from '@toolshop/ui';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
@@ -31,7 +37,10 @@ interface AttributeForm {
 
 export default function AttributesPage() {
   const { can } = usePermissions();
-  const list = useQuery({ queryKey: ['admin', 'attributes'], queryFn: () => api.get<Row[]>('/admin/attributes') });
+  const list = useQuery({
+    queryKey: ['admin', 'attributes'],
+    queryFn: () => api.get<Row[]>('/admin/attributes'),
+  });
   const [editing, setEditing] = useState<Row | null | undefined>(undefined);
   const form = useForm<AttributeForm>({
     values: {
@@ -50,17 +59,28 @@ export default function AttributesPage() {
   const options = useFieldArray({ control: form.control, name: 'options' });
   const type = form.watch('type');
   const save = useAdminMutation(
-    (input: AttributeUpsertInput) => (editing ? api.put(`/admin/attributes/${editing.id}`, input) : api.post('/admin/attributes', input)),
+    (input: AttributeUpsertInput) =>
+      editing
+        ? api.put(`/admin/attributes/${editing.id}`, input)
+        : api.post('/admin/attributes', input),
     { success: 'ویژگی ذخیره شد.', onSuccess: () => setEditing(undefined) },
   );
-  const remove = useAdminMutation((id: string) => api.delete(`/admin/attributes/${id}`), { success: 'ویژگی حذف شد.' });
+  const remove = useAdminMutation((id: string) => api.delete(`/admin/attributes/${id}`), {
+    success: 'ویژگی حذف شد.',
+  });
 
   return (
     <>
       <PageHeader
         title="ویژگی‌های فنی"
         description="تعریف مشخصات فنی (توان، ولتاژ، قطر سه‌نظام…) بدون نیاز به تغییر ساختار دیتابیس"
-        actions={can('attribute.create') ? <Button onClick={() => setEditing(null)}><Plus /> ویژگی جدید</Button> : null}
+        actions={
+          can('attribute.create') ? (
+            <Button onClick={() => setEditing(null)}>
+              <Plus /> ویژگی جدید
+            </Button>
+          ) : null
+        }
       />
       <TableCard>
         <DataTable
@@ -73,15 +93,40 @@ export default function AttributesPage() {
             { header: 'نوع', cell: (a) => ATTRIBUTE_TYPE_LABELS[a.type] },
             { header: 'واحد', cell: (a) => a.unit ?? '—' },
             { header: 'گروه', cell: (a) => <span className="text-xs">{a.groupName ?? '—'}</span> },
-            { header: 'فیلتر', cell: (a) => (a.isFilterable ? <Badge variant="info">بله</Badge> : '—') },
-            { header: 'استفاده', cell: (a) => <span className="text-xs">{faNumber(a.usage.categories)} دسته / {faNumber(a.usage.products)} محصول</span> },
+            {
+              header: 'فیلتر',
+              cell: (a) => (a.isFilterable ? <Badge variant="info">بله</Badge> : '—'),
+            },
+            {
+              header: 'استفاده',
+              cell: (a) => (
+                <span className="text-xs">
+                  {faNumber(a.usage.categories)} دسته / {faNumber(a.usage.products)} محصول
+                </span>
+              ),
+            },
             {
               header: '',
               cell: (a) => (
                 <div className="flex justify-end gap-1">
-                  {can('attribute.update') ? <Button size="icon-sm" variant="ghost" onClick={() => setEditing(a)} aria-label="ویرایش"><Pencil /></Button> : null}
+                  {can('attribute.update') ? (
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => setEditing(a)}
+                      aria-label="ویرایش"
+                    >
+                      <Pencil />
+                    </Button>
+                  ) : null}
                   {can('attribute.delete') ? (
-                    <ConfirmButton size="icon-sm" variant="ghost" aria-label="حذف" title={`حذف ویژگی «${a.name}»؟`} onConfirm={() => remove.mutateAsync(a.id)}>
+                    <ConfirmButton
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label="حذف"
+                      title={`حذف ویژگی «${a.name}»؟`}
+                      onConfirm={() => remove.mutateAsync(a.id)}
+                    >
                       <Trash2 className="text-destructive" />
                     </ConfirmButton>
                   ) : null}
@@ -104,42 +149,99 @@ export default function AttributesPage() {
             groupName: v.groupName || null,
             description: null,
             sortOrder: Number(v.sortOrder) || 0,
-            options: v.type === 'select' || v.type === 'multiselect' ? v.options.map((o, i) => ({ ...o, sortOrder: i })) : [],
+            options:
+              v.type === 'select' || v.type === 'multiselect'
+                ? v.options.map((o, i) => ({ ...o, sortOrder: i }))
+                : [],
           }),
         )}
       >
         <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="نام فارسی" htmlFor="a-name" required><Input id="a-name" {...form.register('name')} /></Field>
-          <Field label="کد (انگلیسی)" htmlFor="a-code" required hint="مثال: chuck_size_mm"><Input id="a-code" dir="ltr" {...form.register('code')} /></Field>
+          <Field label="نام فارسی" htmlFor="a-name" required>
+            <Input id="a-name" {...form.register('name')} />
+          </Field>
+          <Field label="کد (انگلیسی)" htmlFor="a-code" required hint="مثال: chuck_size_mm">
+            <Input id="a-code" dir="ltr" {...form.register('code')} />
+          </Field>
           <Field label="نوع" htmlFor="a-type">
-            <NativeSelect id="a-type" {...form.register('type')} disabled={Boolean(editing && editing.usage.products > 0)}>
-              {ATTRIBUTE_TYPES.map((t) => <option key={t} value={t}>{ATTRIBUTE_TYPE_LABELS[t]}</option>)}
+            <NativeSelect
+              id="a-type"
+              {...form.register('type')}
+              disabled={Boolean(editing && editing.usage.products > 0)}
+            >
+              {ATTRIBUTE_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {ATTRIBUTE_TYPE_LABELS[t]}
+                </option>
+              ))}
             </NativeSelect>
           </Field>
-          <Field label="واحد" htmlFor="a-unit"><Input id="a-unit" placeholder="وات، ولت، میلی‌متر…" {...form.register('unit')} /></Field>
-          <Field label="گروه نمایش" htmlFor="a-group"><Input id="a-group" placeholder="موتور و عملکرد" {...form.register('groupName')} /></Field>
-          <Field label="ترتیب" htmlFor="a-sort"><Input id="a-sort" type="number" dir="ltr" {...form.register('sortOrder')} /></Field>
+          <Field label="واحد" htmlFor="a-unit">
+            <Input id="a-unit" placeholder="وات، ولت، میلی‌متر…" {...form.register('unit')} />
+          </Field>
+          <Field label="گروه نمایش" htmlFor="a-group">
+            <Input id="a-group" placeholder="موتور و عملکرد" {...form.register('groupName')} />
+          </Field>
+          <Field label="ترتیب" htmlFor="a-sort">
+            <Input id="a-sort" type="number" dir="ltr" {...form.register('sortOrder')} />
+          </Field>
         </div>
         <div className="flex flex-wrap gap-5 text-sm">
           {(['isFilterable', 'isSearchable', 'isComparable'] as const).map((key) => (
-            <Controller key={key} control={form.control} name={key} render={({ field }) => (
-              <label className="flex items-center gap-2"><Switch checked={field.value} onCheckedChange={field.onChange} />
-                {{ isFilterable: 'قابل فیلتر', isSearchable: 'قابل جستجو', isComparable: 'در مقایسه' }[key]}
-              </label>
-            )} />
+            <Controller
+              key={key}
+              control={form.control}
+              name={key}
+              render={({ field }) => (
+                <label className="flex items-center gap-2">
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  {
+                    {
+                      isFilterable: 'قابل فیلتر',
+                      isSearchable: 'قابل جستجو',
+                      isComparable: 'در مقایسه',
+                    }[key]
+                  }
+                </label>
+              )}
+            />
           ))}
         </div>
         {type === 'select' || type === 'multiselect' ? (
-          <div className="space-y-2 rounded-md border border-border p-3">
+          <div className="border-border space-y-2 rounded-md border p-3">
             <p className="text-sm font-bold">گزینه‌ها</p>
             {options.fields.map((option, index) => (
               <div key={option.id} className="flex gap-2">
-                <Input placeholder="مقدار (انگلیسی)" dir="ltr" className="h-9" {...form.register(`options.${index}.value`)} />
-                <Input placeholder="برچسب فارسی" className="h-9" {...form.register(`options.${index}.label`)} />
-                <Button type="button" variant="ghost" size="icon-sm" onClick={() => options.remove(index)} aria-label="حذف گزینه"><X /></Button>
+                <Input
+                  placeholder="مقدار (انگلیسی)"
+                  dir="ltr"
+                  className="h-9"
+                  {...form.register(`options.${index}.value`)}
+                />
+                <Input
+                  placeholder="برچسب فارسی"
+                  className="h-9"
+                  {...form.register(`options.${index}.label`)}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => options.remove(index)}
+                  aria-label="حذف گزینه"
+                >
+                  <X />
+                </Button>
               </div>
             ))}
-            <Button type="button" variant="outline" size="sm" onClick={() => options.append({ value: '', label: '' })}><Plus /> افزودن گزینه</Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => options.append({ value: '', label: '' })}
+            >
+              <Plus /> افزودن گزینه
+            </Button>
           </div>
         ) : null}
       </FormDialog>

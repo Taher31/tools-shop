@@ -50,7 +50,11 @@ export function clearAuthCookies(response: Response, config: AppConfig): void {
 }
 
 export function setCartCookie(response: Response, config: AppConfig, token: string): void {
-  response.cookie(CART_COOKIE, token, { ...baseOptions(config), path: '/', maxAge: 60 * 86_400_000 });
+  response.cookie(CART_COOKIE, token, {
+    ...baseOptions(config),
+    path: '/',
+    maxAge: 60 * 86_400_000,
+  });
 }
 
 export function clearCartCookie(response: Response, config: AppConfig): void {

@@ -69,7 +69,9 @@ export class OrdersService {
 
   /** Locks the order row for the rest of the transaction. */
   async lock(tx: Tx, orderId: string): Promise<Order> {
-    const rows = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Order" WHERE "id" = ${orderId}::uuid FOR UPDATE`;
+    const rows = await tx.$queryRaw<
+      { id: string }[]
+    >`SELECT "id" FROM "Order" WHERE "id" = ${orderId}::uuid FOR UPDATE`;
     if (rows.length === 0) throw AppException.notFound('سفارش یافت نشد.');
     return tx.order.findUniqueOrThrow({ where: { id: orderId } });
   }
@@ -84,7 +86,8 @@ export class OrdersService {
     try {
       assertOrderTransition(order.status, to);
     } catch (error) {
-      if (error instanceof InvalidOrderTransitionError) throw new AppException('INVALID_ORDER_TRANSITION');
+      if (error instanceof InvalidOrderTransitionError)
+        throw new AppException('INVALID_ORDER_TRANSITION');
       throw error;
     }
     const reference = `ORDER-${order.orderNumber}`;
@@ -100,7 +103,11 @@ export class OrdersService {
         if (STOCK_COMMITTED_STATUSES.includes(order.status)) {
           await this.inventory.restockOrder(tx, order.id, 'cancellation', reference);
         } else {
-          await this.inventory.releaseReservations(tx, order.id, actor.type === 'system' ? 'expired' : 'released');
+          await this.inventory.releaseReservations(
+            tx,
+            order.id,
+            actor.type === 'system' ? 'expired' : 'released',
+          );
           await this.coupons.releaseForOrder(tx, order.id);
           await tx.payment.updateMany({
             where: { orderId: order.id, status: { in: ['initiated', 'pending'] } },
@@ -144,7 +151,14 @@ export class OrdersService {
         payload: { orderId: order.id, from: order.status, to },
       },
       ...(to === 'paid'
-        ? [{ type: 'order.paid' as const, aggregateType: 'order', aggregateId: order.id, payload: { orderId: order.id } }]
+        ? [
+            {
+              type: 'order.paid' as const,
+              aggregateType: 'order',
+              aggregateId: order.id,
+              payload: { orderId: order.id },
+            },
+          ]
         : []),
     ]);
     return updated;
@@ -153,8 +167,17 @@ export class OrdersService {
   async scheduleExpiry(orderId: string, expiresAt: Date): Promise<void> {
     const delay = Math.max(0, expiresAt.getTime() - Date.now()) + 1_000;
     await this.queue
-      .add(ORDER_JOBS.EXPIRE, { orderId }, { jobId: `expire-${orderId}-${expiresAt.getTime()}`, delay })
-      .catch((error: unknown) => this.logger.warn({ err: error, orderId }, 'Could not schedule order expiry (sweeper will handle it)'));
+      .add(
+        ORDER_JOBS.EXPIRE,
+        { orderId },
+        { jobId: `expire-${orderId}-${expiresAt.getTime()}`, delay },
+      )
+      .catch((error: unknown) =>
+        this.logger.warn(
+          { err: error, orderId },
+          'Could not schedule order expiry (sweeper will handle it)',
+        ),
+      );
   }
 
   /**
@@ -165,22 +188,40 @@ export class OrdersService {
     const outcome = await this.prisma.$transaction(async (tx) => {
       const order = await this.lock(tx, orderId);
       if (!CUSTOMER_CANCELLABLE_STATUSES.includes(order.status)) return 'skipped' as const;
-      if (!order.reservationExpiresAt || order.reservationExpiresAt > new Date()) return 'skipped' as const;
+      if (!order.reservationExpiresAt || order.reservationExpiresAt > new Date())
+        return 'skipped' as const;
       const recentPayment = await tx.payment.findFirst({
-        where: { orderId, status: 'pending', createdAt: { gt: new Date(Date.now() - PAYMENT_GRACE_MS) } },
+        where: {
+          orderId,
+          status: 'pending',
+          createdAt: { gt: new Date(Date.now() - PAYMENT_GRACE_MS) },
+        },
       });
       if (recentPayment) {
         const extended = new Date(recentPayment.createdAt.getTime() + PAYMENT_GRACE_MS);
         await tx.order.update({ where: { id: orderId }, data: { reservationExpiresAt: extended } });
-        await tx.stockReservation.updateMany({ where: { orderId, status: 'active' }, data: { expiresAt: extended } });
+        await tx.stockReservation.updateMany({
+          where: { orderId, status: 'active' },
+          data: { expiresAt: extended },
+        });
         return 'extended' as const;
       }
-      await this.transition(tx, order, 'cancelled', { type: 'system' }, { note: 'لغو خودکار به دلیل عدم پرداخت در مهلت مقرر' });
+      await this.transition(
+        tx,
+        order,
+        'cancelled',
+        { type: 'system' },
+        { note: 'لغو خودکار به دلیل عدم پرداخت در مهلت مقرر' },
+      );
       return 'expired' as const;
     });
     if (outcome === 'extended') {
-      const order = await this.prisma.order.findUnique({ where: { id: orderId }, select: { reservationExpiresAt: true } });
-      if (order?.reservationExpiresAt) await this.scheduleExpiry(orderId, order.reservationExpiresAt);
+      const order = await this.prisma.order.findUnique({
+        where: { id: orderId },
+        select: { reservationExpiresAt: true },
+      });
+      if (order?.reservationExpiresAt)
+        await this.scheduleExpiry(orderId, order.reservationExpiresAt);
     }
     if (outcome !== 'skipped') this.outbox.flush();
     return outcome;
@@ -189,7 +230,10 @@ export class OrdersService {
   /** Safety net for lost delayed jobs. */
   async sweepExpired(): Promise<number> {
     const overdue = await this.prisma.order.findMany({
-      where: { status: { in: ['pending', 'awaiting_payment'] }, reservationExpiresAt: { lte: new Date() } },
+      where: {
+        status: { in: ['pending', 'awaiting_payment'] },
+        reservationExpiresAt: { lte: new Date() },
+      },
       select: { id: true },
       take: 200,
     });
@@ -200,22 +244,42 @@ export class OrdersService {
     return expired;
   }
 
-  async cancelByCustomer(orderId: string, userId: string, reason: string | null): Promise<OrderDetail> {
+  async cancelByCustomer(
+    orderId: string,
+    userId: string,
+    reason: string | null,
+  ): Promise<OrderDetail> {
     await this.prisma.$transaction(async (tx) => {
       const order = await this.lock(tx, orderId);
       if (order.userId !== userId) throw AppException.notFound('سفارش یافت نشد.');
       if (!CUSTOMER_CANCELLABLE_STATUSES.includes(order.status)) {
-        throw new AppException('INVALID_ORDER_TRANSITION', 'این سفارش دیگر توسط شما قابل لغو نیست. با پشتیبانی تماس بگیرید.');
+        throw new AppException(
+          'INVALID_ORDER_TRANSITION',
+          'این سفارش دیگر توسط شما قابل لغو نیست. با پشتیبانی تماس بگیرید.',
+        );
       }
-      await this.transition(tx, order, 'cancelled', { type: 'customer', id: userId }, { note: reason ?? 'لغو توسط مشتری' });
+      await this.transition(
+        tx,
+        order,
+        'cancelled',
+        { type: 'customer', id: userId },
+        { note: reason ?? 'لغو توسط مشتری' },
+      );
     });
     this.outbox.flush();
     return this.getForCustomer(orderId, userId);
   }
 
-  async updateByStaff(orderId: string, input: OrderStatusUpdateInput, actor: AuthContext): Promise<AdminOrderDetail> {
+  async updateByStaff(
+    orderId: string,
+    input: OrderStatusUpdateInput,
+    actor: AuthContext,
+  ): Promise<AdminOrderDetail> {
     if (input.status === 'refunded') {
-      throw new AppException('INVALID_ORDER_TRANSITION', 'بازپرداخت فقط از بخش پرداخت‌ها و با ثبت تراکنش برگشت انجام می‌شود.');
+      throw new AppException(
+        'INVALID_ORDER_TRANSITION',
+        'بازپرداخت فقط از بخش پرداخت‌ها و با ثبت تراکنش برگشت انجام می‌شود.',
+      );
     }
     if (input.status === 'cancelled' && !hasPermission(actor.permissions, 'order.cancel')) {
       throw AppException.forbidden('شما مجوز لغو سفارش را ندارید.');
@@ -223,9 +287,17 @@ export class OrdersService {
     await this.prisma.$transaction(async (tx) => {
       const order = await this.lock(tx, orderId);
       if (input.status === 'shipped' && !input.trackingCode && !order.trackingCode) {
-        throw AppException.validation([{ path: 'trackingCode', message: 'کد رهگیری مرسوله را وارد کنید.' }]);
+        throw AppException.validation([
+          { path: 'trackingCode', message: 'کد رهگیری مرسوله را وارد کنید.' },
+        ]);
       }
-      const updated = await this.transition(tx, order, input.status, { type: 'staff', id: actor.userId }, input);
+      const updated = await this.transition(
+        tx,
+        order,
+        input.status,
+        { type: 'staff', id: actor.userId },
+        input,
+      );
       await this.audit.record(
         {
           action: input.status === 'cancelled' ? 'order.cancel' : 'order.status',
@@ -233,7 +305,11 @@ export class OrdersService {
           entityId: orderId,
           summary: `سفارش ${order.orderNumber}: ${order.status} → ${updated.status}`,
           before: { status: order.status },
-          after: { status: updated.status, note: input.note ?? null, trackingCode: updated.trackingCode },
+          after: {
+            status: updated.status,
+            note: input.note ?? null,
+            trackingCode: updated.trackingCode,
+          },
         },
         tx,
       );
@@ -262,7 +338,10 @@ export class OrdersService {
   }
 
   async getForCustomer(orderId: string, userId: string): Promise<OrderDetail> {
-    const order = await this.prisma.order.findFirst({ where: { id: orderId, userId }, include: ORDER_DETAIL_INCLUDE });
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, userId },
+      include: ORDER_DETAIL_INCLUDE,
+    });
     if (!order) throw AppException.notFound('سفارش یافت نشد.');
     return toOrderDetail(order);
   }
@@ -299,7 +378,10 @@ export class OrdersService {
   }
 
   async getForAdmin(orderId: string): Promise<AdminOrderDetail> {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: ADMIN_ORDER_INCLUDE });
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: ADMIN_ORDER_INCLUDE,
+    });
     if (!order) throw AppException.notFound('سفارش یافت نشد.');
     return toAdminOrderDetail(order);
   }

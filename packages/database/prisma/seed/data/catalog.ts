@@ -28,8 +28,22 @@ export const ATTRIBUTES: SeedAttribute[] = [
       { value: 'pneumatic', label: 'بادی' },
     ],
   },
-  { code: 'power_w', name: 'توان ورودی', type: 'number', unit: 'وات', groupName: 'موتور و عملکرد', isFilterable: true },
-  { code: 'voltage_v', name: 'ولتاژ', type: 'number', unit: 'ولت', groupName: 'موتور و عملکرد', isFilterable: true },
+  {
+    code: 'power_w',
+    name: 'توان ورودی',
+    type: 'number',
+    unit: 'وات',
+    groupName: 'موتور و عملکرد',
+    isFilterable: true,
+  },
+  {
+    code: 'voltage_v',
+    name: 'ولتاژ',
+    type: 'number',
+    unit: 'ولت',
+    groupName: 'موتور و عملکرد',
+    isFilterable: true,
+  },
   {
     code: 'motor_type',
     name: 'نوع موتور',
@@ -41,11 +55,23 @@ export const ATTRIBUTES: SeedAttribute[] = [
       { value: 'brushless', label: 'براشلس (بدون ذغال)' },
     ],
   },
-  { code: 'no_load_speed_rpm', name: 'سرعت بدون بار', type: 'number', unit: 'دور در دقیقه', groupName: 'موتور و عملکرد' },
+  {
+    code: 'no_load_speed_rpm',
+    name: 'سرعت بدون بار',
+    type: 'number',
+    unit: 'دور در دقیقه',
+    groupName: 'موتور و عملکرد',
+  },
   { code: 'variable_speed', name: 'کنترل دور', type: 'boolean', groupName: 'امکانات' },
   { code: 'has_reverse', name: 'چپ‌گرد و راست‌گرد', type: 'boolean', groupName: 'امکانات' },
   { code: 'weight_kg', name: 'وزن', type: 'number', unit: 'کیلوگرم', groupName: 'ابعاد و وزن' },
-  { code: 'cable_length_m', name: 'طول کابل', type: 'number', unit: 'متر', groupName: 'ابعاد و وزن' },
+  {
+    code: 'cable_length_m',
+    name: 'طول کابل',
+    type: 'number',
+    unit: 'متر',
+    groupName: 'ابعاد و وزن',
+  },
   {
     code: 'battery_capacity_ah',
     name: 'ظرفیت باتری',
@@ -55,8 +81,21 @@ export const ATTRIBUTES: SeedAttribute[] = [
     isFilterable: true,
   },
   { code: 'battery_count', name: 'تعداد باتری', type: 'number', unit: 'عدد', groupName: 'باتری' },
-  { code: 'torque_nm', name: 'حداکثر گشتاور', type: 'number', unit: 'نیوتن‌متر', groupName: 'موتور و عملکرد' },
-  { code: 'chuck_size_mm', name: 'قطر سه‌نظام', type: 'number', unit: 'میلی‌متر', groupName: 'سه‌نظام', isFilterable: true },
+  {
+    code: 'torque_nm',
+    name: 'حداکثر گشتاور',
+    type: 'number',
+    unit: 'نیوتن‌متر',
+    groupName: 'موتور و عملکرد',
+  },
+  {
+    code: 'chuck_size_mm',
+    name: 'قطر سه‌نظام',
+    type: 'number',
+    unit: 'میلی‌متر',
+    groupName: 'سه‌نظام',
+    isFilterable: true,
+  },
   {
     code: 'chuck_type',
     name: 'نوع گیره / سه‌نظام',
@@ -72,7 +111,13 @@ export const ATTRIBUTES: SeedAttribute[] = [
       { value: 'straight', label: 'دنباله استوانه‌ای' },
     ],
   },
-  { code: 'impact_energy_j', name: 'قدرت ضربه', type: 'number', unit: 'ژول', groupName: 'موتور و عملکرد' },
+  {
+    code: 'impact_energy_j',
+    name: 'قدرت ضربه',
+    type: 'number',
+    unit: 'ژول',
+    groupName: 'موتور و عملکرد',
+  },
   {
     code: 'max_drill_concrete_mm',
     name: 'حداکثر سوراخکاری در بتن',
@@ -94,12 +139,50 @@ export const ATTRIBUTES: SeedAttribute[] = [
       { value: '230', label: '۲۳۰' },
     ],
   },
-  { code: 'cutting_depth_mm', name: 'حداکثر عمق برش', type: 'number', unit: 'میلی‌متر', groupName: 'ظرفیت کاری' },
-  { code: 'blade_diameter_mm', name: 'قطر تیغه', type: 'number', unit: 'میلی‌متر', groupName: 'ظرفیت کاری', isFilterable: true },
-  { code: 'teeth_count', name: 'تعداد دندانه', type: 'number', unit: 'عدد', groupName: 'مشخصات فنی' },
-  { code: 'bit_diameter_mm', name: 'قطر مته', type: 'number', unit: 'میلی‌متر', groupName: 'مشخصات فنی', isFilterable: true },
-  { code: 'working_length_mm', name: 'طول کاری', type: 'number', unit: 'میلی‌متر', groupName: 'مشخصات فنی' },
-  { code: 'disc_thickness_mm', name: 'ضخامت صفحه', type: 'number', unit: 'میلی‌متر', groupName: 'مشخصات فنی' },
+  {
+    code: 'cutting_depth_mm',
+    name: 'حداکثر عمق برش',
+    type: 'number',
+    unit: 'میلی‌متر',
+    groupName: 'ظرفیت کاری',
+  },
+  {
+    code: 'blade_diameter_mm',
+    name: 'قطر تیغه',
+    type: 'number',
+    unit: 'میلی‌متر',
+    groupName: 'ظرفیت کاری',
+    isFilterable: true,
+  },
+  {
+    code: 'teeth_count',
+    name: 'تعداد دندانه',
+    type: 'number',
+    unit: 'عدد',
+    groupName: 'مشخصات فنی',
+  },
+  {
+    code: 'bit_diameter_mm',
+    name: 'قطر مته',
+    type: 'number',
+    unit: 'میلی‌متر',
+    groupName: 'مشخصات فنی',
+    isFilterable: true,
+  },
+  {
+    code: 'working_length_mm',
+    name: 'طول کاری',
+    type: 'number',
+    unit: 'میلی‌متر',
+    groupName: 'مشخصات فنی',
+  },
+  {
+    code: 'disc_thickness_mm',
+    name: 'ضخامت صفحه',
+    type: 'number',
+    unit: 'میلی‌متر',
+    groupName: 'مشخصات فنی',
+  },
   {
     code: 'application_material',
     name: 'مناسب برای',
@@ -128,7 +211,13 @@ export const ATTRIBUTES: SeedAttribute[] = [
       { value: 'tungsten_carbide', label: 'الماسه (کاربید تنگستن)' },
     ],
   },
-  { code: 'pieces_count', name: 'تعداد قطعات', type: 'number', unit: 'عدد', groupName: 'مشخصات کلی' },
+  {
+    code: 'pieces_count',
+    name: 'تعداد قطعات',
+    type: 'number',
+    unit: 'عدد',
+    groupName: 'مشخصات کلی',
+  },
   { code: 'size_range', name: 'محدوده سایز', type: 'text', groupName: 'مشخصات فنی' },
   {
     code: 'tip_type',
@@ -144,7 +233,13 @@ export const ATTRIBUTES: SeedAttribute[] = [
     ],
   },
   { code: 'length_inch', name: 'طول', type: 'number', unit: 'اینچ', groupName: 'ابعاد و وزن' },
-  { code: 'insulated', name: 'عایق برق (۱۰۰۰ ولت)', type: 'boolean', groupName: 'ایمنی', isFilterable: true },
+  {
+    code: 'insulated',
+    name: 'عایق برق (۱۰۰۰ ولت)',
+    type: 'boolean',
+    groupName: 'ایمنی',
+    isFilterable: true,
+  },
 ];
 
 export interface SeedCategory {
@@ -176,7 +271,12 @@ export const CATEGORIES: SeedCategory[] = [
         slug: 'drills',
         name: 'دریل',
         imageUrl: '/placeholders/drill.svg',
-        attributes: ['chuck_size_mm', 'chuck_type', { code: 'torque_nm', isFilterable: false }, { code: 'has_reverse', isFilterable: false }],
+        attributes: [
+          'chuck_size_mm',
+          'chuck_type',
+          { code: 'torque_nm', isFilterable: false },
+          { code: 'has_reverse', isFilterable: false },
+        ],
         children: [
           {
             slug: 'cordless-drills',
@@ -189,7 +289,10 @@ export const CATEGORIES: SeedCategory[] = [
             slug: 'impact-drills',
             name: 'دریل چکشی',
             imageUrl: '/placeholders/drill.svg',
-            attributes: [{ code: 'max_drill_concrete_mm', isFilterable: false }, { code: 'cable_length_m', isFilterable: false }],
+            attributes: [
+              { code: 'max_drill_concrete_mm', isFilterable: false },
+              { code: 'cable_length_m', isFilterable: false },
+            ],
           },
         ],
       },
@@ -250,7 +353,12 @@ export const CATEGORIES: SeedCategory[] = [
         imageUrl: '/placeholders/wrench.svg',
         attributes: [{ code: 'size_range', isFilterable: false }],
       },
-      { slug: 'screwdrivers', name: 'پیچ‌گوشتی', imageUrl: '/placeholders/screwdriver.svg', attributes: ['tip_type'] },
+      {
+        slug: 'screwdrivers',
+        name: 'پیچ‌گوشتی',
+        imageUrl: '/placeholders/screwdriver.svg',
+        attributes: ['tip_type'],
+      },
       {
         slug: 'pliers',
         name: 'انبردست',
@@ -496,7 +604,8 @@ export const PRODUCTS: SeedProduct[] = [
     usageType: 'home',
     warranty: '۱۲ ماه گارانتی',
     countryOfOrigin: 'چین',
-    shortDescription: 'دریل شارژی سبک و جمع‌وجور ۱۲ ولت برای کارهای خانگی، نصب قفسه و مونتاژ مبلمان.',
+    shortDescription:
+      'دریل شارژی سبک و جمع‌وجور ۱۲ ولت برای کارهای خانگی، نصب قفسه و مونتاژ مبلمان.',
     description: p([
       'با وزن تنها ۱ کیلوگرم، AP-CD12 گزینه‌ای مناسب برای کارهای روزمره خانه و کارگاه‌های کوچک است.',
       'سه‌نظام اتومات ۱۰ میلی‌متری تعویض سریع مته و سرپیچ‌گوشتی را بدون آچار ممکن می‌کند.',
@@ -539,7 +648,8 @@ export const PRODUCTS: SeedProduct[] = [
     usageType: 'semi_industrial',
     warranty: '۱۲ ماه گارانتی',
     countryOfOrigin: 'ایران',
-    shortDescription: 'دریل چکشی برقی ۸۵۰ وات با سه‌نظام آچاری ۱۳ میلی‌متری و حالت ضربه برای سوراخکاری آجر و بتن سبک.',
+    shortDescription:
+      'دریل چکشی برقی ۸۵۰ وات با سه‌نظام آچاری ۱۳ میلی‌متری و حالت ضربه برای سوراخکاری آجر و بتن سبک.',
     description: p([
       'KID-850 دارای دو حالت چرخشی و چکشی است و برای سوراخکاری در دیوار آجری، بلوک سیمانی و بتن سبک تا قطر ۱۶ میلی‌متر مناسب است.',
       'دسته کمکی ۳۶۰ درجه و خط‌کش عمق، کنترل و دقت کار را افزایش می‌دهد.',
@@ -560,7 +670,9 @@ export const PRODUCTS: SeedProduct[] = [
       variable_speed: true,
       has_reverse: true,
     },
-    variants: [{ sku: 'KVT-KID850', price: 21_800_000, stock: { MAIN: 18, ISF: 6 }, weightGrams: 2600 }],
+    variants: [
+      { sku: 'KVT-KID850', price: 21_800_000, stock: { MAIN: 18, ISF: 6 }, weightGrams: 2600 },
+    ],
     accessories: ['kaveh-hss-drill-bit-set-19'],
   },
   {
@@ -617,7 +729,8 @@ export const PRODUCTS: SeedProduct[] = [
     usageType: 'industrial',
     warranty: '۱۸ ماه گارانتی شرکتی',
     countryOfOrigin: 'ژاپن',
-    shortDescription: 'بتن‌کن سنگین SDS-Max با قدرت ضربه ۱۰ ژول برای سوراخکاری تا ۴۰ میلی‌متر و تخریب بتن مسلح.',
+    shortDescription:
+      'بتن‌کن سنگین SDS-Max با قدرت ضربه ۱۰ ژول برای سوراخکاری تا ۴۰ میلی‌متر و تخریب بتن مسلح.',
     description: p([
       'SRH-40MAX برای پروژه‌های عمرانی و تخریب سنگین طراحی شده و سیستم ضدلرزش آن خستگی اپراتور را کاهش می‌دهد.',
     ]),
@@ -663,7 +776,9 @@ export const PRODUCTS: SeedProduct[] = [
       disc_diameter_mm: ['115'],
       weight_kg: 1.8,
     },
-    variants: [{ sku: 'KVT-KAG750', price: 14_900_000, stock: { MAIN: 25, ISF: 10 }, weightGrams: 2300 }],
+    variants: [
+      { sku: 'KVT-KAG750', price: 14_900_000, stock: { MAIN: 25, ISF: 10 }, weightGrams: 2300 },
+    ],
     related: ['volter-vag-1200-angle-grinder'],
     accessories: ['volter-metal-cutting-disc-pack'],
   },
@@ -677,7 +792,8 @@ export const PRODUCTS: SeedProduct[] = [
     usageType: 'industrial',
     warranty: '۱۸ ماه گارانتی شرکتی',
     countryOfOrigin: 'چین',
-    shortDescription: 'مینی فرز دسته‌بلند ۱۲۰۰ وات با کنترل دور و استارت نرم؛ مناسب کار مداوم در کارگاه‌های فلزکاری.',
+    shortDescription:
+      'مینی فرز دسته‌بلند ۱۲۰۰ وات با کنترل دور و استارت نرم؛ مناسب کار مداوم در کارگاه‌های فلزکاری.',
     description: p([
       'سیستم استارت نرم از ضربه هنگام روشن شدن جلوگیری می‌کند و کنترل دور الکترونیک امکان کار روی استیل و سنگ را فراهم می‌کند.',
     ]),
@@ -716,7 +832,9 @@ export const PRODUCTS: SeedProduct[] = [
     warranty: '۱۸ ماه گارانتی شرکتی',
     countryOfOrigin: 'ژاپن',
     shortDescription: 'فرز آهنگری سنگین ۲۴۰۰ وات برای برش پروفیل، لوله و سنگ‌زنی سطوح بزرگ.',
-    description: p(['موتور پرقدرت با سیم‌پیچ مقاوم در برابر گردوغبار، دوام بالایی در محیط‌های صنعتی دارد.']),
+    description: p([
+      'موتور پرقدرت با سیم‌پیچ مقاوم در برابر گردوغبار، دوام بالایی در محیط‌های صنعتی دارد.',
+    ]),
     image: '/placeholders/grinder.svg',
     tags: ['فرز آهنگری', 'فرز سنگ بری', 'فرز 230'],
     specs: {
@@ -767,8 +885,11 @@ export const PRODUCTS: SeedProduct[] = [
     usageType: 'semi_industrial',
     warranty: '۱۲ ماه گارانتی',
     countryOfOrigin: 'ایران',
-    shortDescription: 'اره گرد دستی ۱۴۰۰ وات با عمق برش ۶۳ میلی‌متر و قابلیت برش زاویه‌دار تا ۴۵ درجه.',
-    description: p(['کفی آلومینیومی محکم و خط‌کش موازی، برش‌های صاف و تکرارپذیر در ورق‌های چوبی و MDF را تضمین می‌کند.']),
+    shortDescription:
+      'اره گرد دستی ۱۴۰۰ وات با عمق برش ۶۳ میلی‌متر و قابلیت برش زاویه‌دار تا ۴۵ درجه.',
+    description: p([
+      'کفی آلومینیومی محکم و خط‌کش موازی، برش‌های صاف و تکرارپذیر در ورق‌های چوبی و MDF را تضمین می‌کند.',
+    ]),
     image: '/placeholders/saw.svg',
     tags: ['اره گرد', 'اره دیسکی', 'اره 185'],
     specs: {
@@ -781,7 +902,9 @@ export const PRODUCTS: SeedProduct[] = [
       cutting_depth_mm: 63,
       weight_kg: 4.1,
     },
-    variants: [{ sku: 'KVT-KCS185', price: 33_500_000, stock: { MAIN: 6, ISF: 2 }, weightGrams: 5200 }],
+    variants: [
+      { sku: 'KVT-KCS185', price: 33_500_000, stock: { MAIN: 6, ISF: 2 }, weightGrams: 5200 },
+    ],
     accessories: ['arya-pro-tct-saw-blade-185'],
   },
   {
@@ -794,12 +917,17 @@ export const PRODUCTS: SeedProduct[] = [
     usageType: 'semi_industrial',
     warranty: '۶ ماه گارانتی',
     countryOfOrigin: 'چین',
-    shortDescription: 'باتری لیتیوم‌یون ۱۸ ولت با ظرفیت ۴ آمپرساعت و نشانگر شارژ؛ سازگار با تمام ابزارهای ۱۸ ولت ولتر.',
-    description: p(['سلول‌های باکیفیت و مدار محافظ، از باتری در برابر شارژ و دشارژ بیش از حد و حرارت محافظت می‌کند.']),
+    shortDescription:
+      'باتری لیتیوم‌یون ۱۸ ولت با ظرفیت ۴ آمپرساعت و نشانگر شارژ؛ سازگار با تمام ابزارهای ۱۸ ولت ولتر.',
+    description: p([
+      'سلول‌های باکیفیت و مدار محافظ، از باتری در برابر شارژ و دشارژ بیش از حد و حرارت محافظت می‌کند.',
+    ]),
     image: '/placeholders/battery.svg',
     tags: ['باتری ابزار', 'باتری 18 ولت', 'باتری لیتیوم'],
     specs: { power_source: 'cordless', voltage_v: 18, battery_capacity_ah: 4, weight_kg: 0.6 },
-    variants: [{ sku: 'VLT-VB1840', price: 18_500_000, stock: { MAIN: 20, ISF: 6 }, weightGrams: 650 }],
+    variants: [
+      { sku: 'VLT-VB1840', price: 18_500_000, stock: { MAIN: 20, ISF: 6 }, weightGrams: 650 },
+    ],
   },
   {
     slug: 'volter-vc-18f-charger',
@@ -811,7 +939,8 @@ export const PRODUCTS: SeedProduct[] = [
     usageType: 'semi_industrial',
     warranty: '۶ ماه گارانتی',
     countryOfOrigin: 'چین',
-    shortDescription: 'شارژر سریع باتری‌های ۱۸ ولت ولتر؛ شارژ کامل باتری ۴ آمپرساعت در حدود ۶۰ دقیقه.',
+    shortDescription:
+      'شارژر سریع باتری‌های ۱۸ ولت ولتر؛ شارژ کامل باتری ۴ آمپرساعت در حدود ۶۰ دقیقه.',
     description: p(['فن خنک‌کننده داخلی و نشانگر وضعیت، عمر باتری را افزایش می‌دهد.']),
     image: '/placeholders/battery.svg',
     tags: ['شارژر ابزار', 'شارژر 18 ولت'],
@@ -828,8 +957,11 @@ export const PRODUCTS: SeedProduct[] = [
     usageType: 'semi_industrial',
     warranty: 'ضمانت مادام‌العمر شکستگی',
     countryOfOrigin: 'چین',
-    shortDescription: 'ست ۱۲ عددی آچار تخت‌رینگی کروم وانادیوم در سایزهای ۸ تا ۲۲ میلی‌متر با کیف برزنتی.',
-    description: p(['رینگ ۱۵ درجه دسترسی به مهره‌ها را در فضاهای تنگ آسان‌تر می‌کند. پوشش کروم مات از زنگ‌زدگی جلوگیری می‌کند.']),
+    shortDescription:
+      'ست ۱۲ عددی آچار تخت‌رینگی کروم وانادیوم در سایزهای ۸ تا ۲۲ میلی‌متر با کیف برزنتی.',
+    description: p([
+      'رینگ ۱۵ درجه دسترسی به مهره‌ها را در فضاهای تنگ آسان‌تر می‌کند. پوشش کروم مات از زنگ‌زدگی جلوگیری می‌کند.',
+    ]),
     image: '/placeholders/wrench.svg',
     tags: ['آچار تخت رینگی', 'ست آچار', 'آچار یک سر تخت'],
     specs: { material: 'cr_v', pieces_count: 12, size_range: '۸ تا ۲۲ میلی‌متر', insulated: false },
@@ -855,10 +987,17 @@ export const PRODUCTS: SeedProduct[] = [
     warranty: 'ضمانت مادام‌العمر شکستگی',
     countryOfOrigin: 'چین',
     shortDescription: 'آچار فرانسه کروم وانادیوم با فک دقیق و مدرج، در سه سایز ۸، ۱۰ و ۱۲ اینچ.',
-    description: p(['پیچ تنظیم روان و فک بدون لقی، گرفتن مطمئن مهره را در گشتاورهای بالا ممکن می‌کند.']),
+    description: p([
+      'پیچ تنظیم روان و فک بدون لقی، گرفتن مطمئن مهره را در گشتاورهای بالا ممکن می‌کند.',
+    ]),
     image: '/placeholders/wrench.svg',
     tags: ['آچار فرانسه', 'آچار قابل تنظیم'],
-    specs: { material: 'cr_v', pieces_count: 1, size_range: 'دهانه ۲۴ تا ۳۴ میلی‌متر', insulated: false },
+    specs: {
+      material: 'cr_v',
+      pieces_count: 1,
+      size_range: 'دهانه ۲۴ تا ۳۴ میلی‌متر',
+      insulated: false,
+    },
     variants: [
       {
         sku: 'TLN-TAW-08',
@@ -897,7 +1036,9 @@ export const PRODUCTS: SeedProduct[] = [
     warranty: '۱۲ ماه گارانتی',
     countryOfOrigin: 'تایوان',
     shortDescription: 'ست ۶ عددی پیچ‌گوشتی دوسو و چهارسو با عایق ۱۰۰۰ ولت مناسب برقکاران.',
-    description: p(['تیغه فولاد S2 با نوک مغناطیسی و دسته دوجزئی ارگونومیک؛ هر قطعه به‌صورت جداگانه آزمون ولتاژ شده است.']),
+    description: p([
+      'تیغه فولاد S2 با نوک مغناطیسی و دسته دوجزئی ارگونومیک؛ هر قطعه به‌صورت جداگانه آزمون ولتاژ شده است.',
+    ]),
     image: '/placeholders/screwdriver.svg',
     tags: ['پیچ گوشتی عایق', 'ست پیچ گوشتی', 'پیچ گوشتی برقکاری'],
     specs: { material: 's2', pieces_count: 6, tip_type: ['flat', 'phillips'], insulated: true },
@@ -914,11 +1055,15 @@ export const PRODUCTS: SeedProduct[] = [
     warranty: '۱۲ ماه گارانتی',
     countryOfOrigin: 'چین',
     shortDescription: 'انبردست ۸ اینچ کروم وانادیوم با دسته عایق ۱۰۰۰ ولت و لبه برش سخت‌کاری‌شده.',
-    description: p(['لبه‌های برش با القای فرکانس بالا سخت شده‌اند و سیم‌های فولادی را به‌راحتی می‌برند.']),
+    description: p([
+      'لبه‌های برش با القای فرکانس بالا سخت شده‌اند و سیم‌های فولادی را به‌راحتی می‌برند.',
+    ]),
     image: '/placeholders/pliers.svg',
     tags: ['انبردست', 'انبردست عایق', 'دم باریک'],
     specs: { material: 'cr_v', pieces_count: 1, length_inch: 8, insulated: true },
-    variants: [{ sku: 'TLN-TCP8', price: 4_200_000, stock: { MAIN: 30, ISF: 10 }, weightGrams: 330 }],
+    variants: [
+      { sku: 'TLN-TCP8', price: 4_200_000, stock: { MAIN: 30, ISF: 10 }, weightGrams: 330 },
+    ],
   },
   {
     slug: 'steelmax-sds-plus-concrete-bit',
@@ -929,7 +1074,8 @@ export const PRODUCTS: SeedProduct[] = [
     model: 'SB',
     usageType: 'industrial',
     countryOfOrigin: 'آلمان',
-    shortDescription: 'مته الماسه (کاربید تنگستن) با دنباله SDS-Plus و شیار چهارگانه برای تخلیه سریع گردوغبار بتن.',
+    shortDescription:
+      'مته الماسه (کاربید تنگستن) با دنباله SDS-Plus و شیار چهارگانه برای تخلیه سریع گردوغبار بتن.',
     description: p([
       'سر الماسه چهارلبه، سوراخ‌هایی تمیز و دقیق در بتن، آجر و سنگ ایجاد می‌کند و در برخورد با میلگرد کمتر گیر می‌کند.',
       'طول کاری ۱۶۰ میلی‌متر و طول کلی ۲۱۰ میلی‌متر.',
@@ -943,8 +1089,20 @@ export const PRODUCTS: SeedProduct[] = [
       working_length_mm: 160,
     },
     variants: [
-      { sku: 'STM-SB-06', title: 'قطر ۶ میلی‌متر', options: [{ name: 'قطر', value: '۶ میلی‌متر' }], price: 1_450_000, stock: { MAIN: 60 } },
-      { sku: 'STM-SB-08', title: 'قطر ۸ میلی‌متر', options: [{ name: 'قطر', value: '۸ میلی‌متر' }], price: 1_650_000, stock: { MAIN: 45 } },
+      {
+        sku: 'STM-SB-06',
+        title: 'قطر ۶ میلی‌متر',
+        options: [{ name: 'قطر', value: '۶ میلی‌متر' }],
+        price: 1_450_000,
+        stock: { MAIN: 60 },
+      },
+      {
+        sku: 'STM-SB-08',
+        title: 'قطر ۸ میلی‌متر',
+        options: [{ name: 'قطر', value: '۸ میلی‌متر' }],
+        price: 1_650_000,
+        stock: { MAIN: 45 },
+      },
       {
         sku: 'STM-SB-10',
         title: 'قطر ۱۰ میلی‌متر',
@@ -953,8 +1111,20 @@ export const PRODUCTS: SeedProduct[] = [
         stock: { MAIN: 2 },
         lowStockThreshold: 10,
       },
-      { sku: 'STM-SB-12', title: 'قطر ۱۲ میلی‌متر', options: [{ name: 'قطر', value: '۱۲ میلی‌متر' }], price: 2_400_000, stock: { MAIN: 30 } },
-      { sku: 'STM-SB-14', title: 'قطر ۱۴ میلی‌متر', options: [{ name: 'قطر', value: '۱۴ میلی‌متر' }], price: 2_900_000, stock: { MAIN: 20, ISF: 10 } },
+      {
+        sku: 'STM-SB-12',
+        title: 'قطر ۱۲ میلی‌متر',
+        options: [{ name: 'قطر', value: '۱۲ میلی‌متر' }],
+        price: 2_400_000,
+        stock: { MAIN: 30 },
+      },
+      {
+        sku: 'STM-SB-14',
+        title: 'قطر ۱۴ میلی‌متر',
+        options: [{ name: 'قطر', value: '۱۴ میلی‌متر' }],
+        price: 2_900_000,
+        stock: { MAIN: 20, ISF: 10 },
+      },
     ],
     related: ['kaveh-hss-drill-bit-set-19'],
   },
@@ -968,7 +1138,9 @@ export const PRODUCTS: SeedProduct[] = [
     usageType: 'semi_industrial',
     countryOfOrigin: 'ایران',
     shortDescription: 'ست ۱۹ عددی مته فلز تندبر سنگ‌خورده از ۱ تا ۱۰ میلی‌متر با جعبه فلزی.',
-    description: p(['مته‌های سنگ‌خورده HSS-G با زاویه نوک ۱۳۵ درجه، بدون نیاز به سنتر در فولاد، آلومینیوم و چوب سوراخ می‌کنند.']),
+    description: p([
+      'مته‌های سنگ‌خورده HSS-G با زاویه نوک ۱۳۵ درجه، بدون نیاز به سنتر در فولاد، آلومینیوم و چوب سوراخ می‌کنند.',
+    ]),
     image: '/placeholders/drill-bit.svg',
     tags: ['ست مته', 'مته آهن', 'مته فلز', 'مته HSS'],
     specs: {
@@ -988,15 +1160,36 @@ export const PRODUCTS: SeedProduct[] = [
     model: 'VCD-INOX',
     usageType: 'industrial',
     countryOfOrigin: 'آلمان',
-    shortDescription: 'صفحه برش نازک آهن و استیل با الیاف تقویتی دولایه؛ برش سریع با حرارت و پلیسه کم.',
-    description: p(['مناسب برش پروفیل، میلگرد، لوله و ورق فلزی؛ بدون آهن و گوگرد برای برش استیل ضدزنگ.']),
+    shortDescription:
+      'صفحه برش نازک آهن و استیل با الیاف تقویتی دولایه؛ برش سریع با حرارت و پلیسه کم.',
+    description: p([
+      'مناسب برش پروفیل، میلگرد، لوله و ورق فلزی؛ بدون آهن و گوگرد برای برش استیل ضدزنگ.',
+    ]),
     image: '/placeholders/disc.svg',
     tags: ['صفحه برش', 'صفحه سنگ', 'صفحه استیل بر'],
     specs: { application_material: ['metal'], disc_diameter_mm: ['115', '180', '230'] },
     variants: [
-      { sku: 'VLT-CD-115', title: '۱۱۵×۱ میلی‌متر', options: [{ name: 'ابعاد', value: '۱۱۵×۱ میلی‌متر' }], price: 2_750_000, stock: { MAIN: 40, ISF: 20 } },
-      { sku: 'VLT-CD-180', title: '۱۸۰×۱٫۶ میلی‌متر', options: [{ name: 'ابعاد', value: '۱۸۰×۱٫۶ میلی‌متر' }], price: 4_900_000, stock: { MAIN: 25 } },
-      { sku: 'VLT-CD-230', title: '۲۳۰×۱٫۹ میلی‌متر', options: [{ name: 'ابعاد', value: '۲۳۰×۱٫۹ میلی‌متر' }], price: 6_600_000, stock: { MAIN: 18 } },
+      {
+        sku: 'VLT-CD-115',
+        title: '۱۱۵×۱ میلی‌متر',
+        options: [{ name: 'ابعاد', value: '۱۱۵×۱ میلی‌متر' }],
+        price: 2_750_000,
+        stock: { MAIN: 40, ISF: 20 },
+      },
+      {
+        sku: 'VLT-CD-180',
+        title: '۱۸۰×۱٫۶ میلی‌متر',
+        options: [{ name: 'ابعاد', value: '۱۸۰×۱٫۶ میلی‌متر' }],
+        price: 4_900_000,
+        stock: { MAIN: 25 },
+      },
+      {
+        sku: 'VLT-CD-230',
+        title: '۲۳۰×۱٫۹ میلی‌متر',
+        options: [{ name: 'ابعاد', value: '۲۳۰×۱٫۹ میلی‌متر' }],
+        price: 6_600_000,
+        stock: { MAIN: 18 },
+      },
     ],
   },
   {
@@ -1008,8 +1201,11 @@ export const PRODUCTS: SeedProduct[] = [
     model: 'TCT-18540',
     usageType: 'semi_industrial',
     countryOfOrigin: 'تایوان',
-    shortDescription: 'تیغ اره دایره‌ای با دندانه‌های الماسه (TCT) برای برش تمیز چوب، MDF و نئوپان.',
-    description: p(['شیارهای کاهش صدا و حرارت روی بدنه تیغ، لرزش را کاهش داده و کیفیت برش را بالا می‌برد.']),
+    shortDescription:
+      'تیغ اره دایره‌ای با دندانه‌های الماسه (TCT) برای برش تمیز چوب، MDF و نئوپان.',
+    description: p([
+      'شیارهای کاهش صدا و حرارت روی بدنه تیغ، لرزش را کاهش داده و کیفیت برش را بالا می‌برد.',
+    ]),
     image: '/placeholders/blade.svg',
     tags: ['تیغ اره', 'تیغ اره گرد', 'تیغ الماسه'],
     specs: { application_material: ['wood'], blade_diameter_mm: 185, teeth_count: 40 },
@@ -1027,7 +1223,13 @@ export const PRODUCTS: SeedProduct[] = [
     description: p(['این محصول در وضعیت پیش‌نویس است و فقط در پنل مدیریت دیده می‌شود.']),
     image: '/placeholders/drill.svg',
     tags: ['دریل ستونی'],
-    specs: { power_source: 'corded', power_w: 550, voltage_v: 220, chuck_size_mm: 16, chuck_type: 'keyed' },
+    specs: {
+      power_source: 'corded',
+      power_w: 550,
+      voltage_v: 220,
+      chuck_size_mm: 16,
+      chuck_type: 'keyed',
+    },
     variants: [{ sku: 'STM-SDP16', price: 75_000_000, stock: {} }],
   },
 ];

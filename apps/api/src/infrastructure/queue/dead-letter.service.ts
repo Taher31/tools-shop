@@ -42,6 +42,8 @@ export class DeadLetterService {
         },
         { removeOnComplete: false, removeOnFail: false, attempts: 1 },
       )
-      .catch((dlqError: unknown) => this.logger.error({ err: dlqError }, 'Failed to write dead-letter job'));
+      .catch((dlqError: unknown) =>
+        this.logger.error({ err: dlqError }, 'Failed to write dead-letter job'),
+      );
   }
 }

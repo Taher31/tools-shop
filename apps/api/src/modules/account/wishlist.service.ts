@@ -14,22 +14,32 @@ export class WishlistService {
   ) {}
 
   async list(userId: string): Promise<WishlistItem[]> {
-    const items = await this.prisma.wishlistItem.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
+    const items = await this.prisma.wishlistItem.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
     const cards = await this.products.cardsByIds(items.map((item) => item.productId));
     const byId = new Map(cards.map((card) => [card.id, card]));
     return items.flatMap((item) => {
       const product = byId.get(item.productId);
-      return product ? [{ productId: item.productId, addedAt: item.createdAt.toISOString(), product }] : [];
+      return product
+        ? [{ productId: item.productId, addedAt: item.createdAt.toISOString(), product }]
+        : [];
     });
   }
 
   async ids(userId: string): Promise<string[]> {
-    const items = await this.prisma.wishlistItem.findMany({ where: { userId }, select: { productId: true } });
+    const items = await this.prisma.wishlistItem.findMany({
+      where: { userId },
+      select: { productId: true },
+    });
     return items.map((item) => item.productId);
   }
 
   async add(userId: string, productId: string): Promise<string[]> {
-    const product = await this.prisma.product.findFirst({ where: { id: productId, status: 'active', deletedAt: null } });
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId, status: 'active', deletedAt: null },
+    });
     if (!product) throw AppException.notFound('محصول یافت نشد.');
     if ((await this.prisma.wishlistItem.count({ where: { userId } })) >= MAX_ITEMS) {
       throw AppException.conflict('فهرست علاقه‌مندی‌ها پر است.');

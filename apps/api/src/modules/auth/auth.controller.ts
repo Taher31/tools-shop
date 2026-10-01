@@ -13,7 +13,13 @@ import { ZBody } from '../../common/decorators/validated.decorator';
 import { AppConfig } from '../../config/app-config';
 import { CartService } from '../cart/cart.service';
 import type { AuthContext } from './auth-context';
-import { CART_COOKIE, clearAuthCookies, clearCartCookie, REFRESH_COOKIE, setAuthCookies } from './auth-cookies';
+import {
+  CART_COOKIE,
+  clearAuthCookies,
+  clearCartCookie,
+  REFRESH_COOKIE,
+  setAuthCookies,
+} from './auth-cookies';
 import { AuthService } from './auth.service';
 import { AuthRateLimit } from './auth-throttle';
 import { CurrentUser, OptionalUser, Public } from './decorators';
@@ -112,7 +118,11 @@ export class AuthController {
     return this.auth.getAuthUser(user.userId);
   }
 
-  private async adoptGuestCart(request: Request, response: Response, userId: string): Promise<void> {
+  private async adoptGuestCart(
+    request: Request,
+    response: Response,
+    userId: string,
+  ): Promise<void> {
     const guestToken = cookie(request, CART_COOKIE);
     if (!guestToken) return;
     await this.carts.mergeGuestCartIntoUser(guestToken, userId);

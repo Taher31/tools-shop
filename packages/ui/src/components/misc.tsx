@@ -1,18 +1,24 @@
 import * as React from 'react';
 import { cn } from '../lib/cn';
 
-export function Separator({ className, vertical = false }: { className?: string; vertical?: boolean }) {
+export function Separator({
+  className,
+  vertical = false,
+}: {
+  className?: string;
+  vertical?: boolean;
+}) {
   return (
     <div
       role="separator"
       aria-orientation={vertical ? 'vertical' : 'horizontal'}
-      className={cn('shrink-0 bg-border', vertical ? 'h-full w-px' : 'h-px w-full', className)}
+      className={cn('bg-border shrink-0', vertical ? 'h-full w-px' : 'h-px w-full', className)}
     />
   );
 }
 
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('animate-pulse rounded-md bg-muted', className)} {...props} />;
+  return <div className={cn('bg-muted animate-pulse rounded-md', className)} {...props} />;
 }
 
 export interface EmptyStateProps {
@@ -25,10 +31,17 @@ export interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-3 px-6 py-14 text-center', className)}>
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center gap-3 px-6 py-14 text-center',
+        className,
+      )}
+    >
       {icon ? <div className="text-muted-foreground [&_svg]:size-10">{icon}</div> : null}
       <p className="text-base font-bold">{title}</p>
-      {description ? <div className="max-w-md text-sm leading-7 text-muted-foreground">{description}</div> : null}
+      {description ? (
+        <div className="text-muted-foreground max-w-md text-sm leading-7">{description}</div>
+      ) : null}
       {action}
     </div>
   );
@@ -52,7 +65,10 @@ export function Alert({
     destructive: 'border-destructive/30 bg-destructive-soft text-destructive',
   }[variant];
   return (
-    <div role={variant === 'destructive' ? 'alert' : 'status'} className={cn('rounded-md border px-4 py-3 text-sm leading-7', styles, className)}>
+    <div
+      role={variant === 'destructive' ? 'alert' : 'status'}
+      className={cn('rounded-md border px-4 py-3 text-sm leading-7', styles, className)}
+    >
       {title ? <p className="font-bold">{title}</p> : null}
       {children ? <div className="text-foreground/85">{children}</div> : null}
     </div>

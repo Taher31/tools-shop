@@ -4,14 +4,31 @@ import type { Settings } from 'meilisearch';
 export const PRODUCT_INDEX = 'products';
 
 /** Persian function words that carry no meaning for product search. */
-const STOP_WORDS = ['و', 'با', 'در', 'برای', 'از', 'به', 'را', 'که', 'یا', 'این', 'آن', 'مدل', 'خرید', 'قیمت'];
+const STOP_WORDS = [
+  'و',
+  'با',
+  'در',
+  'برای',
+  'از',
+  'به',
+  'را',
+  'که',
+  'یا',
+  'این',
+  'آن',
+  'مدل',
+  'خرید',
+  'قیمت',
+];
 
 export function buildSynonyms(): Record<string, string[]> {
   const synonyms: Record<string, string[]> = {};
   for (const group of SEARCH_SYNONYM_GROUPS) {
     const terms = [...new Set(group.map((term) => normalizeForSearch(term)).filter(Boolean))];
     for (const term of terms) {
-      synonyms[term] = [...new Set([...(synonyms[term] ?? []), ...terms.filter((other) => other !== term)])];
+      synonyms[term] = [
+        ...new Set([...(synonyms[term] ?? []), ...terms.filter((other) => other !== term)]),
+      ];
     }
   }
   return synonyms;
@@ -32,9 +49,26 @@ export const PRODUCT_INDEX_SETTINGS: Settings = {
     'specsSearch',
     'barcodes',
   ],
-  filterableAttributes: ['categoryIds', 'brandSlug', 'facets', 'price', 'inStock', 'onSale', 'isFeatured'],
+  filterableAttributes: [
+    'categoryIds',
+    'brandSlug',
+    'facets',
+    'price',
+    'inStock',
+    'onSale',
+    'isFeatured',
+  ],
   sortableAttributes: ['price', 'publishedAt', 'soldCount', 'ratingAverage'],
-  rankingRules: ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'inStockRank:desc', 'soldCount:desc'],
+  rankingRules: [
+    'words',
+    'typo',
+    'proximity',
+    'attribute',
+    'sort',
+    'exactness',
+    'inStockRank:desc',
+    'soldCount:desc',
+  ],
   stopWords: STOP_WORDS.map((word) => normalizeForSearch(word)),
   synonyms: buildSynonyms(),
   typoTolerance: {

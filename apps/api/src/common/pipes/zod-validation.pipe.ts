@@ -11,7 +11,10 @@ export function zodIssuesToFieldErrors(issues: readonly z.core.$ZodIssue[]): Fie
 }
 
 /** Validates and transforms a request part with a zod schema from @toolshop/shared. */
-export class ZodValidationPipe<TSchema extends z.ZodType> implements PipeTransform<unknown, z.output<TSchema>> {
+export class ZodValidationPipe<TSchema extends z.ZodType> implements PipeTransform<
+  unknown,
+  z.output<TSchema>
+> {
   constructor(private readonly schema: TSchema) {}
 
   transform(value: unknown): z.output<TSchema> {

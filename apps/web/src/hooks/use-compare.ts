@@ -12,7 +12,9 @@ function read(): string[] {
   if (cached) return cached;
   try {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? '[]');
-    cached = Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string').slice(0, MAX_COMPARE) : [];
+    cached = Array.isArray(parsed)
+      ? parsed.filter((id): id is string => typeof id === 'string').slice(0, MAX_COMPARE)
+      : [];
   } catch {
     cached = [];
   }
@@ -56,7 +58,10 @@ export function useCompare() {
     toast.success('به لیست مقایسه اضافه شد.');
   }, []);
 
-  const remove = useCallback((productId: string) => write(read().filter((id) => id !== productId)), []);
+  const remove = useCallback(
+    (productId: string) => write(read().filter((id) => id !== productId)),
+    [],
+  );
   const clear = useCallback(() => write([]), []);
 
   return { ids, toggle, remove, clear, has: (productId: string) => ids.includes(productId) };

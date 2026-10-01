@@ -74,7 +74,9 @@ export class AdminReviewsController {
 
   @Get()
   @RequirePermissions('review.moderate')
-  list(@ZQuery(reviewListSchema) query: z.infer<typeof reviewListSchema>): Promise<Paginated<AdminReviewView>> {
+  list(
+    @ZQuery(reviewListSchema) query: z.infer<typeof reviewListSchema>,
+  ): Promise<Paginated<AdminReviewView>> {
     return this.reviews.adminReviews(query);
   }
 
@@ -95,7 +97,9 @@ export class AdminQuestionsController {
 
   @Get()
   @RequirePermissions('question.answer')
-  list(@ZQuery(questionListSchema) query: z.infer<typeof questionListSchema>): Promise<Paginated<AdminQuestionView>> {
+  list(
+    @ZQuery(questionListSchema) query: z.infer<typeof questionListSchema>,
+  ): Promise<Paginated<AdminQuestionView>> {
     return this.reviews.adminQuestions(query);
   }
 

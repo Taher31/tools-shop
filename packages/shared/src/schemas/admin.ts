@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { emailSchema, idSchema, listQuerySchema, mobileSchema, textSchema, optionalTextSchema } from './common';
+import {
+  emailSchema,
+  idSchema,
+  listQuerySchema,
+  mobileSchema,
+  textSchema,
+  optionalTextSchema,
+} from './common';
 import { passwordSchema } from './auth';
 import { REVIEW_STATUSES, QUESTION_STATUSES } from '../commerce/enums';
 

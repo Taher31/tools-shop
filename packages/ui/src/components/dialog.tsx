@@ -20,14 +20,14 @@ export const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed top-1/2 left-1/2 z-50 grid max-h-[90vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-lg border border-border bg-card p-5 shadow-xl focus:outline-none',
+        'border-border bg-card fixed left-1/2 top-1/2 z-50 grid max-h-[90vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-lg border p-5 shadow-xl focus:outline-none',
         className,
       )}
       {...props}
     >
       {children}
       {hideClose ? null : (
-        <DialogPrimitive.Close className="absolute top-3 end-3 rounded-sm p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <DialogPrimitive.Close className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring absolute end-3 top-3 rounded-sm p-1 focus-visible:outline-none focus-visible:ring-2">
           <X className="size-4" />
           <span className="sr-only">بستن</span>
         </DialogPrimitive.Close>
@@ -42,7 +42,12 @@ export function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLD
 }
 
 export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex flex-wrap items-center justify-end gap-2 pt-2', className)} {...props} />;
+  return (
+    <div
+      className={cn('flex flex-wrap items-center justify-end gap-2 pt-2', className)}
+      {...props}
+    />
+  );
 }
 
 export const DialogTitle = React.forwardRef<
@@ -57,29 +62,36 @@ export const DialogDescription = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description ref={ref} className={cn('text-sm leading-7 text-muted-foreground', className)} {...props} />
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn('text-muted-foreground text-sm leading-7', className)}
+    {...props}
+  />
 ));
 DialogDescription.displayName = 'DialogDescription';
 
 /** Side panel (mobile menu, filters). `side="start"` opens from the right in RTL. */
 export const SheetContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { side?: 'start' | 'end'; title: string }
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    side?: 'start' | 'end';
+    title: string;
+  }
 >(({ className, children, side = 'start', title, ...props }, ref) => (
   <DialogPrimitive.Portal>
     <DialogPrimitive.Overlay className={overlayClass} />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed inset-y-0 z-50 flex w-[85vw] max-w-sm flex-col bg-card shadow-xl focus:outline-none',
+        'bg-card fixed inset-y-0 z-50 flex w-[85vw] max-w-sm flex-col shadow-xl focus:outline-none',
         side === 'start' ? 'start-0' : 'end-0',
         className,
       )}
       {...props}
     >
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <div className="border-border flex items-center justify-between border-b px-4 py-3">
         <DialogPrimitive.Title className="text-base font-bold">{title}</DialogPrimitive.Title>
-        <DialogPrimitive.Close className="rounded-sm p-1 text-muted-foreground hover:bg-muted">
+        <DialogPrimitive.Close className="text-muted-foreground hover:bg-muted rounded-sm p-1">
           <X className="size-5" />
           <span className="sr-only">بستن</span>
         </DialogPrimitive.Close>

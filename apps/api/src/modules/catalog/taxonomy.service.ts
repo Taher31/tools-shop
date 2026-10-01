@@ -58,7 +58,12 @@ export class TaxonomyService {
         isSearchable: a.isSearchable,
         isComparable: a.isComparable,
         sortOrder: a.sortOrder,
-        options: a.options.map((o) => ({ id: o.id, value: o.value, label: o.label, sortOrder: o.sortOrder })),
+        options: a.options.map((o) => ({
+          id: o.id,
+          value: o.value,
+          label: o.label,
+          sortOrder: o.sortOrder,
+        })),
       })),
       categoryAttributes: categoryAttributes.map((ca) => ({
         categoryId: ca.categoryId,

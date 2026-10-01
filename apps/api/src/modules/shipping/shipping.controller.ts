@@ -1,5 +1,9 @@
 import { Get, Post, Put } from '@nestjs/common';
-import { type ShippingMethodUpsertInput, shippingMethodUpsertSchema, type ShippingMethodView } from '@toolshop/shared';
+import {
+  type ShippingMethodUpsertInput,
+  shippingMethodUpsertSchema,
+  type ShippingMethodView,
+} from '@toolshop/shared';
 import { UuidParam, ZBody } from '../../common/decorators/validated.decorator';
 import { AdminController, RequirePermissions } from '../auth/decorators';
 import { ShippingService } from './shipping.service';
@@ -16,13 +20,18 @@ export class AdminShippingController {
 
   @Post()
   @RequirePermissions('shipping.manage')
-  create(@ZBody(shippingMethodUpsertSchema) input: ShippingMethodUpsertInput): Promise<ShippingMethodView> {
+  create(
+    @ZBody(shippingMethodUpsertSchema) input: ShippingMethodUpsertInput,
+  ): Promise<ShippingMethodView> {
     return this.shipping.create(input);
   }
 
   @Put(':id')
   @RequirePermissions('shipping.manage')
-  update(@UuidParam() id: string, @ZBody(shippingMethodUpsertSchema) input: ShippingMethodUpsertInput): Promise<ShippingMethodView> {
+  update(
+    @UuidParam() id: string,
+    @ZBody(shippingMethodUpsertSchema) input: ShippingMethodUpsertInput,
+  ): Promise<ShippingMethodView> {
     return this.shipping.update(id, input);
   }
 }

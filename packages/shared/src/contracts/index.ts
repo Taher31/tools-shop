@@ -545,7 +545,12 @@ export interface AdminProductDetail {
   seoTitle: string | null;
   seoDescription: string | null;
   canonicalUrl: string | null;
-  marketplaceSync: { channel: string; status: string; lastSyncedAt: string | null; lastError: string | null }[];
+  marketplaceSync: {
+    channel: string;
+    status: string;
+    lastSyncedAt: string | null;
+    lastError: string | null;
+  }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -687,7 +692,13 @@ export interface DashboardStats {
   customersCount: number;
   salesByDay: { date: string; total: Rial; orders: number }[];
   lowStockItems: InventoryRow[];
-  topProducts: { productId: string; title: string; slug: string; quantity: number; revenue: Rial }[];
+  topProducts: {
+    productId: string;
+    title: string;
+    slug: string;
+    quantity: number;
+    revenue: Rial;
+  }[];
   recentOrders: AdminOrderSummary[];
 }
 

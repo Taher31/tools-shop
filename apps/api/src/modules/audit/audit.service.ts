@@ -30,7 +30,8 @@ export class AuditService {
     const context = RequestContext.get();
     const hasSnapshots = entry.before !== undefined || entry.after !== undefined;
     const { before, after } = diffSnapshots(entry.before, entry.after);
-    if (hasSnapshots && entry.before && entry.after && before && Object.keys(before).length === 0) return;
+    if (hasSnapshots && entry.before && entry.after && before && Object.keys(before).length === 0)
+      return;
 
     const actorId = entry.actorId !== undefined ? entry.actorId : (context?.user?.userId ?? null);
     const actorType: AuditActorType = entry.actorType ?? (actorId ? 'user' : 'system');

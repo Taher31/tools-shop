@@ -53,7 +53,12 @@ import { ShippingModule } from './modules/shipping/shipping.module';
       useFactory: (config: AppConfig, redis: Redis) => ({
         throttlers: [
           { name: 'default', ttl: config.rateLimit.ttlSeconds * 1000, limit: config.rateLimit.max },
-          { name: 'auth', ttl: 60_000, limit: config.rateLimit.authMax, skipIf: (ctx) => !isAuthRateLimited(ctx) },
+          {
+            name: 'auth',
+            ttl: 60_000,
+            limit: config.rateLimit.authMax,
+            skipIf: (ctx) => !isAuthRateLimited(ctx),
+          },
         ],
         storage: new RedisThrottlerStorage(redis),
       }),
@@ -85,6 +90,8 @@ import { ShippingModule } from './modules/shipping/shipping.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestContextMiddleware, OriginCheckMiddleware).forRoutes({ path: '{*path}', method: RequestMethod.ALL });
+    consumer
+      .apply(RequestContextMiddleware, OriginCheckMiddleware)
+      .forRoutes({ path: '{*path}', method: RequestMethod.ALL });
   }
 }

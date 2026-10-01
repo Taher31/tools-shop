@@ -34,7 +34,9 @@ export class SettingsService {
 
   async getAll(): Promise<AllSettings> {
     return this.cache.wrap(CACHE_KEY, 300, async () => {
-      const rows = await this.prisma.setting.findMany({ where: { key: { in: Object.keys(SETTINGS_GROUPS) } } });
+      const rows = await this.prisma.setting.findMany({
+        where: { key: { in: Object.keys(SETTINGS_GROUPS) } },
+      });
       const values = new Map(rows.map((row) => [row.key, row.value]));
       return {
         store: this.parse('store', values.get('store')),
@@ -61,7 +63,10 @@ export class SettingsService {
     };
   }
 
-  async update<G extends SettingsGroup>(group: G, value: SettingsValue<G>): Promise<SettingsValue<G>> {
+  async update<G extends SettingsGroup>(
+    group: G,
+    value: SettingsValue<G>,
+  ): Promise<SettingsValue<G>> {
     const before = await this.get(group);
     await this.prisma.$transaction(async (tx) => {
       await tx.setting.upsert({
@@ -90,6 +95,9 @@ export class SettingsService {
     const result = schema.safeParse(raw ?? {});
     if (result.success) return result.data as SettingsValue<G>;
     // Stored data predates a schema change: fall back to defaults merged with valid fields.
-    return schema.parse({ ...(schema.safeParse({}).data ?? {}), ...(raw as object) }) as SettingsValue<G>;
+    return schema.parse({
+      ...(schema.safeParse({}).data ?? {}),
+      ...(raw as object),
+    }) as SettingsValue<G>;
   }
 }

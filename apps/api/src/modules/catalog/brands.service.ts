@@ -28,11 +28,16 @@ export class BrandsService {
   ) {}
 
   async publicList(): Promise<BrandSummary[]> {
-    const brands = await this.prisma.brand.findMany({ where: { isActive: true }, orderBy: { name: 'asc' } });
+    const brands = await this.prisma.brand.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+    });
     return brands.map(toSummary);
   }
 
-  async publicBySlug(slug: string): Promise<BrandSummary & { description: string | null; country: string | null }> {
+  async publicBySlug(
+    slug: string,
+  ): Promise<BrandSummary & { description: string | null; country: string | null }> {
     const brand = await this.prisma.brand.findFirst({ where: { slug, isActive: true } });
     if (!brand) throw AppException.notFound('برند یافت نشد.');
     return { ...toSummary(brand), description: brand.description, country: brand.country };
@@ -57,11 +62,17 @@ export class BrandsService {
 
   async create(input: BrandUpsertInput): Promise<AdminBrandView> {
     if (input.slug && (await this.slugTaken(input.slug))) throw this.slugConflict();
-    const slug = input.slug ?? (await uniqueSlug(input.englishName ?? input.name, (s) => this.slugTaken(s)));
+    const slug =
+      input.slug ?? (await uniqueSlug(input.englishName ?? input.name, (s) => this.slugTaken(s)));
     const brand = await this.prisma.$transaction(async (tx) => {
       const created = await tx.brand.create({ data: { ...input, slug } });
       await this.audit.record(
-        { action: 'brand.create', entityType: 'brand', entityId: created.id, summary: `ایجاد برند ${created.name}` },
+        {
+          action: 'brand.create',
+          entityType: 'brand',
+          entityId: created.id,
+          summary: `ایجاد برند ${created.name}`,
+        },
         tx,
       );
       return created;
@@ -89,7 +100,12 @@ export class BrandsService {
         tx,
       );
       await this.outbox.record(tx, [
-        { type: 'catalog.taxonomy_changed', aggregateType: 'brand', aggregateId: id, payload: { brandIds: [id] } },
+        {
+          type: 'catalog.taxonomy_changed',
+          aggregateType: 'brand',
+          aggregateId: id,
+          payload: { brandIds: [id] },
+        },
       ]);
     });
     await this.taxonomy.invalidate();
@@ -107,7 +123,12 @@ export class BrandsService {
     await this.prisma.$transaction(async (tx) => {
       await tx.brand.delete({ where: { id } });
       await this.audit.record(
-        { action: 'brand.delete', entityType: 'brand', entityId: id, summary: `حذف برند ${brand.name}` },
+        {
+          action: 'brand.delete',
+          entityType: 'brand',
+          entityId: id,
+          summary: `حذف برند ${brand.name}`,
+        },
         tx,
       );
     });
@@ -125,6 +146,8 @@ export class BrandsService {
   }
 
   private slugConflict(): AppException {
-    return AppException.conflict('این نامک قبلاً استفاده شده است.', [{ path: 'slug', message: 'تکراری' }]);
+    return AppException.conflict('این نامک قبلاً استفاده شده است.', [
+      { path: 'slug', message: 'تکراری' },
+    ]);
   }
 }

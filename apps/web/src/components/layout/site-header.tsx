@@ -8,15 +8,24 @@ import { HeaderActions } from './header-actions';
 import { MobileMenu } from './mobile-menu';
 import { SearchBox } from './search-box';
 
-export function SiteHeader({ settings, tree }: { settings: PublicSettings; tree: CategoryTreeNode[] }) {
+export function SiteHeader({
+  settings,
+  tree,
+}: {
+  settings: PublicSettings;
+  tree: CategoryTreeNode[];
+}) {
   const { store } = settings;
   return (
     <header className="sticky top-0 z-30 shadow-sm">
-      <div className="hidden bg-topbar text-xs text-topbar-foreground md:block">
+      <div className="bg-topbar text-topbar-foreground hidden text-xs md:block">
         <div className="container-page flex h-9 items-center justify-between">
           <div className="flex items-center gap-5">
             {store.supportPhone ? (
-              <a href={`tel:${store.supportPhone.replace(/[^\d+]/g, '')}`} className="flex items-center gap-1.5 hover:text-white">
+              <a
+                href={`tel:${store.supportPhone.replace(/[^\d+]/g, '')}`}
+                className="flex items-center gap-1.5 hover:text-white"
+              >
                 <Phone className="size-3.5" />
                 <span className="ltr">{store.supportPhone}</span>
               </a>
@@ -42,7 +51,7 @@ export function SiteHeader({ settings, tree }: { settings: PublicSettings; tree:
         </div>
       </div>
 
-      <div className="border-b border-border bg-header">
+      <div className="border-border bg-header border-b">
         <div className="container-page flex h-16 items-center gap-3 lg:h-20 lg:gap-6">
           <MobileMenu tree={tree} />
           <BrandLogo name={store.storeName} logoUrl={store.logoUrl} tagline={store.tagline} />

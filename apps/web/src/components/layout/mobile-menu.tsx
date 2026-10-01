@@ -39,7 +39,10 @@ export function MobileMenu({ tree }: { tree: CategoryTreeNode[] }) {
       </DialogTrigger>
       <SheetContent title="منو" side="start" aria-describedby={undefined}>
         <div className="p-2">
-          <Link href="/products" className="block rounded-md px-3 py-2.5 font-bold text-primary hover:bg-muted">
+          <Link
+            href="/products"
+            className="text-primary hover:bg-muted block rounded-md px-3 py-2.5 font-bold"
+          >
             همه کالاها
           </Link>
           <Accordion type="multiple" className="px-3">
@@ -49,20 +52,26 @@ export function MobileMenu({ tree }: { tree: CategoryTreeNode[] }) {
                 <AccordionContent className="pb-3">
                   <ul className="space-y-1">
                     <li>
-                      <Link href={`/category/${category.slug}`} className="block py-1 text-info">
+                      <Link href={`/category/${category.slug}`} className="text-info block py-1">
                         همه {category.name}
                       </Link>
                     </li>
                     {category.children.map((child) => (
                       <li key={child.id}>
-                        <Link href={`/category/${child.slug}`} className="block py-1 text-foreground">
+                        <Link
+                          href={`/category/${child.slug}`}
+                          className="text-foreground block py-1"
+                        >
                           {child.name}
                         </Link>
                         {child.children.length > 0 ? (
-                          <ul className="ms-3 border-s border-border ps-3">
+                          <ul className="border-border ms-3 border-s ps-3">
                             {child.children.map((grandchild) => (
                               <li key={grandchild.id}>
-                                <Link href={`/category/${grandchild.slug}`} className="block py-1 text-[13px] text-muted-foreground">
+                                <Link
+                                  href={`/category/${grandchild.slug}`}
+                                  className="text-muted-foreground block py-1 text-[13px]"
+                                >
                                   {grandchild.name}
                                 </Link>
                               </li>
@@ -76,10 +85,13 @@ export function MobileMenu({ tree }: { tree: CategoryTreeNode[] }) {
               </AccordionItem>
             ))}
           </Accordion>
-          <ul className="mt-2 border-t border-border pt-2">
+          <ul className="border-border mt-2 border-t pt-2">
             {LINKS.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} className="block rounded-md px-3 py-2.5 text-sm hover:bg-muted">
+                <Link
+                  href={link.href}
+                  className="hover:bg-muted block rounded-md px-3 py-2.5 text-sm"
+                >
                   {link.label}
                 </Link>
               </li>

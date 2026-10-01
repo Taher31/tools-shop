@@ -35,7 +35,9 @@ export class AttributesService {
 
   async create(input: AttributeUpsertInput): Promise<AttributeView> {
     if (await this.prisma.attribute.findUnique({ where: { code: input.code } })) {
-      throw AppException.conflict('این کد ویژگی قبلاً استفاده شده است.', [{ path: 'code', message: 'تکراری' }]);
+      throw AppException.conflict('این کد ویژگی قبلاً استفاده شده است.', [
+        { path: 'code', message: 'تکراری' },
+      ]);
     }
     const { options, ...data } = input;
     const attribute = await this.prisma.$transaction(async (tx) => {
@@ -43,7 +45,12 @@ export class AttributesService {
         data: { ...data, options: { create: options } },
       });
       await this.audit.record(
-        { action: 'attribute.create', entityType: 'attribute', entityId: created.id, summary: `ایجاد ویژگی ${created.name}` },
+        {
+          action: 'attribute.create',
+          entityType: 'attribute',
+          entityId: created.id,
+          summary: `ایجاد ویژگی ${created.name}`,
+        },
         tx,
       );
       return created;
@@ -61,23 +68,34 @@ export class AttributesService {
     if (existing._count.values > 0 && existing.type !== input.type) {
       throw AppException.conflict('نوع ویژگی‌ای که برای محصولات مقدار دارد قابل تغییر نیست.');
     }
-    if (existing.code !== input.code && (await this.prisma.attribute.findUnique({ where: { code: input.code } }))) {
-      throw AppException.conflict('این کد ویژگی قبلاً استفاده شده است.', [{ path: 'code', message: 'تکراری' }]);
+    if (
+      existing.code !== input.code &&
+      (await this.prisma.attribute.findUnique({ where: { code: input.code } }))
+    ) {
+      throw AppException.conflict('این کد ویژگی قبلاً استفاده شده است.', [
+        { path: 'code', message: 'تکراری' },
+      ]);
     }
-    const removed = existing.options.filter((o) => !input.options.some((n) => n.value === o.value)).map((o) => o.value);
+    const removed = existing.options
+      .filter((o) => !input.options.some((n) => n.value === o.value))
+      .map((o) => o.value);
     if (removed.length > 0) {
       const inUse = await this.prisma.productAttributeValue.count({
         where: { attributeId: id, optionValues: { hasSome: removed } },
       });
       if (inUse > 0) {
-        throw AppException.conflict(`گزینه‌های ${removed.join('، ')} در محصولات استفاده شده‌اند و قابل حذف نیستند.`);
+        throw AppException.conflict(
+          `گزینه‌های ${removed.join('، ')} در محصولات استفاده شده‌اند و قابل حذف نیستند.`,
+        );
       }
     }
 
     const { options, ...data } = input;
     await this.prisma.$transaction(async (tx) => {
       await tx.attribute.update({ where: { id }, data });
-      await tx.attributeOption.deleteMany({ where: { attributeId: id, value: { notIn: options.map((o) => o.value) } } });
+      await tx.attributeOption.deleteMany({
+        where: { attributeId: id, value: { notIn: options.map((o) => o.value) } },
+      });
       for (const option of options) {
         await tx.attributeOption.upsert({
           where: { attributeId_value: { attributeId: id, value: option.value } },
@@ -91,13 +109,28 @@ export class AttributesService {
           entityType: 'attribute',
           entityId: id,
           summary: `ویرایش ویژگی ${input.name}`,
-          before: { name: existing.name, code: existing.code, isFilterable: existing.isFilterable, unit: existing.unit },
-          after: { name: input.name, code: input.code, isFilterable: input.isFilterable, unit: input.unit },
+          before: {
+            name: existing.name,
+            code: existing.code,
+            isFilterable: existing.isFilterable,
+            unit: existing.unit,
+          },
+          after: {
+            name: input.name,
+            code: input.code,
+            isFilterable: input.isFilterable,
+            unit: input.unit,
+          },
         },
         tx,
       );
       await this.outbox.record(tx, [
-        { type: 'catalog.taxonomy_changed', aggregateType: 'attribute', aggregateId: id, payload: { attributeIds: [id] } },
+        {
+          type: 'catalog.taxonomy_changed',
+          aggregateType: 'attribute',
+          aggregateId: id,
+          payload: { attributeIds: [id] },
+        },
       ]);
     });
     await this.taxonomy.invalidate();
@@ -117,7 +150,12 @@ export class AttributesService {
     await this.prisma.$transaction(async (tx) => {
       await tx.attribute.delete({ where: { id } });
       await this.audit.record(
-        { action: 'attribute.delete', entityType: 'attribute', entityId: id, summary: `حذف ویژگی ${attribute.name}` },
+        {
+          action: 'attribute.delete',
+          entityType: 'attribute',
+          entityId: id,
+          summary: `حذف ویژگی ${attribute.name}`,
+        },
         tx,
       );
     });

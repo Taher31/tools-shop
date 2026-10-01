@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type { ShippingMethod } from '@toolshop/database';
-import type { ShippingMethodUpsertInput, ShippingMethodView, ShippingOption } from '@toolshop/shared';
+import type {
+  ShippingMethodUpsertInput,
+  ShippingMethodView,
+  ShippingOption,
+} from '@toolshop/shared';
 import { AppException } from '../../common/errors/app-exception';
 import { toRial } from '../../common/utils/money';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -26,12 +30,21 @@ function toView(method: ShippingMethod): ShippingMethodView {
   };
 }
 
-export function serves(method: { provinces: string[] }, province: string | null | undefined): boolean {
-  return method.provinces.length === 0 || (province !== null && province !== undefined && method.provinces.includes(province));
+export function serves(
+  method: { provinces: string[] },
+  province: string | null | undefined,
+): boolean {
+  return (
+    method.provinces.length === 0 ||
+    (province !== null && province !== undefined && method.provinces.includes(province))
+  );
 }
 
 export function shippingRule(method: ShippingMethod): ShippingRule {
-  return { cost: toRial(method.baseCost), freeShippingThreshold: toRial(method.freeShippingThreshold) };
+  return {
+    cost: toRial(method.baseCost),
+    freeShippingThreshold: toRial(method.freeShippingThreshold),
+  };
 }
 
 @Injectable()
@@ -42,7 +55,10 @@ export class ShippingService {
   ) {}
 
   async activeMethods(): Promise<ShippingMethod[]> {
-    return this.prisma.shippingMethod.findMany({ where: { isActive: true }, orderBy: { sortOrder: 'asc' } });
+    return this.prisma.shippingMethod.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' },
+    });
   }
 
   /** Methods serving the province, with the cost for this order amount. */
@@ -53,7 +69,9 @@ export class ShippingService {
       .map((method) => {
         const rule = shippingRule(method);
         const cost =
-          rule.freeShippingThreshold !== null && merchandiseTotal >= rule.freeShippingThreshold ? 0 : rule.cost;
+          rule.freeShippingThreshold !== null && merchandiseTotal >= rule.freeShippingThreshold
+            ? 0
+            : rule.cost;
         return {
           id: method.id,
           code: method.code,
@@ -74,24 +92,42 @@ export class ShippingService {
 
   async create(input: ShippingMethodUpsertInput): Promise<ShippingMethodView> {
     if (await this.prisma.shippingMethod.findUnique({ where: { code: input.code } })) {
-      throw AppException.conflict('کد روش ارسال تکراری است.', [{ path: 'code', message: 'تکراری' }]);
+      throw AppException.conflict('کد روش ارسال تکراری است.', [
+        { path: 'code', message: 'تکراری' },
+      ]);
     }
     const method = await this.prisma.shippingMethod.create({ data: this.toData(input) });
-    await this.audit.record({ action: 'shipping.create', entityType: 'shipping_method', entityId: method.id, summary: method.name });
+    await this.audit.record({
+      action: 'shipping.create',
+      entityType: 'shipping_method',
+      entityId: method.id,
+      summary: method.name,
+    });
     return toView(method);
   }
 
   async update(id: string, input: ShippingMethodUpsertInput): Promise<ShippingMethodView> {
     const existing = await this.prisma.shippingMethod.findUnique({ where: { id } });
     if (!existing) throw AppException.notFound('روش ارسال یافت نشد.');
-    const method = await this.prisma.shippingMethod.update({ where: { id }, data: this.toData(input) });
+    const method = await this.prisma.shippingMethod.update({
+      where: { id },
+      data: this.toData(input),
+    });
     await this.audit.record({
       action: 'shipping.update',
       entityType: 'shipping_method',
       entityId: id,
       summary: method.name,
-      before: { baseCost: existing.baseCost, isActive: existing.isActive, freeShippingThreshold: existing.freeShippingThreshold },
-      after: { baseCost: method.baseCost, isActive: method.isActive, freeShippingThreshold: method.freeShippingThreshold },
+      before: {
+        baseCost: existing.baseCost,
+        isActive: existing.isActive,
+        freeShippingThreshold: existing.freeShippingThreshold,
+      },
+      after: {
+        baseCost: method.baseCost,
+        isActive: method.isActive,
+        freeShippingThreshold: method.freeShippingThreshold,
+      },
     });
     return toView(method);
   }
@@ -100,7 +136,9 @@ export class ShippingService {
     return {
       ...input,
       baseCost: BigInt(input.baseCost),
-      freeShippingThreshold: input.freeShippingThreshold ? BigInt(input.freeShippingThreshold) : null,
+      freeShippingThreshold: input.freeShippingThreshold
+        ? BigInt(input.freeShippingThreshold)
+        : null,
     };
   }
 }

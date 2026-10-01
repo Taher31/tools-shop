@@ -1,5 +1,10 @@
 import { Get } from '@nestjs/common';
-import { type AuditLogQuery, auditLogQuerySchema, type AuditLogView, type Paginated } from '@toolshop/shared';
+import {
+  type AuditLogQuery,
+  auditLogQuerySchema,
+  type AuditLogView,
+  type Paginated,
+} from '@toolshop/shared';
 import type { Prisma } from '@toolshop/database';
 import { ZQuery } from '../../common/decorators/validated.decorator';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
@@ -33,7 +38,9 @@ export class AuditController {
       rows.map((row) => ({
         id: row.id,
         actorType: row.actorType,
-        actor: row.actor ? { id: row.actor.id, fullName: `${row.actor.firstName} ${row.actor.lastName}` } : null,
+        actor: row.actor
+          ? { id: row.actor.id, fullName: `${row.actor.firstName} ${row.actor.lastName}` }
+          : null,
         action: row.action,
         entityType: row.entityType,
         entityId: row.entityId,

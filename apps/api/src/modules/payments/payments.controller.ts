@@ -39,7 +39,11 @@ export class PaymentsController {
   /** Gateways redirect the customer here (GET or POST form) after the bank page. */
   @Public()
   @All('callback/:provider')
-  async callback(@Param('provider') provider: string, @Req() request: Request, @Res() response: Response): Promise<void> {
+  async callback(
+    @Param('provider') provider: string,
+    @Req() request: Request,
+    @Res() response: Response,
+  ): Promise<void> {
     const params = { ...flatten(request.query), ...flatten(request.body) };
     try {
       const outcome = await this.payments.handleCallback(provider.slice(0, 40), params);
@@ -50,7 +54,10 @@ export class PaymentsController {
   }
 
   @Get('result')
-  result(@Query('order') orderId: string | undefined, @CurrentUser() user: AuthContext): Promise<PaymentResultView> {
+  result(
+    @Query('order') orderId: string | undefined,
+    @CurrentUser() user: AuthContext,
+  ): Promise<PaymentResultView> {
     if (!orderId || !isUuid(orderId)) throw AppException.notFound();
     return this.payments.resultForOrder(orderId, user.userId);
   }
@@ -99,8 +106,10 @@ export class AdminPaymentsController {
 
   @Post(':id/refund')
   @RequirePermissions('payment.refund')
-  refund(@UuidParam() id: string, @ZBody(refundSchema) input: RefundInput): Promise<AdminPaymentView> {
+  refund(
+    @UuidParam() id: string,
+    @ZBody(refundSchema) input: RefundInput,
+  ): Promise<AdminPaymentView> {
     return this.payments.refund(id, input);
   }
 }
-

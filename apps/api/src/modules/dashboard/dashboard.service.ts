@@ -22,39 +22,63 @@ export class DashboardService {
     const chartStart = new Date(today.getTime() - (CHART_DAYS - 1) * 86_400_000);
     const revenue = { status: { in: REVENUE_STATUSES } };
 
-    const [salesToday, salesMonth, awaitingFulfillment, awaitingPayment, customersCount, lowStockItems, lowStockCount, recent, daily, top] =
-      await Promise.all([
-        this.prisma.order.aggregate({ where: { ...revenue, paidAt: { gte: today } }, _sum: { total: true }, _count: { _all: true } }),
-        this.prisma.order.aggregate({ where: { ...revenue, paidAt: { gte: month } }, _sum: { total: true }, _count: { _all: true } }),
-        this.prisma.order.count({ where: { status: { in: ['paid', 'processing', 'packed'] } } }),
-        this.prisma.order.count({ where: { status: 'awaiting_payment' } }),
-        this.prisma.user.count({ where: { type: 'customer' } }),
-        this.inventory.lowStock(8),
-        this.inventory.countLowStock(),
-        this.prisma.order.findMany({
-          orderBy: { createdAt: 'desc' },
-          take: 8,
-          include: {
-            items: { select: { quantity: true } },
-            user: { select: { id: true, firstName: true, lastName: true, mobile: true } },
-          },
-        }),
-        this.prisma.order.findMany({
-          where: { ...revenue, paidAt: { gte: chartStart } },
-          select: { paidAt: true, total: true },
-        }),
-        this.prisma.orderItem.groupBy({
-          by: ['productId'],
-          where: { productId: { not: null }, order: { ...revenue, paidAt: { gte: new Date(Date.now() - 30 * 86_400_000) } } },
-          _sum: { quantity: true, total: true },
-          orderBy: { _sum: { quantity: 'desc' } },
-          take: 5,
-        }),
-      ]);
+    const [
+      salesToday,
+      salesMonth,
+      awaitingFulfillment,
+      awaitingPayment,
+      customersCount,
+      lowStockItems,
+      lowStockCount,
+      recent,
+      daily,
+      top,
+    ] = await Promise.all([
+      this.prisma.order.aggregate({
+        where: { ...revenue, paidAt: { gte: today } },
+        _sum: { total: true },
+        _count: { _all: true },
+      }),
+      this.prisma.order.aggregate({
+        where: { ...revenue, paidAt: { gte: month } },
+        _sum: { total: true },
+        _count: { _all: true },
+      }),
+      this.prisma.order.count({ where: { status: { in: ['paid', 'processing', 'packed'] } } }),
+      this.prisma.order.count({ where: { status: 'awaiting_payment' } }),
+      this.prisma.user.count({ where: { type: 'customer' } }),
+      this.inventory.lowStock(8),
+      this.inventory.countLowStock(),
+      this.prisma.order.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+        include: {
+          items: { select: { quantity: true } },
+          user: { select: { id: true, firstName: true, lastName: true, mobile: true } },
+        },
+      }),
+      this.prisma.order.findMany({
+        where: { ...revenue, paidAt: { gte: chartStart } },
+        select: { paidAt: true, total: true },
+      }),
+      this.prisma.orderItem.groupBy({
+        by: ['productId'],
+        where: {
+          productId: { not: null },
+          order: { ...revenue, paidAt: { gte: new Date(Date.now() - 30 * 86_400_000) } },
+        },
+        _sum: { quantity: true, total: true },
+        orderBy: { _sum: { quantity: 'desc' } },
+        take: 5,
+      }),
+    ]);
 
     const byDay = new Map<string, { total: number; orders: number }>();
     for (let i = 0; i < CHART_DAYS; i += 1) {
-      byDay.set(tehranDateKey(new Date(chartStart.getTime() + i * 86_400_000)), { total: 0, orders: 0 });
+      byDay.set(tehranDateKey(new Date(chartStart.getTime() + i * 86_400_000)), {
+        total: 0,
+        orders: 0,
+      });
     }
     for (const order of daily) {
       if (!order.paidAt) continue;

@@ -1,5 +1,11 @@
 import { Get, Put } from '@nestjs/common';
-import { type CustomerDetail, type CustomerListItem, type ListQuery, listQuerySchema, type Paginated } from '@toolshop/shared';
+import {
+  type CustomerDetail,
+  type CustomerListItem,
+  type ListQuery,
+  listQuerySchema,
+  type Paginated,
+} from '@toolshop/shared';
 import { z } from 'zod';
 import { UuidParam, ZBody, ZQuery } from '../../common/decorators/validated.decorator';
 import { AdminController, RequirePermissions } from '../auth/decorators';
@@ -25,7 +31,10 @@ export class AdminCustomersController {
 
   @Put(':id/status')
   @RequirePermissions('customer.update')
-  setStatus(@UuidParam() id: string, @ZBody(statusSchema) input: z.infer<typeof statusSchema>): Promise<CustomerDetail> {
+  setStatus(
+    @UuidParam() id: string,
+    @ZBody(statusSchema) input: z.infer<typeof statusSchema>,
+  ): Promise<CustomerDetail> {
     return this.customers.setActive(id, input.isActive);
   }
 }

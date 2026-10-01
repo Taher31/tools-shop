@@ -1,7 +1,11 @@
 'use client';
 
 import { Check } from 'lucide-react';
-import { Checkbox as CheckboxPrimitive, Switch as SwitchPrimitive, RadioGroup as RadioGroupPrimitive } from 'radix-ui';
+import {
+  Checkbox as CheckboxPrimitive,
+  Switch as SwitchPrimitive,
+  RadioGroup as RadioGroupPrimitive,
+} from 'radix-ui';
 import * as React from 'react';
 import { cn } from '../lib/cn';
 
@@ -12,7 +16,7 @@ export const Checkbox = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      'peer size-[18px] shrink-0 rounded-sm border border-input bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+      'border-input bg-card focus-visible:ring-ring data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground peer size-[18px] shrink-0 rounded-sm border focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     {...props}
@@ -31,7 +35,7 @@ export const Switch = React.forwardRef<
   <SwitchPrimitive.Root
     ref={ref}
     className={cn(
-      'inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-input transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-success',
+      'bg-input focus-visible:ring-ring data-[state=checked]:bg-success inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     {...props}
@@ -50,12 +54,12 @@ export const RadioGroupItem = React.forwardRef<
   <RadioGroupPrimitive.Item
     ref={ref}
     className={cn(
-      'aspect-square size-[18px] shrink-0 rounded-full border border-input bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=checked]:border-primary',
+      'border-input bg-card focus-visible:ring-ring data-[state=checked]:border-primary aspect-square size-[18px] shrink-0 rounded-full border focus-visible:outline-none focus-visible:ring-2',
       className,
     )}
     {...props}
   >
-    <RadioGroupPrimitive.Indicator className="flex items-center justify-center after:block after:size-2.5 after:rounded-full after:bg-primary" />
+    <RadioGroupPrimitive.Indicator className="after:bg-primary flex items-center justify-center after:block after:size-2.5 after:rounded-full" />
   </RadioGroupPrimitive.Item>
 ));
 RadioGroupItem.displayName = 'RadioGroupItem';

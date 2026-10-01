@@ -72,7 +72,10 @@ export class ProductQueryService {
   async cardsByIds(ids: string[]): Promise<ProductCard[]> {
     if (ids.length === 0) return [];
     const [records, taxonomy] = await Promise.all([
-      this.prisma.product.findMany({ where: { id: { in: ids }, ...VISIBLE_PRODUCT_WHERE }, include: PRODUCT_CARD_INCLUDE }),
+      this.prisma.product.findMany({
+        where: { id: { in: ids }, ...VISIBLE_PRODUCT_WHERE },
+        include: PRODUCT_CARD_INCLUDE,
+      }),
       this.taxonomyService.get(),
     ]);
     const byId = new Map(records.map((record) => [record.id, toProductCard(record, taxonomy)]));
@@ -93,7 +96,9 @@ export class ProductQueryService {
       }),
       this.taxonomyService.get(),
     ]);
-    return records.filter((r) => taxonomy.isCategoryVisible(r.categoryId)).map((r) => toProductCard(r, taxonomy));
+    return records
+      .filter((r) => taxonomy.isCategoryVisible(r.categoryId))
+      .map((r) => toProductCard(r, taxonomy));
   }
 
   async home(): Promise<HomePageData> {
@@ -102,15 +107,33 @@ export class ProductQueryService {
       const [featured, newest, onSale, brands] = await Promise.all([
         this.cards({ isFeatured: true }, [{ soldCount: 'desc' }], 8),
         this.cards({}, [{ publishedAt: 'desc' }], 8),
-        this.cards({ variants: { some: { isActive: true, deletedAt: null, compareAtPrice: { not: null } } } }, [{ updatedAt: 'desc' }], 8),
-        this.prisma.brand.findMany({ where: { isActive: true }, orderBy: { name: 'asc' }, take: 12 }),
+        this.cards(
+          {
+            variants: { some: { isActive: true, deletedAt: null, compareAtPrice: { not: null } } },
+          },
+          [{ updatedAt: 'desc' }],
+          8,
+        ),
+        this.prisma.brand.findMany({
+          where: { isActive: true },
+          orderBy: { name: 'asc' },
+          take: 12,
+        }),
       ]);
       return {
         featured,
         newest,
         onSale: onSale.filter((card) => card.discountPercent > 0),
-        categories: taxonomy.children(null, true).map((c) => ({ id: c.id, name: c.name, slug: c.slug, imageUrl: c.imageUrl })),
-        brands: brands.map((b) => ({ id: b.id, name: b.name, englishName: b.englishName, slug: b.slug, logoUrl: b.logoUrl })),
+        categories: taxonomy
+          .children(null, true)
+          .map((c) => ({ id: c.id, name: c.name, slug: c.slug, imageUrl: c.imageUrl })),
+        brands: brands.map((b) => ({
+          id: b.id,
+          name: b.name,
+          englishName: b.englishName,
+          slug: b.slug,
+          logoUrl: b.logoUrl,
+        })),
       };
     });
   }
@@ -123,9 +146,19 @@ export class ProductQueryService {
     return this.cache.wrap('catalog:sitemap', 600, async () => {
       const taxonomy = await this.taxonomyService.get();
       const [products, categories, brands] = await Promise.all([
-        this.prisma.product.findMany({ where: VISIBLE_PRODUCT_WHERE, select: { slug: true, updatedAt: true, categoryId: true }, take: 50_000 }),
-        this.prisma.category.findMany({ where: { isActive: true }, select: { id: true, slug: true, updatedAt: true } }),
-        this.prisma.brand.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
+        this.prisma.product.findMany({
+          where: VISIBLE_PRODUCT_WHERE,
+          select: { slug: true, updatedAt: true, categoryId: true },
+          take: 50_000,
+        }),
+        this.prisma.category.findMany({
+          where: { isActive: true },
+          select: { id: true, slug: true, updatedAt: true },
+        }),
+        this.prisma.brand.findMany({
+          where: { isActive: true },
+          select: { slug: true, updatedAt: true },
+        }),
       ]);
       return {
         products: products
@@ -184,11 +217,17 @@ export class ProductQueryService {
     return { products, attributes };
   }
 
-  private toDetail(product: DetailRecord, taxonomy: Taxonomy, showStockCountBelow: number): ProductDetail {
+  private toDetail(
+    product: DetailRecord,
+    taxonomy: Taxonomy,
+    showStockCountBelow: number,
+  ): ProductDetail {
     const category = taxonomy.categoriesById.get(product.categoryId);
     if (!category) throw AppException.notFound('محصول یافت نشد.');
 
-    const valuesByAttribute = new Map(product.attributeValues.map((value) => [value.attributeId, value]));
+    const valuesByAttribute = new Map(
+      product.attributeValues.map((value) => [value.attributeId, value]),
+    );
     const specs: ProductSpec[] = [];
     const used = new Set<string>();
     const pushSpec = (attributeId: string) => {
@@ -208,7 +247,9 @@ export class ProductQueryService {
         isComparable: attribute.isComparable,
       });
     };
-    taxonomy.effectiveAttributes(product.categoryId).forEach((entry) => pushSpec(entry.attribute.id));
+    taxonomy
+      .effectiveAttributes(product.categoryId)
+      .forEach((entry) => pushSpec(entry.attribute.id));
     product.attributeValues.forEach((value) => pushSpec(value.attributeId));
 
     const ratingAverage = product.ratingAverage ? product.ratingAverage.toNumber() : null;
@@ -235,7 +276,12 @@ export class ProductQueryService {
             logoUrl: product.brand.logoUrl,
           }
         : null,
-      category: { id: category.id, name: category.name, slug: category.slug, imageUrl: category.imageUrl },
+      category: {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        imageUrl: category.imageUrl,
+      },
       breadcrumbs: taxonomy.ancestors(category.id).map((c) => ({ name: c.name, slug: c.slug })),
       images: product.images.map((image) => ({ url: image.url, alt: image.alt })),
       specs,

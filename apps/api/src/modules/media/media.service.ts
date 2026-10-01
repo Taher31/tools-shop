@@ -21,13 +21,24 @@ export class MediaService {
     private readonly config: AppConfig,
   ) {}
 
-  async uploadImage(file: Express.Multer.File | undefined, folder: string, actorId: string): Promise<UploadedMedia> {
+  async uploadImage(
+    file: Express.Multer.File | undefined,
+    folder: string,
+    actorId: string,
+  ): Promise<UploadedMedia> {
     if (!file) throw AppException.validation([{ path: 'file', message: 'فایلی ارسال نشده است.' }]);
     if (file.size > this.config.storage.maxUploadBytes) {
-      throw new AppException('PAYLOAD_TOO_LARGE', `حداکثر حجم مجاز ${Math.round(this.config.storage.maxUploadBytes / 1048576)} مگابایت است.`);
+      throw new AppException(
+        'PAYLOAD_TOO_LARGE',
+        `حداکثر حجم مجاز ${Math.round(this.config.storage.maxUploadBytes / 1048576)} مگابایت است.`,
+      );
     }
     const type = detectImageType(file.buffer);
-    if (!type) throw new AppException('UNSUPPORTED_MEDIA_TYPE', 'فقط تصاویر JPG، PNG، WebP، GIF و AVIF پذیرفته می‌شوند.');
+    if (!type)
+      throw new AppException(
+        'UNSUPPORTED_MEDIA_TYPE',
+        'فقط تصاویر JPG، PNG، WebP، GIF و AVIF پذیرفته می‌شوند.',
+      );
 
     const now = new Date();
     const key = `${folder}/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, '0')}/${randomUUID()}.${type.extension}`;

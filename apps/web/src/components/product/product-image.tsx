@@ -18,7 +18,12 @@ export function ProductImage({
 }) {
   if (!src) {
     return (
-      <div className={cn('flex size-full items-center justify-center text-muted-foreground/40', className)}>
+      <div
+        className={cn(
+          'text-muted-foreground/40 flex size-full items-center justify-center',
+          className,
+        )}
+      >
         <Package className="size-1/3" strokeWidth={1.2} />
       </div>
     );

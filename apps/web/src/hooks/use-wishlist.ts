@@ -23,7 +23,9 @@ export function useToggleWishlist() {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: ({ productId, add }: { productId: string; add: boolean }) =>
-      add ? api.put<string[]>(`/account/wishlist/${productId}`) : api.delete<string[]>(`/account/wishlist/${productId}`),
+      add
+        ? api.put<string[]>(`/account/wishlist/${productId}`)
+        : api.delete<string[]>(`/account/wishlist/${productId}`),
     onSuccess: (ids, { add }) => {
       queryClient.setQueryData(['wishlist', 'ids'], ids);
       void queryClient.invalidateQueries({ queryKey: ['wishlist', 'items'] });

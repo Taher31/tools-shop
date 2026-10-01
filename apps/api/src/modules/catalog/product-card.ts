@@ -1,5 +1,10 @@
 import type { Prisma } from '@toolshop/database';
-import { discountPercent, type KeySpec, type ProductCard, type VariantOption } from '@toolshop/shared';
+import {
+  discountPercent,
+  type KeySpec,
+  type ProductCard,
+  type VariantOption,
+} from '@toolshop/shared';
 import { toRial } from '../../common/utils/money';
 import { availableQuantity } from '../inventory/stock';
 import type { StoredAttributeValue, Taxonomy } from './taxonomy';
@@ -70,9 +75,9 @@ export function keySpecs(
 }
 
 /** The variant shown on cards: cheapest in-stock variant, else the cheapest one. */
-export function displayVariant<V extends { price: bigint; inventoryLevels: { onHand: number; reserved: number }[] }>(
-  variants: V[],
-): V | undefined {
+export function displayVariant<
+  V extends { price: bigint; inventoryLevels: { onHand: number; reserved: number }[] },
+>(variants: V[]): V | undefined {
   const sorted = [...variants].sort((a, b) => (a.price < b.price ? -1 : a.price > b.price ? 1 : 0));
   return sorted.find((variant) => availableQuantity(variant.inventoryLevels) > 0) ?? sorted[0];
 }

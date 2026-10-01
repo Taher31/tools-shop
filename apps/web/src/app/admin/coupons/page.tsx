@@ -1,6 +1,12 @@
 'use client';
 
-import { COUPON_TYPE_LABELS, COUPON_TYPES, type CouponType, type CouponUpsertInput, type CouponView } from '@toolshop/shared';
+import {
+  COUPON_TYPE_LABELS,
+  COUPON_TYPES,
+  type CouponType,
+  type CouponUpsertInput,
+  type CouponView,
+} from '@toolshop/shared';
 import { Badge, Button, Field, Input, NativeSelect, Switch } from '@toolshop/ui';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -54,34 +60,86 @@ export default function CouponsPage() {
   });
   const type = form.watch('type');
   const save = useAdminMutation(
-    (input: CouponUpsertInput) => (editing ? api.put(`/admin/coupons/${editing.id}`, input) : api.post('/admin/coupons', input)),
+    (input: CouponUpsertInput) =>
+      editing ? api.put(`/admin/coupons/${editing.id}`, input) : api.post('/admin/coupons', input),
     { success: 'کد تخفیف ذخیره شد.', onSuccess: () => setEditing(undefined) },
   );
-  const remove = useAdminMutation((id: string) => api.delete(`/admin/coupons/${id}`), { success: 'کد تخفیف حذف/غیرفعال شد.' });
+  const remove = useAdminMutation((id: string) => api.delete(`/admin/coupons/${id}`), {
+    success: 'کد تخفیف حذف/غیرفعال شد.',
+  });
 
   return (
     <>
-      <PageHeader title="کدهای تخفیف" actions={can('coupon.manage') ? <Button onClick={() => setEditing(null)}><Plus /> کد جدید</Button> : null} />
-      <TableCard toolbar={<SearchInput onSearch={list.setSearch} placeholder="جستجوی کد" className="w-56" />}>
+      <PageHeader
+        title="کدهای تخفیف"
+        actions={
+          can('coupon.manage') ? (
+            <Button onClick={() => setEditing(null)}>
+              <Plus /> کد جدید
+            </Button>
+          ) : null
+        }
+      />
+      <TableCard
+        toolbar={<SearchInput onSearch={list.setSearch} placeholder="جستجوی کد" className="w-56" />}
+      >
         <DataTable
           rows={list.data?.items}
           loading={list.isLoading}
           rowKey={(c) => c.id}
           columns={[
-            { header: 'کد', cell: (c) => <span className="ltr font-mono font-bold">{c.code}</span> },
+            {
+              header: 'کد',
+              cell: (c) => <span className="ltr font-mono font-bold">{c.code}</span>,
+            },
             { header: 'نوع', cell: (c) => COUPON_TYPE_LABELS[c.type] },
-            { header: 'مقدار', cell: (c) => (c.type === 'percent' ? `٪${faNumber(c.value)}` : c.type === 'fixed' ? price(c.value) : '—') },
+            {
+              header: 'مقدار',
+              cell: (c) =>
+                c.type === 'percent'
+                  ? `٪${faNumber(c.value)}`
+                  : c.type === 'fixed'
+                    ? price(c.value)
+                    : '—',
+            },
             { header: 'حداقل خرید', cell: (c) => (c.minSubtotal ? price(c.minSubtotal) : '—') },
-            { header: 'استفاده', cell: (c) => `${faNumber(c.usedCount)}${c.usageLimit ? ` از ${faNumber(c.usageLimit)}` : ''}` },
-            { header: 'اعتبار', cell: (c) => <span className="text-xs">{c.endsAt ? `تا ${date(c.endsAt)}` : 'بدون انقضا'}</span> },
-            { header: 'وضعیت', cell: (c) => (c.isActive ? <Badge variant="success">فعال</Badge> : <Badge>غیرفعال</Badge>) },
+            {
+              header: 'استفاده',
+              cell: (c) =>
+                `${faNumber(c.usedCount)}${c.usageLimit ? ` از ${faNumber(c.usageLimit)}` : ''}`,
+            },
+            {
+              header: 'اعتبار',
+              cell: (c) => (
+                <span className="text-xs">{c.endsAt ? `تا ${date(c.endsAt)}` : 'بدون انقضا'}</span>
+              ),
+            },
+            {
+              header: 'وضعیت',
+              cell: (c) =>
+                c.isActive ? <Badge variant="success">فعال</Badge> : <Badge>غیرفعال</Badge>,
+            },
             {
               header: '',
               cell: (c) =>
                 can('coupon.manage') ? (
                   <div className="flex justify-end gap-1">
-                    <Button size="icon-sm" variant="ghost" onClick={() => setEditing(c)} aria-label="ویرایش"><Pencil /></Button>
-                    <ConfirmButton size="icon-sm" variant="ghost" aria-label="حذف" title={`حذف کد ${c.code}؟`} description="کدهای استفاده‌شده غیرفعال می‌شوند تا سوابق حفظ شود." onConfirm={() => remove.mutateAsync(c.id)}>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => setEditing(c)}
+                      aria-label="ویرایش"
+                    >
+                      <Pencil />
+                    </Button>
+                    <ConfirmButton
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label="حذف"
+                      title={`حذف کد ${c.code}؟`}
+                      description="کدهای استفاده‌شده غیرفعال می‌شوند تا سوابق حفظ شود."
+                      onConfirm={() => remove.mutateAsync(c.id)}
+                    >
                       <Trash2 className="text-destructive" />
                     </ConfirmButton>
                   </div>
@@ -101,7 +159,8 @@ export default function CouponsPage() {
             code: v.code,
             description: v.description || null,
             type: v.type,
-            value: v.type === 'percent' ? Number(v.percent) : v.type === 'fixed' ? (v.fixed ?? 0) : 0,
+            value:
+              v.type === 'percent' ? Number(v.percent) : v.type === 'fixed' ? (v.fixed ?? 0) : 0,
             maxDiscount: v.maxDiscount,
             minSubtotal: v.minSubtotal,
             startsAt: v.startsAt ? new Date(v.startsAt) : null,
@@ -113,27 +172,78 @@ export default function CouponsPage() {
         )}
       >
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="کد" htmlFor="cp-code" required><Input id="cp-code" dir="ltr" className="uppercase" {...form.register('code')} /></Field>
+          <Field label="کد" htmlFor="cp-code" required>
+            <Input id="cp-code" dir="ltr" className="uppercase" {...form.register('code')} />
+          </Field>
           <Field label="نوع" htmlFor="cp-type">
             <NativeSelect id="cp-type" {...form.register('type')}>
-              {COUPON_TYPES.map((t) => <option key={t} value={t}>{COUPON_TYPE_LABELS[t]}</option>)}
+              {COUPON_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {COUPON_TYPE_LABELS[t]}
+                </option>
+              ))}
             </NativeSelect>
           </Field>
           {type === 'percent' ? (
-            <Field label="درصد تخفیف" htmlFor="cp-pct"><Input id="cp-pct" type="number" min={1} max={100} dir="ltr" {...form.register('percent')} /></Field>
+            <Field label="درصد تخفیف" htmlFor="cp-pct">
+              <Input
+                id="cp-pct"
+                type="number"
+                min={1}
+                max={100}
+                dir="ltr"
+                {...form.register('percent')}
+              />
+            </Field>
           ) : type === 'fixed' ? (
-            <Field label="مبلغ تخفیف"><Controller control={form.control} name="fixed" render={({ field }) => <MoneyInput value={field.value} onChange={field.onChange} />} /></Field>
+            <Field label="مبلغ تخفیف">
+              <Controller
+                control={form.control}
+                name="fixed"
+                render={({ field }) => <MoneyInput value={field.value} onChange={field.onChange} />}
+              />
+            </Field>
           ) : null}
           {type === 'percent' ? (
-            <Field label="سقف تخفیف"><Controller control={form.control} name="maxDiscount" render={({ field }) => <MoneyInput value={field.value} onChange={field.onChange} />} /></Field>
+            <Field label="سقف تخفیف">
+              <Controller
+                control={form.control}
+                name="maxDiscount"
+                render={({ field }) => <MoneyInput value={field.value} onChange={field.onChange} />}
+              />
+            </Field>
           ) : null}
-          <Field label="حداقل مبلغ خرید"><Controller control={form.control} name="minSubtotal" render={({ field }) => <MoneyInput value={field.value} onChange={field.onChange} />} /></Field>
-          <Field label="از تاریخ" htmlFor="cp-start"><Input id="cp-start" type="date" dir="ltr" {...form.register('startsAt')} /></Field>
-          <Field label="تا تاریخ" htmlFor="cp-end"><Input id="cp-end" type="date" dir="ltr" {...form.register('endsAt')} /></Field>
-          <Field label="سقف کل استفاده" htmlFor="cp-limit"><Input id="cp-limit" type="number" dir="ltr" {...form.register('usageLimit')} /></Field>
-          <Field label="سقف استفاده هر مشتری" htmlFor="cp-plimit"><Input id="cp-plimit" type="number" dir="ltr" {...form.register('perCustomerLimit')} /></Field>
-          <Field label="توضیحات" htmlFor="cp-desc" className="sm:col-span-2"><Input id="cp-desc" {...form.register('description')} /></Field>
-          <Controller control={form.control} name="isActive" render={({ field }) => <label className="flex items-center gap-2 text-sm"><Switch checked={field.value} onCheckedChange={field.onChange} /> فعال</label>} />
+          <Field label="حداقل مبلغ خرید">
+            <Controller
+              control={form.control}
+              name="minSubtotal"
+              render={({ field }) => <MoneyInput value={field.value} onChange={field.onChange} />}
+            />
+          </Field>
+          <Field label="از تاریخ" htmlFor="cp-start">
+            <Input id="cp-start" type="date" dir="ltr" {...form.register('startsAt')} />
+          </Field>
+          <Field label="تا تاریخ" htmlFor="cp-end">
+            <Input id="cp-end" type="date" dir="ltr" {...form.register('endsAt')} />
+          </Field>
+          <Field label="سقف کل استفاده" htmlFor="cp-limit">
+            <Input id="cp-limit" type="number" dir="ltr" {...form.register('usageLimit')} />
+          </Field>
+          <Field label="سقف استفاده هر مشتری" htmlFor="cp-plimit">
+            <Input id="cp-plimit" type="number" dir="ltr" {...form.register('perCustomerLimit')} />
+          </Field>
+          <Field label="توضیحات" htmlFor="cp-desc" className="sm:col-span-2">
+            <Input id="cp-desc" {...form.register('description')} />
+          </Field>
+          <Controller
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <label className="flex items-center gap-2 text-sm">
+                <Switch checked={field.value} onCheckedChange={field.onChange} /> فعال
+              </label>
+            )}
+          />
         </div>
       </FormDialog>
     </>

@@ -22,7 +22,9 @@ export async function ProductListing({ state, basePath, category, brand }: Produ
   const apiParams = listingSearchParams({ ...state, brand: brand ? [brand] : state.brand });
   if (category) apiParams.set('category', category);
   apiParams.set('pageSize', '24');
-  const result = await serverApi<ProductSearchResult>(`/products?${apiParams.toString()}`, { revalidate: 30 });
+  const result = await serverApi<ProductSearchResult>(`/products?${apiParams.toString()}`, {
+    revalidate: 30,
+  });
   const hrefFor = (page: number) => {
     const query = listingSearchParams({ ...state, page }).toString();
     return query ? `${basePath}?${query}` : basePath;
@@ -30,7 +32,12 @@ export async function ProductListing({ state, basePath, category, brand }: Produ
 
   return (
     <div className="flex items-start gap-6">
-      <ListingFilters state={state} facets={result.facets} hideBrand={Boolean(brand)} linkCategories />
+      <ListingFilters
+        state={state}
+        facets={result.facets}
+        hideBrand={Boolean(brand)}
+        linkCategories
+      />
       <div className="min-w-0 flex-1">
         <ListingToolbar state={state} result={result} hideBrand={Boolean(brand)} linkCategories />
         {result.engine === 'database' ? (
@@ -44,7 +51,7 @@ export async function ProductListing({ state, basePath, category, brand }: Produ
             <Pagination page={result.page} totalPages={result.totalPages} hrefFor={hrefFor} />
           </>
         ) : (
-          <div className="rounded-lg border border-border bg-card">
+          <div className="border-border bg-card rounded-lg border">
             <EmptyState
               icon={<SearchX />}
               title="کالایی با این مشخصات پیدا نشد"

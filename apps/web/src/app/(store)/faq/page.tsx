@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 export default async function FaqPage() {
   const items = await serverApi<FaqItemView[]>('/faq', { revalidate: 300, tags: ['faq'] });
   const groups = new Map<string, FaqItemView[]>();
-  for (const item of items) groups.set(item.category ?? 'عمومی', [...(groups.get(item.category ?? 'عمومی') ?? []), item]);
+  for (const item of items)
+    groups.set(item.category ?? 'عمومی', [...(groups.get(item.category ?? 'عمومی') ?? []), item]);
 
   return (
     <div className="container-page max-w-4xl py-6">
@@ -33,8 +34,8 @@ export default async function FaqPage() {
       <h1 className="mb-6 text-2xl font-extrabold">سوالات متداول</h1>
       <div className="space-y-6">
         {[...groups.entries()].map(([group, questions]) => (
-          <section key={group} className="rounded-lg border border-border bg-card px-5">
-            <h2 className="border-b border-border py-3 font-bold text-primary">{group}</h2>
+          <section key={group} className="border-border bg-card rounded-lg border px-5">
+            <h2 className="border-border text-primary border-b py-3 font-bold">{group}</h2>
             <Accordion type="single" collapsible>
               {questions.map((item) => (
                 <AccordionItem key={item.id} value={item.id} className="last:border-0">

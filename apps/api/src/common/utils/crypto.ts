@@ -1,4 +1,10 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+  timingSafeEqual,
+} from 'node:crypto';
 
 export function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');

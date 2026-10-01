@@ -9,13 +9,22 @@ export interface AttributeValueColumns {
   optionValues: string[];
 }
 
-const EMPTY = { textValue: null, numberValue: null, booleanValue: null, optionValues: [] as string[] };
+const EMPTY = {
+  textValue: null,
+  numberValue: null,
+  booleanValue: null,
+  optionValues: [] as string[],
+};
 
-function convert(attribute: TaxonomyAttribute, raw: AttributeValueInput['value']): Omit<AttributeValueColumns, 'attributeId'> | string | null {
+function convert(
+  attribute: TaxonomyAttribute,
+  raw: AttributeValueInput['value'],
+): Omit<AttributeValueColumns, 'attributeId'> | string | null {
   switch (attribute.type) {
     case 'number': {
-      if (raw === '' ) return null;
-      const value = typeof raw === 'number' ? raw : Number(toEnglishDigits(String(raw)).replace(/[٫,]/g, '.'));
+      if (raw === '') return null;
+      const value =
+        typeof raw === 'number' ? raw : Number(toEnglishDigits(String(raw)).replace(/[٫,]/g, '.'));
       return Number.isFinite(value) ? { ...EMPTY, numberValue: value } : 'مقدار باید عدد باشد.';
     }
     case 'boolean': {
@@ -32,10 +41,14 @@ function convert(attribute: TaxonomyAttribute, raw: AttributeValueInput['value']
         : 'گزینه انتخاب‌شده معتبر نیست.';
     }
     case 'multiselect': {
-      const values = (Array.isArray(raw) ? raw : String(raw).split(',')).map((v) => v.trim()).filter(Boolean);
+      const values = (Array.isArray(raw) ? raw : String(raw).split(','))
+        .map((v) => v.trim())
+        .filter(Boolean);
       if (values.length === 0) return null;
       const invalid = values.filter((v) => !attribute.options.some((o) => o.value === v));
-      return invalid.length > 0 ? 'گزینه انتخاب‌شده معتبر نیست.' : { ...EMPTY, optionValues: [...new Set(values)] };
+      return invalid.length > 0
+        ? 'گزینه انتخاب‌شده معتبر نیست.'
+        : { ...EMPTY, optionValues: [...new Set(values)] };
     }
     default: {
       const text = String(raw).trim();
@@ -60,12 +73,18 @@ export function resolveAttributeValues(
   inputs.forEach((input, index) => {
     const entry = allowedById.get(input.attributeId);
     if (!entry) {
-      errors.push({ path: `attributes.${index}`, message: 'این ویژگی برای دسته‌بندی انتخاب‌شده تعریف نشده است.' });
+      errors.push({
+        path: `attributes.${index}`,
+        message: 'این ویژگی برای دسته‌بندی انتخاب‌شده تعریف نشده است.',
+      });
       return;
     }
     const converted = convert(entry.attribute, input.value);
     if (typeof converted === 'string') {
-      errors.push({ path: `attributes.${index}`, message: `${entry.attribute.name}: ${converted}` });
+      errors.push({
+        path: `attributes.${index}`,
+        message: `${entry.attribute.name}: ${converted}`,
+      });
     } else if (converted) {
       values.push({ attributeId: input.attributeId, ...converted });
     }

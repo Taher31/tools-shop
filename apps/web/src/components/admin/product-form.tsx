@@ -170,7 +170,10 @@ function toInput(values: FormValues, attributes: EffectiveAttribute[]): ProductU
     shortDescription: nullable(values.shortDescription),
     description: nullable(values.description),
     videoUrl: nullable(values.videoUrl),
-    tags: values.tags.split(/[،,]/).map((t) => t.trim()).filter(Boolean),
+    tags: values.tags
+      .split(/[،,]/)
+      .map((t) => t.trim())
+      .filter(Boolean),
     isFeatured: values.isFeatured,
     seoTitle: nullable(values.seoTitle),
     seoDescription: nullable(values.seoDescription),
@@ -178,13 +181,19 @@ function toInput(values: FormValues, attributes: EffectiveAttribute[]): ProductU
     images: values.images.map((image) => ({ url: image.url, alt: nullable(image.alt) })),
     attributes: attributes
       .filter((entry) => !isEmptyValue(values.attributes[entry.attribute.id]))
-      .map((entry) => ({ attributeId: entry.attribute.id, value: values.attributes[entry.attribute.id] as AttributeValue })),
+      .map((entry) => ({
+        attributeId: entry.attribute.id,
+        value: values.attributes[entry.attribute.id] as AttributeValue,
+      })),
     variants: values.variants.map((variant) => ({
       id: variant.id,
       sku: variant.sku,
       barcode: nullable(variant.barcode),
       title: nullable(variant.title),
-      options: variant.optionName.trim() && variant.optionValue.trim() ? [{ name: variant.optionName.trim(), value: variant.optionValue.trim() }] : [],
+      options:
+        variant.optionName.trim() && variant.optionValue.trim()
+          ? [{ name: variant.optionName.trim(), value: variant.optionValue.trim() }]
+          : [],
       price: variant.price ?? 0,
       compareAtPrice: variant.compareAtPrice,
       lowStockThreshold: Number(variant.lowStockThreshold) || 0,
@@ -203,19 +212,35 @@ function flattenCategories(nodes: AdminCategoryView[], depth = 0): { id: string;
   ]);
 }
 
-function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
+        {description ? <p className="text-muted-foreground text-xs">{description}</p> : null}
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
   );
 }
 
-function AttributeInput({ entry, value, onChange }: { entry: EffectiveAttribute; value: AttributeValue | undefined; onChange: (value: AttributeValue) => void }) {
+function AttributeInput({
+  entry,
+  value,
+  onChange,
+}: {
+  entry: EffectiveAttribute;
+  value: AttributeValue | undefined;
+  onChange: (value: AttributeValue) => void;
+}) {
   const { attribute } = entry;
   const id = `attr-${attribute.code}`;
   const label = (
@@ -228,13 +253,24 @@ function AttributeInput({ entry, value, onChange }: { entry: EffectiveAttribute;
     case 'number':
       return (
         <Field label={label} htmlFor={id} required={entry.isRequired}>
-          <Input id={id} inputMode="decimal" dir="ltr" className="text-left" value={value === undefined ? '' : String(value)} onChange={(e) => onChange(e.target.value)} />
+          <Input
+            id={id}
+            inputMode="decimal"
+            dir="ltr"
+            className="text-left"
+            value={value === undefined ? '' : String(value)}
+            onChange={(e) => onChange(e.target.value)}
+          />
         </Field>
       );
     case 'boolean':
       return (
         <Field label={label} htmlFor={id} required={entry.isRequired}>
-          <NativeSelect id={id} value={value === undefined || value === '' ? '' : String(value)} onChange={(e) => onChange(e.target.value === '' ? '' : e.target.value === 'true')}>
+          <NativeSelect
+            id={id}
+            value={value === undefined || value === '' ? '' : String(value)}
+            onChange={(e) => onChange(e.target.value === '' ? '' : e.target.value === 'true')}
+          >
             <option value="">— مشخص نشده —</option>
             <option value="true">دارد / بله</option>
             <option value="false">ندارد / خیر</option>
@@ -244,7 +280,11 @@ function AttributeInput({ entry, value, onChange }: { entry: EffectiveAttribute;
     case 'select':
       return (
         <Field label={label} htmlFor={id} required={entry.isRequired}>
-          <NativeSelect id={id} value={typeof value === 'string' ? value : ''} onChange={(e) => onChange(e.target.value)}>
+          <NativeSelect
+            id={id}
+            value={typeof value === 'string' ? value : ''}
+            onChange={(e) => onChange(e.target.value)}
+          >
             <option value="">— انتخاب کنید —</option>
             {attribute.options.map((option) => (
               <option key={option.value} value={option.value}>
@@ -258,12 +298,18 @@ function AttributeInput({ entry, value, onChange }: { entry: EffectiveAttribute;
       const selected = Array.isArray(value) ? value : [];
       return (
         <Field label={label} required={entry.isRequired}>
-          <div className="flex flex-wrap gap-x-4 gap-y-2 rounded-md border border-input bg-card px-3 py-2">
+          <div className="border-input bg-card flex flex-wrap gap-x-4 gap-y-2 rounded-md border px-3 py-2">
             {attribute.options.map((option) => (
               <label key={option.value} className="flex items-center gap-1.5 text-sm">
                 <Checkbox
                   checked={selected.includes(option.value)}
-                  onCheckedChange={(checked) => onChange(checked ? [...selected, option.value] : selected.filter((v) => v !== option.value))}
+                  onCheckedChange={(checked) =>
+                    onChange(
+                      checked
+                        ? [...selected, option.value]
+                        : selected.filter((v) => v !== option.value),
+                    )
+                  }
                 />
                 {option.label}
               </label>
@@ -275,23 +321,40 @@ function AttributeInput({ entry, value, onChange }: { entry: EffectiveAttribute;
     default:
       return (
         <Field label={label} htmlFor={id} required={entry.isRequired}>
-          <Input id={id} value={typeof value === 'string' ? value : ''} onChange={(e) => onChange(e.target.value)} />
+          <Input
+            id={id}
+            value={typeof value === 'string' ? value : ''}
+            onChange={(e) => onChange(e.target.value)}
+          />
         </Field>
       );
   }
 }
 
-function ProductPicker({ value, onChange, excludeId }: { value: string[]; onChange: (ids: string[]) => void; excludeId?: string }) {
+function ProductPicker({
+  value,
+  onChange,
+  excludeId,
+}: {
+  value: string[];
+  onChange: (ids: string[]) => void;
+  excludeId?: string;
+}) {
   const [term, setTerm] = useState('');
   const results = useQuery({
     queryKey: ['admin', 'product-picker', term],
-    queryFn: () => api.get<Paginated<AdminProductListItem>>(`/admin/products${toQueryString({ q: term, pageSize: 8 })}`),
+    queryFn: () =>
+      api.get<Paginated<AdminProductListItem>>(
+        `/admin/products${toQueryString({ q: term, pageSize: 8 })}`,
+      ),
     enabled: term.trim().length >= 2,
   });
   const selected = useQuery({
     queryKey: ['admin', 'product-picker-selected', value],
     queryFn: async () => {
-      const items = await Promise.all(value.map((id) => api.get<AdminProductDetail>(`/admin/products/${id}`).catch(() => null)));
+      const items = await Promise.all(
+        value.map((id) => api.get<AdminProductDetail>(`/admin/products/${id}`).catch(() => null)),
+      );
       return items.filter((p): p is AdminProductDetail => p !== null);
     },
     enabled: value.length > 0,
@@ -302,23 +365,31 @@ function ProductPicker({ value, onChange, excludeId }: { value: string[]; onChan
         {value.map((id) => (
           <Badge key={id} variant="secondary" className="gap-1.5 py-1">
             {selected.data?.find((p) => p.id === id)?.title ?? '…'}
-            <button type="button" onClick={() => onChange(value.filter((v) => v !== id))} aria-label="حذف">
+            <button
+              type="button"
+              onClick={() => onChange(value.filter((v) => v !== id))}
+              aria-label="حذف"
+            >
               <X className="size-3" />
             </button>
           </Badge>
         ))}
       </div>
       <div className="relative">
-        <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="جستجوی محصول برای افزودن (نام یا SKU)…" />
+        <Input
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+          placeholder="جستجوی محصول برای افزودن (نام یا SKU)…"
+        />
         {results.data && term.trim().length >= 2 ? (
-          <ul className="absolute inset-x-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+          <ul className="border-border bg-popover absolute inset-x-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border shadow-lg">
             {results.data.items
               .filter((p) => p.id !== excludeId && !value.includes(p.id))
               .map((p) => (
                 <li key={p.id}>
                   <button
                     type="button"
-                    className="w-full px-3 py-2 text-start text-sm hover:bg-muted"
+                    className="hover:bg-muted w-full px-3 py-2 text-start text-sm"
                     onClick={() => {
                       onChange([...value, p.id]);
                       setTerm('');
@@ -346,18 +417,27 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
   const images = useFieldArray({ control: form.control, name: 'images', keyName: 'key' });
   const categoryId = form.watch('categoryId');
 
-  const categories = useQuery({ queryKey: ['admin', 'categories'], queryFn: () => api.get<AdminCategoryView[]>('/admin/categories') });
-  const brands = useQuery({ queryKey: ['admin', 'brands'], queryFn: () => api.get<AdminBrandView[]>('/admin/brands') });
+  const categories = useQuery({
+    queryKey: ['admin', 'categories'],
+    queryFn: () => api.get<AdminCategoryView[]>('/admin/categories'),
+  });
+  const brands = useQuery({
+    queryKey: ['admin', 'brands'],
+    queryFn: () => api.get<AdminBrandView[]>('/admin/brands'),
+  });
   const effective = useQuery({
     queryKey: ['admin', 'effective-attributes', categoryId],
-    queryFn: () => api.get<EffectiveAttribute[]>(`/admin/categories/${categoryId}/effective-attributes`),
+    queryFn: () =>
+      api.get<EffectiveAttribute[]>(`/admin/categories/${categoryId}/effective-attributes`),
     enabled: Boolean(categoryId),
   });
   const canEditPrice = !product || can('product.price.update');
 
   const save = useAdminMutation(
     (input: ProductUpsertInput) =>
-      product ? api.put<AdminProductDetail>(`/admin/products/${product.id}`, input) : api.post<AdminProductDetail>('/admin/products', input),
+      product
+        ? api.put<AdminProductDetail>(`/admin/products/${product.id}`, input)
+        : api.post<AdminProductDetail>('/admin/products', input),
     {
       success: 'محصول ذخیره شد.',
       onSuccess: (saved) => {
@@ -434,16 +514,37 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
         <div className="space-y-5 xl:col-span-2">
           <Section title="اطلاعات اصلی">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="عنوان محصول" htmlFor="title" required error={errors.title?.message} className="md:col-span-2">
+              <Field
+                label="عنوان محصول"
+                htmlFor="title"
+                required
+                error={errors.title?.message}
+                className="md:col-span-2"
+              >
                 <Input id="title" {...form.register('title', { required: 'عنوان الزامی است.' })} />
               </Field>
               <Field label="عنوان انگلیسی" htmlFor="englishTitle">
-                <Input id="englishTitle" dir="ltr" className="text-left" {...form.register('englishTitle')} />
+                <Input
+                  id="englishTitle"
+                  dir="ltr"
+                  className="text-left"
+                  {...form.register('englishTitle')}
+                />
               </Field>
-              <Field label="نامک (URL)" htmlFor="slug" error={errors.slug?.message} hint="خالی بگذارید تا خودکار ساخته شود.">
+              <Field
+                label="نامک (URL)"
+                htmlFor="slug"
+                error={errors.slug?.message}
+                hint="خالی بگذارید تا خودکار ساخته شود."
+              >
                 <Input id="slug" dir="ltr" className="text-left" {...form.register('slug')} />
               </Field>
-              <Field label="دسته‌بندی" htmlFor="categoryId" required error={errors.categoryId?.message}>
+              <Field
+                label="دسته‌بندی"
+                htmlFor="categoryId"
+                required
+                error={errors.categoryId?.message}
+              >
                 <NativeSelect id="categoryId" {...form.register('categoryId')}>
                   <option value="">— انتخاب دسته‌بندی —</option>
                   {flattenCategories(categories.data ?? []).map((c) => (
@@ -485,52 +586,112 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
               <Field label="گارانتی" htmlFor="warranty" className="md:col-span-2">
                 <Input id="warranty" {...form.register('warranty')} />
               </Field>
-              <Field label="برچسب‌ها" htmlFor="tags" hint="با کاما جدا کنید؛ در جستجو استفاده می‌شوند." className="md:col-span-2">
+              <Field
+                label="برچسب‌ها"
+                htmlFor="tags"
+                hint="با کاما جدا کنید؛ در جستجو استفاده می‌شوند."
+                className="md:col-span-2"
+              >
                 <Input id="tags" {...form.register('tags')} />
               </Field>
             </div>
           </Section>
 
-          <Section title="تنوع‌ها، قیمت و SKU" description="قیمت‌ها به تومان وارد می‌شوند. موجودی هر تنوع از بخش «موجودی» مدیریت می‌شود.">
-            {!canEditPrice ? <Alert variant="info" className="mb-3">شما مجوز تغییر قیمت ندارید؛ قیمت‌ها فقط‌خواندنی هستند.</Alert> : null}
+          <Section
+            title="تنوع‌ها، قیمت و SKU"
+            description="قیمت‌ها به تومان وارد می‌شوند. موجودی هر تنوع از بخش «موجودی» مدیریت می‌شود."
+          >
+            {!canEditPrice ? (
+              <Alert variant="info" className="mb-3">
+                شما مجوز تغییر قیمت ندارید؛ قیمت‌ها فقط‌خواندنی هستند.
+              </Alert>
+            ) : null}
             <div className="space-y-3">
               {variants.fields.map((field, index) => {
                 const existing = product?.variants.find((v) => v.id === field.id);
                 const variantErrors = errors.variants?.[index];
                 return (
-                  <div key={field.key} className="rounded-md border border-border p-3">
+                  <div key={field.key} className="border-border rounded-md border p-3">
                     <div className="grid gap-3 md:grid-cols-4">
-                      <Field label="SKU" htmlFor={`v-${index}-sku`} required error={variantErrors?.sku?.message}>
-                        <Input id={`v-${index}-sku`} dir="ltr" className="text-left uppercase" {...form.register(`variants.${index}.sku`)} />
+                      <Field
+                        label="SKU"
+                        htmlFor={`v-${index}-sku`}
+                        required
+                        error={variantErrors?.sku?.message}
+                      >
+                        <Input
+                          id={`v-${index}-sku`}
+                          dir="ltr"
+                          className="text-left uppercase"
+                          {...form.register(`variants.${index}.sku`)}
+                        />
                       </Field>
                       <Field label="قیمت فروش" required error={variantErrors?.price?.message}>
                         <Controller
                           control={form.control}
                           name={`variants.${index}.price`}
-                          render={({ field: f }) => <MoneyInput value={f.value} onChange={f.onChange} aria-invalid={Boolean(variantErrors?.price)} />}
+                          render={({ field: f }) => (
+                            <MoneyInput
+                              value={f.value}
+                              onChange={f.onChange}
+                              aria-invalid={Boolean(variantErrors?.price)}
+                            />
+                          )}
                         />
                       </Field>
-                      <Field label="قیمت قبل از تخفیف" error={variantErrors?.compareAtPrice?.message}>
+                      <Field
+                        label="قیمت قبل از تخفیف"
+                        error={variantErrors?.compareAtPrice?.message}
+                      >
                         <Controller
                           control={form.control}
                           name={`variants.${index}.compareAtPrice`}
-                          render={({ field: f }) => <MoneyInput value={f.value} onChange={f.onChange} />}
+                          render={({ field: f }) => (
+                            <MoneyInput value={f.value} onChange={f.onChange} />
+                          )}
                         />
                       </Field>
-                      <Field label="بارکد" htmlFor={`v-${index}-barcode`} error={variantErrors?.barcode?.message}>
-                        <Input id={`v-${index}-barcode`} dir="ltr" className="text-left" {...form.register(`variants.${index}.barcode`)} />
+                      <Field
+                        label="بارکد"
+                        htmlFor={`v-${index}-barcode`}
+                        error={variantErrors?.barcode?.message}
+                      >
+                        <Input
+                          id={`v-${index}-barcode`}
+                          dir="ltr"
+                          className="text-left"
+                          {...form.register(`variants.${index}.barcode`)}
+                        />
                       </Field>
                       <Field label="عنوان تنوع" htmlFor={`v-${index}-title`}>
-                        <Input id={`v-${index}-title`} placeholder="مثلاً: قطر ۱۰ میلی‌متر" {...form.register(`variants.${index}.title`)} />
+                        <Input
+                          id={`v-${index}-title`}
+                          placeholder="مثلاً: قطر ۱۰ میلی‌متر"
+                          {...form.register(`variants.${index}.title`)}
+                        />
                       </Field>
                       <Field label="نام گزینه" htmlFor={`v-${index}-on`}>
-                        <Input id={`v-${index}-on`} placeholder="مثلاً: قطر" {...form.register(`variants.${index}.optionName`)} />
+                        <Input
+                          id={`v-${index}-on`}
+                          placeholder="مثلاً: قطر"
+                          {...form.register(`variants.${index}.optionName`)}
+                        />
                       </Field>
                       <Field label="مقدار گزینه" htmlFor={`v-${index}-ov`}>
-                        <Input id={`v-${index}-ov`} placeholder="مثلاً: ۱۰ میلی‌متر" {...form.register(`variants.${index}.optionValue`)} />
+                        <Input
+                          id={`v-${index}-ov`}
+                          placeholder="مثلاً: ۱۰ میلی‌متر"
+                          {...form.register(`variants.${index}.optionValue`)}
+                        />
                       </Field>
                       <Field label="حد هشدار موجودی" htmlFor={`v-${index}-low`}>
-                        <Input id={`v-${index}-low`} type="number" min={0} dir="ltr" {...form.register(`variants.${index}.lowStockThreshold`)} />
+                        <Input
+                          id={`v-${index}-low`}
+                          type="number"
+                          min={0}
+                          dir="ltr"
+                          {...form.register(`variants.${index}.lowStockThreshold`)}
+                        />
                       </Field>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
@@ -544,14 +705,26 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
                         )}
                       />
                       {existing ? (
-                        <span className="text-xs text-muted-foreground">
-                          موجودی قابل فروش: <b className="text-foreground">{faNumber(existing.stock.available)}</b> (رزرو {faNumber(existing.stock.reserved)})
-                          {' · '}
-                          <Link href={`/admin/inventory?q=${encodeURIComponent(existing.sku)}`} className="text-info hover:underline">مدیریت موجودی</Link>
+                        <span className="text-muted-foreground text-xs">
+                          موجودی قابل فروش:{' '}
+                          <b className="text-foreground">{faNumber(existing.stock.available)}</b>{' '}
+                          (رزرو {faNumber(existing.stock.reserved)}){' · '}
+                          <Link
+                            href={`/admin/inventory?q=${encodeURIComponent(existing.sku)}`}
+                            className="text-info hover:underline"
+                          >
+                            مدیریت موجودی
+                          </Link>
                         </span>
                       ) : null}
                       {variants.fields.length > 1 ? (
-                        <Button type="button" variant="ghost" size="sm" className="ms-auto text-destructive" onClick={() => variants.remove(index)}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive ms-auto"
+                          onClick={() => variants.remove(index)}
+                        >
                           <Trash2 /> حذف تنوع
                         </Button>
                       ) : null}
@@ -559,29 +732,45 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
                   </div>
                 );
               })}
-              <Button type="button" variant="outline" size="sm" onClick={() => variants.append(emptyVariant())}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => variants.append(emptyVariant())}
+              >
                 <Plus /> افزودن تنوع
               </Button>
             </div>
           </Section>
 
-          <Section title="مشخصات فنی" description="فیلدها بر اساس دسته‌بندی (و دسته‌های والد) تعیین می‌شوند و در فیلتر جستجو و مقایسه استفاده می‌شوند.">
+          <Section
+            title="مشخصات فنی"
+            description="فیلدها بر اساس دسته‌بندی (و دسته‌های والد) تعیین می‌شوند و در فیلتر جستجو و مقایسه استفاده می‌شوند."
+          >
             {!categoryId ? (
-              <p className="text-sm text-muted-foreground">ابتدا دسته‌بندی محصول را انتخاب کنید.</p>
+              <p className="text-muted-foreground text-sm">ابتدا دسته‌بندی محصول را انتخاب کنید.</p>
             ) : attributeEntries.length === 0 ? (
-              <p className="text-sm text-muted-foreground">برای این دسته ویژگی فنی تعریف نشده است.</p>
+              <p className="text-muted-foreground text-sm">
+                برای این دسته ویژگی فنی تعریف نشده است.
+              </p>
             ) : (
               <div className="space-y-5">
                 {[...groups.entries()].map(([group, entries]) => (
                   <div key={group}>
-                    <p className="mb-2 text-sm font-bold text-primary">{group}</p>
+                    <p className="text-primary mb-2 text-sm font-bold">{group}</p>
                     <div className="grid gap-3 md:grid-cols-3">
                       {entries.map((entry) => (
                         <Controller
                           key={entry.attribute.id}
                           control={form.control}
                           name={`attributes.${entry.attribute.id}`}
-                          render={({ field }) => <AttributeInput entry={entry} value={field.value} onChange={field.onChange} />}
+                          render={({ field }) => (
+                            <AttributeInput
+                              entry={entry}
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
                         />
                       ))}
                     </div>
@@ -593,14 +782,27 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
 
           <Section title="توضیحات">
             <div className="space-y-4">
-              <Field label="توضیح کوتاه" htmlFor="shortDescription" hint="در کارت محصول، صفحه محصول و توضیحات متا استفاده می‌شود.">
+              <Field
+                label="توضیح کوتاه"
+                htmlFor="shortDescription"
+                hint="در کارت محصول، صفحه محصول و توضیحات متا استفاده می‌شود."
+              >
                 <Textarea id="shortDescription" rows={3} {...form.register('shortDescription')} />
               </Field>
-              <Field label="توضیحات کامل" htmlFor="description" hint="متن ساده (پاراگراف‌ها با خط خالی جدا شوند) یا HTML ساده؛ کدهای ناامن حذف می‌شوند.">
+              <Field
+                label="توضیحات کامل"
+                htmlFor="description"
+                hint="متن ساده (پاراگراف‌ها با خط خالی جدا شوند) یا HTML ساده؛ کدهای ناامن حذف می‌شوند."
+              >
                 <Textarea id="description" rows={10} {...form.register('description')} />
               </Field>
               <Field label="لینک ویدیو" htmlFor="videoUrl">
-                <Input id="videoUrl" dir="ltr" className="text-left" {...form.register('videoUrl')} />
+                <Input
+                  id="videoUrl"
+                  dir="ltr"
+                  className="text-left"
+                  {...form.register('videoUrl')}
+                />
               </Field>
             </div>
           </Section>
@@ -608,10 +810,30 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
           <Section title="محصولات مرتبط و لوازم جانبی">
             <div className="grid gap-5 md:grid-cols-2">
               <Field label="محصولات مرتبط">
-                <Controller control={form.control} name="relatedProductIds" render={({ field }) => <ProductPicker value={field.value} onChange={field.onChange} excludeId={product?.id} />} />
+                <Controller
+                  control={form.control}
+                  name="relatedProductIds"
+                  render={({ field }) => (
+                    <ProductPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      excludeId={product?.id}
+                    />
+                  )}
+                />
               </Field>
               <Field label="لوازم جانبی سازگار">
-                <Controller control={form.control} name="accessoryProductIds" render={({ field }) => <ProductPicker value={field.value} onChange={field.onChange} excludeId={product?.id} />} />
+                <Controller
+                  control={form.control}
+                  name="accessoryProductIds"
+                  render={({ field }) => (
+                    <ProductPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      excludeId={product?.id}
+                    />
+                  )}
+                />
               </Field>
             </div>
           </Section>
@@ -645,7 +867,9 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
                 </Button>
                 {product ? (
                   <Button asChild variant="outline">
-                    <Link href={`/product/${product.slug}`} target="_blank">مشاهده</Link>
+                    <Link href={`/product/${product.slug}`} target="_blank">
+                      مشاهده
+                    </Link>
                   </Button>
                 ) : null}
               </div>
@@ -654,9 +878,12 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="w-full text-destructive"
+                  className="text-destructive w-full"
                   loading={remove.isPending}
-                  onClick={() => window.confirm('محصول از فروشگاه حذف شود؟ سوابق سفارش‌ها حفظ می‌شود.') && remove.mutate(undefined)}
+                  onClick={() =>
+                    window.confirm('محصول از فروشگاه حذف شود؟ سوابق سفارش‌ها حفظ می‌شود.') &&
+                    remove.mutate(undefined)
+                  }
                 >
                   <Trash2 /> حذف محصول
                 </Button>
@@ -668,28 +895,67 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
             <div className="space-y-3">
               {images.fields.map((image, index) => (
                 <div key={image.key} className="flex items-center gap-2">
-                  <div className="relative size-14 shrink-0 rounded-md bg-muted">
+                  <div className="bg-muted relative size-14 shrink-0 rounded-md">
                     <ProductImage src={image.url} alt="" sizes="56px" className="p-1" />
                   </div>
-                  <Input className="h-9 text-xs" placeholder="متن جایگزین" {...form.register(`images.${index}.alt`)} />
+                  <Input
+                    className="h-9 text-xs"
+                    placeholder="متن جایگزین"
+                    {...form.register(`images.${index}.alt`)}
+                  />
                   <div className="flex flex-col">
-                    <button type="button" disabled={index === 0} onClick={() => images.move(index, index - 1)} className="disabled:opacity-30" aria-label="بالا">
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() => images.move(index, index - 1)}
+                      className="disabled:opacity-30"
+                      aria-label="بالا"
+                    >
                       <ArrowUp className="size-4" />
                     </button>
-                    <button type="button" disabled={index === images.fields.length - 1} onClick={() => images.move(index, index + 1)} className="disabled:opacity-30" aria-label="پایین">
+                    <button
+                      type="button"
+                      disabled={index === images.fields.length - 1}
+                      onClick={() => images.move(index, index + 1)}
+                      className="disabled:opacity-30"
+                      aria-label="پایین"
+                    >
                       <ArrowDown className="size-4" />
                     </button>
                   </div>
-                  <Button type="button" variant="ghost" size="icon-sm" onClick={() => images.remove(index)} aria-label="حذف تصویر">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => images.remove(index)}
+                    aria-label="حذف تصویر"
+                  >
                     <Trash2 className="text-destructive" />
                   </Button>
                 </div>
               ))}
-              <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple hidden onChange={(e) => void upload(e.target.files)} />
-              <Button type="button" variant="outline" size="sm" className="w-full" loading={uploading} onClick={() => fileInput.current?.click()} disabled={!can('media.upload')}>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+                multiple
+                hidden
+                onChange={(e) => void upload(e.target.files)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                loading={uploading}
+                onClick={() => fileInput.current?.click()}
+                disabled={!can('media.upload')}
+              >
                 <ImagePlus /> بارگذاری تصویر
               </Button>
-              <p className="text-[11px] text-muted-foreground">اولین تصویر، تصویر اصلی محصول است. فرمت‌های JPG، PNG، WebP و AVIF.</p>
+              <p className="text-muted-foreground text-[11px]">
+                اولین تصویر، تصویر اصلی محصول است. فرمت‌های JPG، PNG، WebP و AVIF.
+              </p>
             </div>
           </Section>
 
@@ -702,7 +968,12 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
                 <Textarea id="seoDescription" rows={3} {...form.register('seoDescription')} />
               </Field>
               <Field label="Canonical URL" htmlFor="canonicalUrl">
-                <Input id="canonicalUrl" dir="ltr" className="text-left" {...form.register('canonicalUrl')} />
+                <Input
+                  id="canonicalUrl"
+                  dir="ltr"
+                  className="text-left"
+                  {...form.register('canonicalUrl')}
+                />
               </Field>
             </div>
           </Section>
@@ -721,8 +992,9 @@ export function ProductForm({ product }: { product: AdminProductDetail | null })
           ) : null}
 
           {product ? (
-            <p className="px-1 text-xs text-muted-foreground">
-              بازه قیمت: {price(Math.min(...product.variants.map((v) => v.price)))} تا {price(Math.max(...product.variants.map((v) => v.price)))}
+            <p className="text-muted-foreground px-1 text-xs">
+              بازه قیمت: {price(Math.min(...product.variants.map((v) => v.price)))} تا{' '}
+              {price(Math.max(...product.variants.map((v) => v.price)))}
             </p>
           ) : null}
         </div>

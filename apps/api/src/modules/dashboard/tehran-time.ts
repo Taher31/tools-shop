@@ -3,7 +3,9 @@ const DAY_MS = 86_400_000;
 
 /** Start of the current day in Tehran, as a UTC instant. */
 export function startOfTehranDay(now = new Date()): Date {
-  return new Date(Math.floor((now.getTime() + TEHRAN_OFFSET_MS) / DAY_MS) * DAY_MS - TEHRAN_OFFSET_MS);
+  return new Date(
+    Math.floor((now.getTime() + TEHRAN_OFFSET_MS) / DAY_MS) * DAY_MS - TEHRAN_OFFSET_MS,
+  );
 }
 
 /** Start of the current Jalali (Persian calendar) month in Tehran. */

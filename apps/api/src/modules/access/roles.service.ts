@@ -68,25 +68,38 @@ export class RolesService {
   }
 
   async update(id: string, input: RoleUpsertInput): Promise<RoleView> {
-    const existing = await this.prisma.role.findUnique({ where: { id }, include: { permissions: true } });
+    const existing = await this.prisma.role.findUnique({
+      where: { id },
+      include: { permissions: true },
+    });
     if (!existing) throw AppException.notFound('نقش یافت نشد.');
-    if (existing.key === SUPER_ADMIN_ROLE) throw AppException.forbidden('نقش مدیر ارشد قابل ویرایش نیست.');
+    if (existing.key === SUPER_ADMIN_ROLE)
+      throw AppException.forbidden('نقش مدیر ارشد قابل ویرایش نیست.');
     const permissions = this.validatePermissions(input.permissions);
 
     await this.prisma.$transaction(async (tx) => {
       await tx.role.update({
         where: { id },
-        data: { name: input.name, description: input.description, key: existing.isSystem ? existing.key : input.key },
+        data: {
+          name: input.name,
+          description: input.description,
+          key: existing.isSystem ? existing.key : input.key,
+        },
       });
       await tx.rolePermission.deleteMany({ where: { roleId: id } });
-      await tx.rolePermission.createMany({ data: permissions.map((permissionKey) => ({ roleId: id, permissionKey })) });
+      await tx.rolePermission.createMany({
+        data: permissions.map((permissionKey) => ({ roleId: id, permissionKey })),
+      });
       await this.audit.record(
         {
           action: 'role.update',
           entityType: 'role',
           entityId: id,
           summary: `ویرایش دسترسی‌های نقش ${input.name}`,
-          before: { name: existing.name, permissions: existing.permissions.map((p) => p.permissionKey).sort() },
+          before: {
+            name: existing.name,
+            permissions: existing.permissions.map((p) => p.permissionKey).sort(),
+          },
           after: { name: input.name, permissions: [...permissions].sort() },
         },
         tx,
@@ -97,14 +110,23 @@ export class RolesService {
   }
 
   async remove(id: string): Promise<void> {
-    const role = await this.prisma.role.findUnique({ where: { id }, include: { _count: { select: { users: true } } } });
+    const role = await this.prisma.role.findUnique({
+      where: { id },
+      include: { _count: { select: { users: true } } },
+    });
     if (!role) throw AppException.notFound('نقش یافت نشد.');
     if (role.isSystem) throw AppException.forbidden('نقش‌های سیستمی قابل حذف نیستند.');
-    if (role._count.users > 0) throw AppException.conflict('این نقش به کاربرانی اختصاص داده شده است.');
+    if (role._count.users > 0)
+      throw AppException.conflict('این نقش به کاربرانی اختصاص داده شده است.');
     await this.prisma.$transaction(async (tx) => {
       await tx.role.delete({ where: { id } });
       await this.audit.record(
-        { action: 'role.delete', entityType: 'role', entityId: id, summary: `حذف نقش ${role.name}` },
+        {
+          action: 'role.delete',
+          entityType: 'role',
+          entityId: id,
+          summary: `حذف نقش ${role.name}`,
+        },
         tx,
       );
     });
@@ -119,7 +141,9 @@ export class RolesService {
   private validatePermissions(values: string[]): Permission[] {
     const unknown = values.filter((value) => !isPermission(value));
     if (unknown.length > 0) {
-      throw AppException.validation([{ path: 'permissions', message: `دسترسی نامعتبر: ${unknown.join(', ')}` }]);
+      throw AppException.validation([
+        { path: 'permissions', message: `دسترسی نامعتبر: ${unknown.join(', ')}` },
+      ]);
     }
     return [...new Set(values)] as Permission[];
   }

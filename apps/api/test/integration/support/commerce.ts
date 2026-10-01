@@ -44,15 +44,13 @@ export async function setStock(
     const warehouse = warehouses.find((w) => w.code === code);
     if (!warehouse) throw new Error(`Unknown warehouse ${code}`);
     row = ok<InventoryRow>(
-      await admin
-        .post(`${API}/admin/inventory/operations`)
-        .send({
-          variantId,
-          warehouseId: warehouse.id,
-          type: 'set',
-          quantity,
-          note: 'تنظیم برای آزمون',
-        }),
+      await admin.post(`${API}/admin/inventory/operations`).send({
+        variantId,
+        warehouseId: warehouse.id,
+        type: 'set',
+        quantity,
+        note: 'تنظیم برای آزمون',
+      }),
     );
   }
   if (!row) throw new Error('No quantities given');

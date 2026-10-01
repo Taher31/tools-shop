@@ -1,7 +1,17 @@
 'use client';
 
 import type { ProductSearchResult } from '@toolshop/shared';
-import { Button, Checkbox, cn, Dialog, DialogTrigger, Input, Label, SheetContent, Switch } from '@toolshop/ui';
+import {
+  Button,
+  Checkbox,
+  cn,
+  Dialog,
+  DialogTrigger,
+  Input,
+  Label,
+  SheetContent,
+  Switch,
+} from '@toolshop/ui';
 import { SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -24,14 +34,20 @@ function useListingNavigation(state: ListingState) {
   const navigate = (patch: Partial<ListingState>) => {
     const next = listingSearchParams({ ...state, ...patch, page: 1 });
     const query = next.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname, { scroll: false }));
+    startTransition(() =>
+      router.push(query ? `${pathname}?${query}` : pathname, { scroll: false }),
+    );
   };
   return { navigate, pending };
 }
 
 function FacetGroup({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div role="group" aria-label={title} className="border-b border-border py-4 first:pt-0 last:border-0 last:pb-0">
+    <div
+      role="group"
+      aria-label={title}
+      className="border-border border-b py-4 first:pt-0 last:border-0 last:pb-0"
+    >
       <p className="mb-3 text-sm font-bold">{title}</p>
       {children}
     </div>
@@ -62,18 +78,29 @@ function CheckboxList({
               id={id}
               checked={checked}
               onCheckedChange={(value) =>
-                onChange(value ? [...selected, option.value] : selected.filter((item) => item !== option.value))
+                onChange(
+                  value
+                    ? [...selected, option.value]
+                    : selected.filter((item) => item !== option.value),
+                )
               }
             />
-            <Label htmlFor={id} className="flex flex-1 cursor-pointer items-center justify-between text-[13px] font-normal">
+            <Label
+              htmlFor={id}
+              className="flex flex-1 cursor-pointer items-center justify-between text-[13px] font-normal"
+            >
               <span>{option.label}</span>
-              <span className="text-xs text-muted-foreground">{faNumber(option.count)}</span>
+              <span className="text-muted-foreground text-xs">{faNumber(option.count)}</span>
             </Label>
           </div>
         );
       })}
       {options.length > 8 ? (
-        <button type="button" onClick={() => setExpanded(!expanded)} className="text-xs text-info hover:underline">
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="text-info text-xs hover:underline"
+        >
           {expanded ? 'نمایش کمتر' : `نمایش همه (${faNumber(options.length)})`}
         </button>
       ) : null}
@@ -81,12 +108,22 @@ function CheckboxList({
   );
 }
 
-function PriceFilter({ state, range, onApply }: { state: ListingState; range: { min: number; max: number } | null; onApply: (min?: number, max?: number) => void }) {
+function PriceFilter({
+  state,
+  range,
+  onApply,
+}: {
+  state: ListingState;
+  range: { min: number; max: number } | null;
+  onApply: (min?: number, max?: number) => void;
+}) {
   const toToman = (rial?: number) => (rial === undefined ? '' : String(Math.floor(rial / 10)));
   const [min, setMin] = useState(toToman(state.minPrice));
   const [max, setMax] = useState(toToman(state.maxPrice));
   const parse = (value: string) => {
-    const digits = value.replace(/[^\d۰-۹]/g, '').replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+    const digits = value
+      .replace(/[^\d۰-۹]/g, '')
+      .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
     return digits ? Number(digits) * 10 : undefined;
   };
   return (
@@ -98,11 +135,25 @@ function PriceFilter({ state, range, onApply }: { state: ListingState; range: { 
       }}
     >
       <div className="grid grid-cols-2 gap-2">
-        <Input inputMode="numeric" placeholder="از (تومان)" value={min} onChange={(e) => setMin(e.target.value)} aria-label="حداقل قیمت" className="h-9 text-xs" />
-        <Input inputMode="numeric" placeholder="تا (تومان)" value={max} onChange={(e) => setMax(e.target.value)} aria-label="حداکثر قیمت" className="h-9 text-xs" />
+        <Input
+          inputMode="numeric"
+          placeholder="از (تومان)"
+          value={min}
+          onChange={(e) => setMin(e.target.value)}
+          aria-label="حداقل قیمت"
+          className="h-9 text-xs"
+        />
+        <Input
+          inputMode="numeric"
+          placeholder="تا (تومان)"
+          value={max}
+          onChange={(e) => setMax(e.target.value)}
+          aria-label="حداکثر قیمت"
+          className="h-9 text-xs"
+        />
       </div>
       {range ? (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-muted-foreground text-[11px]">
           محدوده: {priceNumber(range.min)} تا {priceNumber(range.max)} تومان
         </p>
       ) : null}
@@ -121,11 +172,19 @@ function FiltersBody({ state, facets, linkCategories, hideBrand }: FiltersProps)
         <div className="space-y-3">
           <label className="flex cursor-pointer items-center justify-between text-[13px]">
             فقط کالاهای موجود
-            <Switch checked={state.inStock} onCheckedChange={(inStock) => navigate({ inStock })} aria-label="فقط کالاهای موجود" />
+            <Switch
+              checked={state.inStock}
+              onCheckedChange={(inStock) => navigate({ inStock })}
+              aria-label="فقط کالاهای موجود"
+            />
           </label>
           <label className="flex cursor-pointer items-center justify-between text-[13px]">
             فقط تخفیف‌دار
-            <Switch checked={state.onSale} onCheckedChange={(onSale) => navigate({ onSale })} aria-label="فقط تخفیف‌دار" />
+            <Switch
+              checked={state.onSale}
+              onCheckedChange={(onSale) => navigate({ onSale })}
+              aria-label="فقط تخفیف‌دار"
+            />
           </label>
         </div>
       </FacetGroup>
@@ -135,9 +194,12 @@ function FiltersBody({ state, facets, linkCategories, hideBrand }: FiltersProps)
           <ul className="space-y-2 text-[13px]">
             {facets.categories.map((category) => (
               <li key={category.value}>
-                <Link href={`/category/${category.value}`} className="flex items-center justify-between hover:text-primary">
+                <Link
+                  href={`/category/${category.value}`}
+                  className="hover:text-primary flex items-center justify-between"
+                >
                   <span>{category.label}</span>
-                  <span className="text-xs text-muted-foreground">{faNumber(category.count)}</span>
+                  <span className="text-muted-foreground text-xs">{faNumber(category.count)}</span>
                 </Link>
               </li>
             ))}
@@ -147,12 +209,21 @@ function FiltersBody({ state, facets, linkCategories, hideBrand }: FiltersProps)
 
       {!hideBrand && facets.brands.length > 0 ? (
         <FacetGroup title="برند">
-          <CheckboxList name="brand" options={facets.brands} selected={state.brand} onChange={(brand) => navigate({ brand })} />
+          <CheckboxList
+            name="brand"
+            options={facets.brands}
+            selected={state.brand}
+            onChange={(brand) => navigate({ brand })}
+          />
         </FacetGroup>
       ) : null}
 
       <FacetGroup title="محدوده قیمت">
-        <PriceFilter state={state} range={facets.price} onApply={(minPrice, maxPrice) => navigate({ minPrice, maxPrice })} />
+        <PriceFilter
+          state={state}
+          range={facets.price}
+          onApply={(minPrice, maxPrice) => navigate({ minPrice, maxPrice })}
+        />
       </FacetGroup>
 
       {facets.attributes.map((facet) => (
@@ -176,7 +247,7 @@ function FiltersBody({ state, facets, linkCategories, hideBrand }: FiltersProps)
 export function ListingFilters(props: FiltersProps) {
   return (
     <aside className="hidden w-64 shrink-0 lg:block" aria-label="فیلترها">
-      <div className="sticky top-40 max-h-[calc(100vh-11rem)] overflow-y-auto rounded-lg border border-border bg-card p-4">
+      <div className="border-border bg-card sticky top-40 max-h-[calc(100vh-11rem)] overflow-y-auto rounded-lg border p-4">
         <FiltersBody {...props} />
       </div>
     </aside>
@@ -189,7 +260,11 @@ export function MobileFilters(props: FiltersProps & { activeCount: number }) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="lg:hidden">
           <SlidersHorizontal /> فیلترها
-          {props.activeCount > 0 ? <span className="rounded-full bg-accent px-1.5 text-[11px] text-accent-foreground">{faNumber(props.activeCount)}</span> : null}
+          {props.activeCount > 0 ? (
+            <span className="bg-accent text-accent-foreground rounded-full px-1.5 text-[11px]">
+              {faNumber(props.activeCount)}
+            </span>
+          ) : null}
         </Button>
       </DialogTrigger>
       <SheetContent title="فیلترها" side="end" aria-describedby={undefined}>

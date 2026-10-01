@@ -22,7 +22,10 @@ interface Props {
 }
 
 const loadProduct = (slug: string) =>
-  serverApiOrNull<ProductDetail>(`/products/${encodeURIComponent(slug)}`, { revalidate: 30, tags: [`product:${slug}`] });
+  serverApiOrNull<ProductDetail>(`/products/${encodeURIComponent(slug)}`, {
+    revalidate: 30,
+    tags: [`product:${slug}`],
+  });
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await loadProduct(decodeURIComponent((await params).slug));
@@ -53,7 +56,9 @@ function productJsonLd(product: ProductDetail) {
     description: product.shortDescription ?? undefined,
     sku: product.variants[0]?.sku,
     mpn: product.model ?? undefined,
-    image: product.images.map((image) => (image.url.startsWith('http') ? image.url : `${siteConfig.url}${image.url}`)),
+    image: product.images.map((image) =>
+      image.url.startsWith('http') ? image.url : `${siteConfig.url}${image.url}`,
+    ),
     brand: product.brand ? { '@type': 'Brand', name: product.brand.name } : undefined,
     category: product.breadcrumbs.map((b) => b.name).join(' > '),
     offers:
@@ -67,10 +72,21 @@ function productJsonLd(product: ProductDetail) {
             availability,
             url,
           }
-        : { '@type': 'Offer', priceCurrency: 'IRR', price: prices[0], availability, url, itemCondition: 'https://schema.org/NewCondition' },
+        : {
+            '@type': 'Offer',
+            priceCurrency: 'IRR',
+            price: prices[0],
+            availability,
+            url,
+            itemCondition: 'https://schema.org/NewCondition',
+          },
     aggregateRating:
       product.rating.average && product.rating.count > 0
-        ? { '@type': 'AggregateRating', ratingValue: product.rating.average, reviewCount: product.rating.count }
+        ? {
+            '@type': 'AggregateRating',
+            ratingValue: product.rating.average,
+            reviewCount: product.rating.count,
+          }
         : undefined,
   };
 }
@@ -84,7 +100,9 @@ export default async function ProductPage({ params }: Props) {
     { name: product.title },
   ];
   const facts = [
-    product.brand ? { label: 'برند', value: product.brand.name, href: `/brand/${product.brand.slug}` } : null,
+    product.brand
+      ? { label: 'برند', value: product.brand.name, href: `/brand/${product.brand.slug}` }
+      : null,
     product.model ? { label: 'مدل', value: product.model } : null,
     product.usageType ? { label: 'کاربری', value: USAGE_TYPE_LABELS[product.usageType] } : null,
     product.countryOfOrigin ? { label: 'کشور سازنده', value: product.countryOfOrigin } : null,
@@ -101,15 +119,19 @@ export default async function ProductPage({ params }: Props) {
         </div>
 
         <div className="lg:col-span-4">
-          <h1 className="text-xl leading-9 font-extrabold">{product.title}</h1>
-          {product.englishTitle ? <p className="ltr mt-1 text-end text-sm text-muted-foreground">{product.englishTitle}</p> : null}
+          <h1 className="text-xl font-extrabold leading-9">{product.title}</h1>
+          {product.englishTitle ? (
+            <p className="ltr text-muted-foreground mt-1 text-end text-sm">
+              {product.englishTitle}
+            </p>
+          ) : null}
           <div className="mt-2">
             <RatingSummary average={product.rating.average} count={product.rating.count} />
           </div>
           <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
             {facts.map((fact) => (
-              <div key={fact.label} className="rounded-md bg-card px-3 py-2 ring-1 ring-border">
-                <dt className="text-xs text-muted-foreground">{fact.label}</dt>
+              <div key={fact.label} className="bg-card ring-border rounded-md px-3 py-2 ring-1">
+                <dt className="text-muted-foreground text-xs">{fact.label}</dt>
                 <dd className="font-semibold">
                   {fact.href ? (
                     <Link href={fact.href} className="text-info hover:underline">
@@ -122,21 +144,23 @@ export default async function ProductPage({ params }: Props) {
               </div>
             ))}
           </dl>
-          {product.shortDescription ? <p className="mt-4 text-sm leading-8 text-foreground/85">{product.shortDescription}</p> : null}
+          {product.shortDescription ? (
+            <p className="text-foreground/85 mt-4 text-sm leading-8">{product.shortDescription}</p>
+          ) : null}
           {product.specs.length > 0 ? (
             <div className="mt-5">
               <p className="mb-2 text-sm font-bold">ویژگی‌های کلیدی</p>
               <ul className="space-y-1.5 text-sm">
                 {product.specs.slice(0, 6).map((spec) => (
                   <li key={spec.attributeId} className="flex gap-2">
-                    <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-accent" />
+                    <span className="bg-accent mt-2.5 size-1.5 shrink-0 rounded-full" />
                     <span className="text-muted-foreground">{spec.name}:</span>
                     <span className="font-medium">{spec.value}</span>
                   </li>
                 ))}
               </ul>
               {product.specs.length > 6 ? (
-                <a href="#specs" className="mt-2 inline-block text-xs text-info hover:underline">
+                <a href="#specs" className="text-info mt-2 inline-block text-xs hover:underline">
                   مشاهده همه {faNumber(product.specs.length)} مشخصه فنی
                 </a>
               ) : null}
@@ -151,12 +175,17 @@ export default async function ProductPage({ params }: Props) {
         </div>
       </div>
 
-      <div id="specs" className="mt-10 scroll-mt-40 rounded-lg border border-border bg-card px-4 pb-6 sm:px-6">
+      <div
+        id="specs"
+        className="border-border bg-card mt-10 scroll-mt-40 rounded-lg border px-4 pb-6 sm:px-6"
+      >
         <Tabs defaultValue={product.specs.length > 0 ? 'specs' : 'description'} dir="rtl">
           <TabsList>
             {product.specs.length > 0 ? <TabsTrigger value="specs">مشخصات فنی</TabsTrigger> : null}
             <TabsTrigger value="description">معرفی محصول</TabsTrigger>
-            <TabsTrigger value="reviews">نظرات {product.rating.count > 0 ? `(${faNumber(product.rating.count)})` : ''}</TabsTrigger>
+            <TabsTrigger value="reviews">
+              نظرات {product.rating.count > 0 ? `(${faNumber(product.rating.count)})` : ''}
+            </TabsTrigger>
             <TabsTrigger value="questions">پرسش و پاسخ</TabsTrigger>
           </TabsList>
           {product.specs.length > 0 ? (
@@ -166,12 +195,20 @@ export default async function ProductPage({ params }: Props) {
           ) : null}
           <TabsContent value="description">
             {product.description ? (
-              <div className="prose-content max-w-4xl" dangerouslySetInnerHTML={{ __html: product.description }} />
+              <div
+                className="prose-content max-w-4xl"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
             ) : (
-              <p className="text-sm text-muted-foreground">توضیحاتی برای این محصول ثبت نشده است.</p>
+              <p className="text-muted-foreground text-sm">توضیحاتی برای این محصول ثبت نشده است.</p>
             )}
             {product.videoUrl ? (
-              <a href={product.videoUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-block text-sm text-info hover:underline">
+              <a
+                href={product.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-info mt-4 inline-block text-sm hover:underline"
+              >
                 مشاهده ویدیوی معرفی محصول
               </a>
             ) : null}

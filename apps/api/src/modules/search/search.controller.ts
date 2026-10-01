@@ -21,7 +21,8 @@ export function parseSearchParams(raw: Record<string, unknown>) {
         .flatMap((v) => String(v).split(','))
         .map((v) => v.trim())
         .filter(Boolean);
-      if (/^[a-z][a-z0-9_]{1,62}$/.test(code) && values.length > 0) attributes[code] = values.slice(0, 20);
+      if (/^[a-z][a-z0-9_]{1,62}$/.test(code) && values.length > 0)
+        attributes[code] = values.slice(0, 20);
     } else {
       rest[key] = value;
     }

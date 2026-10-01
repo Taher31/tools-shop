@@ -9,7 +9,15 @@ import {
 
 describe('order state machine', () => {
   it('follows the happy path', () => {
-    const path = ['pending', 'awaiting_payment', 'paid', 'processing', 'packed', 'shipped', 'delivered'] as const;
+    const path = [
+      'pending',
+      'awaiting_payment',
+      'paid',
+      'processing',
+      'packed',
+      'shipped',
+      'delivered',
+    ] as const;
     for (let i = 0; i < path.length - 1; i += 1) {
       expect(canTransitionOrder(path[i]!, path[i + 1]!)).toBe(true);
     }

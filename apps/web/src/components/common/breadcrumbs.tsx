@@ -14,7 +14,7 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
   return (
     <>
       <nav aria-label="مسیر" className="mb-4 overflow-x-auto">
-        <ol className="flex items-center gap-1 text-xs whitespace-nowrap text-muted-foreground">
+        <ol className="text-muted-foreground flex items-center gap-1 whitespace-nowrap text-xs">
           {all.map((item, index) => (
             <li key={`${item.name}-${index}`} className="flex items-center gap-1">
               {index > 0 ? <ChevronLeft className="size-3.5 opacity-60" /> : null}
@@ -23,7 +23,11 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
                   {item.name}
                 </Link>
               ) : (
-                <span className={index === all.length - 1 ? 'font-medium text-foreground' : undefined}>{item.name}</span>
+                <span
+                  className={index === all.length - 1 ? 'text-foreground font-medium' : undefined}
+                >
+                  {item.name}
+                </span>
               )}
             </li>
           ))}

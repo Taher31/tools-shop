@@ -14,7 +14,10 @@ export class AdminMediaController {
   @Post('images')
   @RequirePermissions('media.upload')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: HARD_LIMIT_BYTES, files: 1 } }))
-  upload(@UploadedFile() file: Express.Multer.File | undefined, @CurrentUser() user: AuthContext): Promise<UploadedMedia> {
+  upload(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @CurrentUser() user: AuthContext,
+  ): Promise<UploadedMedia> {
     return this.media.uploadImage(file, 'products', user.userId);
   }
 }

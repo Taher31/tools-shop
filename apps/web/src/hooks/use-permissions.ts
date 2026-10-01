@@ -8,6 +8,7 @@ export function usePermissions() {
   const { user } = useAuth();
   const granted = new Set<string>(user?.permissions ?? []);
   return {
-    can: (permission: Permission | Permission[]) => user?.type === 'staff' && hasPermission(granted, permission),
+    can: (permission: Permission | Permission[]) =>
+      user?.type === 'staff' && hasPermission(granted, permission),
   };
 }

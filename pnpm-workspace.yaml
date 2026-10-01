@@ -3,11 +3,11 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
-  - "@nestjs/core"
-  - "@prisma/client"
-  - "@prisma/engines"
-  - "@swc/core"
-  - "@tailwindcss/oxide"
+  - '@nestjs/core'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@swc/core'
+  - '@tailwindcss/oxide'
   - argon2
   - esbuild
   - msgpackr-extract

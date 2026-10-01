@@ -2,7 +2,21 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CartTotals, CheckoutPreview, CheckoutResult } from '@toolshop/shared';
-import { Alert, Button, Card, CardContent, CardHeader, CardTitle, cn, EmptyState, RadioGroup, RadioGroupItem, Skeleton, Textarea, toast } from '@toolshop/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  cn,
+  EmptyState,
+  RadioGroup,
+  RadioGroupItem,
+  Skeleton,
+  Textarea,
+  toast,
+} from '@toolshop/ui';
 import { CreditCard, MapPin, Plus, ShoppingCart, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -33,13 +47,15 @@ export function CheckoutView() {
   useEffect(() => {
     if (!data) return;
     if (!addressId && data.addresses[0]) setAddressId(data.addresses[0].id);
-    if (shippingId && !data.shippingOptions.some((o) => o.id === shippingId)) setShippingId(undefined);
+    if (shippingId && !data.shippingOptions.some((o) => o.id === shippingId))
+      setShippingId(undefined);
     if (!provider && data.paymentProviders[0]) setProvider(data.paymentProviders[0].code);
   }, [data, addressId, shippingId, provider]);
 
   const quote = useQuery({
     queryKey: ['checkout-quote', addressId, shippingId, data?.cart.totals.total],
-    queryFn: () => api.post<CartTotals>('/checkout/quote', { addressId, shippingMethodId: shippingId }),
+    queryFn: () =>
+      api.post<CartTotals>('/checkout/quote', { addressId, shippingMethodId: shippingId }),
     enabled: Boolean(addressId && shippingId),
   });
 
@@ -81,14 +97,16 @@ export function CheckoutView() {
   if (preview.error) {
     const empty = preview.error instanceof ApiError && preview.error.code === 'CART_EMPTY';
     return (
-      <div className="rounded-lg border border-border bg-card">
+      <div className="border-border bg-card rounded-lg border">
         <EmptyState
           icon={<ShoppingCart />}
           title={empty ? 'سبد خرید شما خالی است' : 'امکان نمایش صفحه پرداخت نیست'}
           description={empty ? undefined : errorMessage(preview.error)}
           action={
             <Button asChild variant="outline">
-              <Link href={empty ? '/products' : '/cart'}>{empty ? 'مشاهده محصولات' : 'بازگشت به سبد خرید'}</Link>
+              <Link href={empty ? '/products' : '/cart'}>
+                {empty ? 'مشاهده محصولات' : 'بازگشت به سبد خرید'}
+              </Link>
             </Button>
           }
         />
@@ -109,7 +127,7 @@ export function CheckoutView() {
             {data.cart.warnings.map((w) => (
               <p key={w}>{w}</p>
             ))}
-            <Link href="/cart" className="font-bold text-info hover:underline">
+            <Link href="/cart" className="text-info font-bold hover:underline">
               اصلاح سبد خرید
             </Link>
           </Alert>
@@ -118,7 +136,7 @@ export function CheckoutView() {
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <MapPin className="size-5 text-primary" /> آدرس تحویل
+              <MapPin className="text-primary size-5" /> آدرس تحویل
             </CardTitle>
             <Button variant="outline" size="sm" onClick={() => setAddressDialog(true)}>
               <Plus /> آدرس جدید
@@ -126,20 +144,30 @@ export function CheckoutView() {
           </CardHeader>
           <CardContent>
             {data.addresses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">هنوز آدرسی ثبت نکرده‌اید. برای ادامه یک آدرس اضافه کنید.</p>
+              <p className="text-muted-foreground text-sm">
+                هنوز آدرسی ثبت نکرده‌اید. برای ادامه یک آدرس اضافه کنید.
+              </p>
             ) : (
-              <RadioGroup value={addressId} onValueChange={setAddressId} className="grid gap-3 sm:grid-cols-2">
+              <RadioGroup
+                value={addressId}
+                onValueChange={setAddressId}
+                className="grid gap-3 sm:grid-cols-2"
+              >
                 {data.addresses.map((address) => (
                   <label
                     key={address.id}
                     className={cn(
                       'flex cursor-pointer gap-3 rounded-md border p-3 transition-colors',
-                      address.id === addressId ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50',
+                      address.id === addressId
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50',
                     )}
                   >
                     <RadioGroupItem value={address.id} className="mt-1" />
                     <div>
-                      {address.title ? <p className="mb-1 text-sm font-bold">{address.title}</p> : null}
+                      {address.title ? (
+                        <p className="mb-1 text-sm font-bold">{address.title}</p>
+                      ) : null}
                       <AddressText address={address} />
                     </div>
                   </label>
@@ -152,12 +180,14 @@ export function CheckoutView() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Truck className="size-5 text-primary" /> روش ارسال
+              <Truck className="text-primary size-5" /> روش ارسال
             </CardTitle>
           </CardHeader>
           <CardContent>
             {data.shippingOptions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">برای این آدرس روش ارسالی در دسترس نیست.</p>
+              <p className="text-muted-foreground text-sm">
+                برای این آدرس روش ارسالی در دسترس نیست.
+              </p>
             ) : (
               <RadioGroup value={shippingId} onValueChange={setShippingId} className="space-y-2">
                 {data.shippingOptions.map((option) => (
@@ -165,13 +195,15 @@ export function CheckoutView() {
                     key={option.id}
                     className={cn(
                       'flex cursor-pointer items-center gap-3 rounded-md border p-3 transition-colors',
-                      option.id === shippingId ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50',
+                      option.id === shippingId
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50',
                     )}
                   >
                     <RadioGroupItem value={option.id} />
                     <div className="flex-1">
                       <p className="text-sm font-bold">{option.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {option.description}
                         {option.description ? ' · ' : ''}
                         {option.estimatedDaysMax === 0
@@ -194,31 +226,44 @@ export function CheckoutView() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CreditCard className="size-5 text-primary" /> پرداخت
+              <CreditCard className="text-primary size-5" /> پرداخت
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <RadioGroup value={provider} onValueChange={setProvider} className="flex flex-wrap gap-2">
+            <RadioGroup
+              value={provider}
+              onValueChange={setProvider}
+              className="flex flex-wrap gap-2"
+            >
               {data.paymentProviders.map((option) => (
                 <label
                   key={option.code}
                   className={cn(
                     'flex cursor-pointer items-center gap-2 rounded-md border px-4 py-3 text-sm',
-                    option.code === provider ? 'border-primary bg-primary/5 font-bold' : 'border-border',
+                    option.code === provider
+                      ? 'border-primary bg-primary/5 font-bold'
+                      : 'border-border',
                   )}
                 >
                   <RadioGroupItem value={option.code} /> {option.name}
                 </label>
               ))}
             </RadioGroup>
-            <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={1000} placeholder="توضیحات سفارش (اختیاری)" aria-label="توضیحات سفارش" />
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={2}
+              maxLength={1000}
+              placeholder="توضیحات سفارش (اختیاری)"
+              aria-label="توضیحات سفارش"
+            />
           </CardContent>
         </Card>
       </div>
 
       <div className="space-y-3 lg:sticky lg:top-40">
         <OrderSummary totals={totals} shippingPending={!shippingId}>
-          <ul className="max-h-48 space-y-1.5 overflow-y-auto border-t border-border pt-3 text-xs text-muted-foreground">
+          <ul className="border-border text-muted-foreground max-h-48 space-y-1.5 overflow-y-auto border-t pt-3 text-xs">
             {data.cart.lines.map((line) => (
               <li key={line.id} className="flex justify-between gap-2">
                 <span className="line-clamp-1">
@@ -227,17 +272,34 @@ export function CheckoutView() {
               </li>
             ))}
           </ul>
-          <Button variant="accent" size="lg" className="w-full" disabled={!canPlace || quote.isFetching} loading={place.isPending} onClick={() => place.mutate()}>
+          <Button
+            variant="accent"
+            size="lg"
+            className="w-full"
+            disabled={!canPlace || quote.isFetching}
+            loading={place.isPending}
+            onClick={() => place.mutate()}
+          >
             ثبت سفارش و پرداخت
           </Button>
-          {!shippingId ? <p className="text-xs text-muted-foreground">برای ادامه، روش ارسال را انتخاب کنید.</p> : null}
+          {!shippingId ? (
+            <p className="text-muted-foreground text-xs">برای ادامه، روش ارسال را انتخاب کنید.</p>
+          ) : null}
         </OrderSummary>
-        <p className="px-1 text-xs leading-6 text-muted-foreground">
-          با ثبت سفارش، <Link href="/terms" className="text-info hover:underline">قوانین و مقررات</Link> فروشگاه را می‌پذیرید.
+        <p className="text-muted-foreground px-1 text-xs leading-6">
+          با ثبت سفارش،{' '}
+          <Link href="/terms" className="text-info hover:underline">
+            قوانین و مقررات
+          </Link>{' '}
+          فروشگاه را می‌پذیرید.
         </p>
       </div>
 
-      <AddressDialog open={addressDialog} onOpenChange={setAddressDialog} onSaved={(address) => setAddressId(address.id)} />
+      <AddressDialog
+        open={addressDialog}
+        onOpenChange={setAddressDialog}
+        onSaved={(address) => setAddressId(address.id)}
+      />
     </div>
   );
 }

@@ -13,7 +13,11 @@ export class PaymentProviderRegistry {
     private readonly config: AppConfig,
   ) {
     for (const provider of providers) {
-      if (provider.code === 'mock' && config.isProduction && !config.payments.allowMockInProduction) {
+      if (
+        provider.code === 'mock' &&
+        config.isProduction &&
+        !config.payments.allowMockInProduction
+      ) {
         this.logger.warn('Mock payment provider is disabled in production');
         continue;
       }
@@ -32,6 +36,9 @@ export class PaymentProviderRegistry {
   }
 
   available(): { code: string; name: string }[] {
-    return [...this.providers.values()].map((provider) => ({ code: provider.code, name: provider.displayName }));
+    return [...this.providers.values()].map((provider) => ({
+      code: provider.code,
+      name: provider.displayName,
+    }));
   }
 }

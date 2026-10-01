@@ -34,7 +34,8 @@ export function PaymentResult() {
     return (
       <div className="w-full max-w-lg">
         <Alert variant="destructive" title="تراکنش یافت نشد">
-          اگر مبلغی از حساب شما کسر شده، حداکثر تا ۷۲ ساعت بازمی‌گردد. در غیر این صورت با پشتیبانی تماس بگیرید.
+          اگر مبلغی از حساب شما کسر شده، حداکثر تا ۷۲ ساعت بازمی‌گردد. در غیر این صورت با پشتیبانی
+          تماس بگیرید.
         </Alert>
       </div>
     );
@@ -46,11 +47,15 @@ export function PaymentResult() {
 
   const success = result.data.status === 'succeeded';
   return (
-    <div className="w-full max-w-lg rounded-lg border border-border bg-card p-8 text-center">
-      {success ? <CircleCheck className="mx-auto size-16 text-success" strokeWidth={1.5} /> : <CircleX className="mx-auto size-16 text-destructive" strokeWidth={1.5} />}
+    <div className="border-border bg-card w-full max-w-lg rounded-lg border p-8 text-center">
+      {success ? (
+        <CircleCheck className="text-success mx-auto size-16" strokeWidth={1.5} />
+      ) : (
+        <CircleX className="text-destructive mx-auto size-16" strokeWidth={1.5} />
+      )}
       <h1 className="mt-4 text-xl font-extrabold">{success ? 'پرداخت موفق' : 'پرداخت ناموفق'}</h1>
-      <p className="mt-2 text-sm leading-7 text-muted-foreground">{result.data.message}</p>
-      <dl className="mx-auto mt-6 max-w-xs space-y-2 rounded-md bg-muted p-4 text-sm">
+      <p className="text-muted-foreground mt-2 text-sm leading-7">{result.data.message}</p>
+      <dl className="bg-muted mx-auto mt-6 max-w-xs space-y-2 rounded-md p-4 text-sm">
         <div className="flex justify-between">
           <dt className="text-muted-foreground">شماره سفارش</dt>
           <dd className="font-bold">{faNumber(result.data.orderNumber)}</dd>

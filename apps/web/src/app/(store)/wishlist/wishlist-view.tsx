@@ -20,7 +20,7 @@ export function WishlistView() {
   if (authLoading || (user && isLoading)) return <Skeleton className="h-72" />;
   if (!user) {
     return (
-      <div className="rounded-lg border border-border bg-card">
+      <div className="border-border bg-card rounded-lg border">
         <EmptyState
           icon={<Heart />}
           title="برای مشاهده علاقه‌مندی‌ها وارد شوید"
@@ -35,8 +35,12 @@ export function WishlistView() {
   }
   if (!data || data.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card">
-        <EmptyState icon={<Heart />} title="فهرست علاقه‌مندی‌های شما خالی است" description="با زدن علامت قلب روی محصولات، آن‌ها را برای بعد ذخیره کنید." />
+      <div className="border-border bg-card rounded-lg border">
+        <EmptyState
+          icon={<Heart />}
+          title="فهرست علاقه‌مندی‌های شما خالی است"
+          description="با زدن علامت قلب روی محصولات، آن‌ها را برای بعد ذخیره کنید."
+        />
       </div>
     );
   }

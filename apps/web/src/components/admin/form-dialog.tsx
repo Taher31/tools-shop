@@ -1,6 +1,13 @@
 'use client';
 
-import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@toolshop/ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@toolshop/ui';
 import type { FormEvent, ReactNode } from 'react';
 
 /** Modal form used by the admin CRUD screens. */

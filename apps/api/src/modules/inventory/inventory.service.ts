@@ -65,28 +65,47 @@ export class InventoryService {
     const merged = new Map<string, ReservationLine>();
     for (const line of lines) {
       const existing = merged.get(line.variantId);
-      merged.set(line.variantId, existing ? { ...existing, quantity: existing.quantity + line.quantity } : line);
+      merged.set(
+        line.variantId,
+        existing ? { ...existing, quantity: existing.quantity + line.quantity } : line,
+      );
     }
     const ordered = [...merged.values()].sort((a, b) => a.variantId.localeCompare(b.variantId));
 
     for (const line of ordered) {
       const levels = await this.lockLevels(tx, line.variantId);
-      const available = levels.reduce((sum, level) => sum + Math.max(0, level.onHand - level.reserved), 0);
-      if (available < line.quantity) throw new InsufficientStockError(line.variantId, available, line.label);
+      const available = levels.reduce(
+        (sum, level) => sum + Math.max(0, level.onHand - level.reserved),
+        0,
+      );
+      if (available < line.quantity)
+        throw new InsufficientStockError(line.variantId, available, line.label);
 
       let remaining = line.quantity;
       for (const level of levels) {
         if (remaining === 0) break;
         const take = Math.min(remaining, Math.max(0, level.onHand - level.reserved));
         if (take === 0) continue;
-        await tx.inventoryLevel.update({ where: { id: level.id }, data: { reserved: { increment: take } } });
+        await tx.inventoryLevel.update({
+          where: { id: level.id },
+          data: { reserved: { increment: take } },
+        });
         await tx.stockReservation.create({
-          data: { orderId, variantId: line.variantId, warehouseId: level.warehouseId, quantity: take, expiresAt },
+          data: {
+            orderId,
+            variantId: line.variantId,
+            warehouseId: level.warehouseId,
+            quantity: take,
+            expiresAt,
+          },
         });
         remaining -= take;
       }
     }
-    await this.recordChanged(tx, ordered.map((l) => l.variantId));
+    await this.recordChanged(
+      tx,
+      ordered.map((l) => l.variantId),
+    );
   }
 
   /** Payment captured: reserved units leave the warehouse (sale movements). */
@@ -94,8 +113,16 @@ export class InventoryService {
     const reservations = await this.activeReservations(tx, orderId);
     for (const reservation of reservations) {
       const level = await tx.inventoryLevel.update({
-        where: { variantId_warehouseId: { variantId: reservation.variantId, warehouseId: reservation.warehouseId } },
-        data: { onHand: { decrement: reservation.quantity }, reserved: { decrement: reservation.quantity } },
+        where: {
+          variantId_warehouseId: {
+            variantId: reservation.variantId,
+            warehouseId: reservation.warehouseId,
+          },
+        },
+        data: {
+          onHand: { decrement: reservation.quantity },
+          reserved: { decrement: reservation.quantity },
+        },
       });
       await tx.stockMovement.create({
         data: {
@@ -108,30 +135,60 @@ export class InventoryService {
           reference,
         },
       });
-      await tx.stockReservation.update({ where: { id: reservation.id }, data: { status: 'committed' } });
+      await tx.stockReservation.update({
+        where: { id: reservation.id },
+        data: { status: 'committed' },
+      });
     }
-    await this.recordChanged(tx, reservations.map((r) => r.variantId));
+    await this.recordChanged(
+      tx,
+      reservations.map((r) => r.variantId),
+    );
   }
 
   /** Unpaid order cancelled or expired: reserved units become available again. */
-  async releaseReservations(tx: Tx, orderId: string, status: 'released' | 'expired'): Promise<void> {
+  async releaseReservations(
+    tx: Tx,
+    orderId: string,
+    status: 'released' | 'expired',
+  ): Promise<void> {
     const reservations = await this.activeReservations(tx, orderId);
     for (const reservation of reservations) {
       await tx.inventoryLevel.update({
-        where: { variantId_warehouseId: { variantId: reservation.variantId, warehouseId: reservation.warehouseId } },
+        where: {
+          variantId_warehouseId: {
+            variantId: reservation.variantId,
+            warehouseId: reservation.warehouseId,
+          },
+        },
         data: { reserved: { decrement: reservation.quantity } },
       });
       await tx.stockReservation.update({ where: { id: reservation.id }, data: { status } });
     }
-    await this.recordChanged(tx, reservations.map((r) => r.variantId));
+    await this.recordChanged(
+      tx,
+      reservations.map((r) => r.variantId),
+    );
   }
 
   /** Paid order cancelled or returned: units go back to the warehouses they left. */
-  async restockOrder(tx: Tx, orderId: string, type: 'cancellation' | 'return', reference: string): Promise<void> {
-    const committed = await tx.stockReservation.findMany({ where: { orderId, status: 'committed' } });
+  async restockOrder(
+    tx: Tx,
+    orderId: string,
+    type: 'cancellation' | 'return',
+    reference: string,
+  ): Promise<void> {
+    const committed = await tx.stockReservation.findMany({
+      where: { orderId, status: 'committed' },
+    });
     for (const reservation of committed) {
       const level = await tx.inventoryLevel.update({
-        where: { variantId_warehouseId: { variantId: reservation.variantId, warehouseId: reservation.warehouseId } },
+        where: {
+          variantId_warehouseId: {
+            variantId: reservation.variantId,
+            warehouseId: reservation.warehouseId,
+          },
+        },
         data: { onHand: { increment: reservation.quantity } },
       });
       await tx.stockMovement.create({
@@ -145,9 +202,15 @@ export class InventoryService {
           reference,
         },
       });
-      await tx.stockReservation.update({ where: { id: reservation.id }, data: { status: 'released' } });
+      await tx.stockReservation.update({
+        where: { id: reservation.id },
+        data: { status: 'released' },
+      });
     }
-    await this.recordChanged(tx, committed.map((r) => r.variantId));
+    await this.recordChanged(
+      tx,
+      committed.map((r) => r.variantId),
+    );
   }
 
   /** Staff stock operation (goods received, customer return, count correction). */
@@ -162,7 +225,9 @@ export class InventoryService {
       if (!warehouse) throw AppException.notFound('انبار یافت نشد.');
 
       await tx.inventoryLevel.upsert({
-        where: { variantId_warehouseId: { variantId: input.variantId, warehouseId: input.warehouseId } },
+        where: {
+          variantId_warehouseId: { variantId: input.variantId, warehouseId: input.warehouseId },
+        },
         update: {},
         create: { variantId: input.variantId, warehouseId: input.warehouseId },
       });
@@ -215,7 +280,9 @@ export class InventoryService {
       });
       if (warehouses.length !== 2) throw AppException.notFound('انبار یافت نشد.');
       await tx.inventoryLevel.upsert({
-        where: { variantId_warehouseId: { variantId: input.variantId, warehouseId: input.toWarehouseId } },
+        where: {
+          variantId_warehouseId: { variantId: input.variantId, warehouseId: input.toWarehouseId },
+        },
         update: {},
         create: { variantId: input.variantId, warehouseId: input.toWarehouseId },
       });
@@ -228,8 +295,14 @@ export class InventoryService {
         throw AppException.conflict(`موجودی قابل انتقال در انبار مبدا ${available} عدد است.`);
       }
       const reference = `TRANSFER-${Date.now()}`;
-      await tx.inventoryLevel.update({ where: { id: from.id }, data: { onHand: from.onHand - input.quantity } });
-      await tx.inventoryLevel.update({ where: { id: to.id }, data: { onHand: to.onHand + input.quantity } });
+      await tx.inventoryLevel.update({
+        where: { id: from.id },
+        data: { onHand: from.onHand - input.quantity },
+      });
+      await tx.inventoryLevel.update({
+        where: { id: to.id },
+        data: { onHand: to.onHand + input.quantity },
+      });
       await tx.stockMovement.createMany({
         data: [
           {
@@ -271,7 +344,10 @@ export class InventoryService {
   }
 
   async list(query: InventoryListQuery): Promise<Paginated<InventoryRow>> {
-    const where: Prisma.ProductVariantWhereInput = { deletedAt: null, product: { deletedAt: null } };
+    const where: Prisma.ProductVariantWhereInput = {
+      deletedAt: null,
+      product: { deletedAt: null },
+    };
     if (query.q) {
       where.OR = [
         { sku: { contains: query.q.toUpperCase() } },
@@ -354,7 +430,10 @@ export class InventoryService {
   }
 
   async row(variantId: string): Promise<InventoryRow> {
-    const variant = await this.prisma.productVariant.findUnique({ where: { id: variantId }, include: ROW_INCLUDE });
+    const variant = await this.prisma.productVariant.findUnique({
+      where: { id: variantId },
+      include: ROW_INCLUDE,
+    });
     if (!variant) throw AppException.notFound();
     return toInventoryRow(variant);
   }
@@ -418,7 +497,9 @@ export class InventoryService {
 
 const ROW_INCLUDE = {
   product: { select: { id: true, title: true } },
-  inventoryLevels: { include: { warehouse: { select: { id: true, code: true, name: true, isActive: true } } } },
+  inventoryLevels: {
+    include: { warehouse: { select: { id: true, code: true, name: true, isActive: true } } },
+  },
 } satisfies Prisma.ProductVariantInclude;
 
 type RowRecord = Prisma.ProductVariantGetPayload<{ include: typeof ROW_INCLUDE }>;

@@ -2,14 +2,16 @@
 import path from 'node:path';
 import { config as loadEnv } from 'dotenv';
 import argon2 from 'argon2';
-import {
-  PERMISSION_DEFINITIONS,
-  SUPER_ADMIN_ROLE,
-  SYSTEM_ROLES,
-  slugify,
-} from '@toolshop/shared';
+import { PERMISSION_DEFINITIONS, SUPER_ADMIN_ROLE, SYSTEM_ROLES, slugify } from '@toolshop/shared';
 import { createPrismaClient, type Prisma, type PrismaClient } from '../../src';
-import { ATTRIBUTES, BRANDS, CATEGORIES, PRODUCTS, type SeedCategory, type SeedSpecValue } from './data/catalog';
+import {
+  ATTRIBUTES,
+  BRANDS,
+  CATEGORIES,
+  PRODUCTS,
+  type SeedCategory,
+  type SeedSpecValue,
+} from './data/catalog';
 import {
   COMMERCE_SETTINGS,
   CONTENT_PAGES,
@@ -35,7 +37,12 @@ const DEMO_CUSTOMER = {
 
 /** Same parameters as the API's PasswordService (OWASP recommended argon2id). */
 function hashPassword(password: string): Promise<string> {
-  return argon2.hash(password, { type: argon2.argon2id, memoryCost: 19_456, timeCost: 2, parallelism: 1 });
+  return argon2.hash(password, {
+    type: argon2.argon2id,
+    memoryCost: 19_456,
+    timeCost: 2,
+    parallelism: 1,
+  });
 }
 
 async function seedAccessControl(prisma: PrismaClient): Promise<void> {
@@ -55,7 +62,12 @@ async function seedAccessControl(prisma: PrismaClient): Promise<void> {
     const role =
       existing ??
       (await prisma.role.create({
-        data: { key: definition.key, name: definition.name, description: definition.description, isSystem: true },
+        data: {
+          key: definition.key,
+          name: definition.name,
+          description: definition.description,
+          isSystem: true,
+        },
       }));
     // super_admin always holds every permission; other roles keep admin customizations.
     if (!existing || definition.key === SUPER_ADMIN_ROLE) {
@@ -104,9 +116,24 @@ async function seedUsers(prisma: PrismaClient): Promise<string> {
   if (!isProduction) {
     const demoStaff = [
       { email: 'sales@example.com', firstName: 'کارشناس', lastName: 'فروش', roleKey: 'sales' },
-      { email: 'warehouse@example.com', firstName: 'مسئول', lastName: 'انبار', roleKey: 'warehouse' },
-      { email: 'support@example.com', firstName: 'کارشناس', lastName: 'پشتیبانی', roleKey: 'support' },
-      { email: 'content@example.com', firstName: 'مدیر', lastName: 'محتوا', roleKey: 'content_manager' },
+      {
+        email: 'warehouse@example.com',
+        firstName: 'مسئول',
+        lastName: 'انبار',
+        roleKey: 'warehouse',
+      },
+      {
+        email: 'support@example.com',
+        firstName: 'کارشناس',
+        lastName: 'پشتیبانی',
+        roleKey: 'support',
+      },
+      {
+        email: 'content@example.com',
+        firstName: 'مدیر',
+        lastName: 'محتوا',
+        roleKey: 'content_manager',
+      },
     ];
     for (const staff of demoStaff) {
       await ensureStaffUser(prisma, { ...staff, password: DEMO_STAFF_PASSWORD });
@@ -173,7 +200,9 @@ async function seedWarehouses(prisma: PrismaClient): Promise<Map<string, string>
   return ids;
 }
 
-async function seedAttributes(prisma: PrismaClient): Promise<Map<string, { id: string; type: string }>> {
+async function seedAttributes(
+  prisma: PrismaClient,
+): Promise<Map<string, { id: string; type: string }>> {
   const attributes = new Map<string, { id: string; type: string }>();
   for (const [index, attribute] of ATTRIBUTES.entries()) {
     const record = await prisma.attribute.upsert({
@@ -193,7 +222,12 @@ async function seedAttributes(prisma: PrismaClient): Promise<Map<string, { id: s
       await prisma.attributeOption.upsert({
         where: { attributeId_value: { attributeId: record.id, value: option.value } },
         update: {},
-        create: { attributeId: record.id, value: option.value, label: option.label, sortOrder: optionIndex },
+        create: {
+          attributeId: record.id,
+          value: option.value,
+          label: option.label,
+          sortOrder: optionIndex,
+        },
       });
     }
     attributes.set(record.code, { id: record.id, type: record.type });
@@ -205,7 +239,11 @@ async function seedAttributes(prisma: PrismaClient): Promise<Map<string, { id: s
 async function seedBrands(prisma: PrismaClient): Promise<Map<string, string>> {
   const ids = new Map<string, string>();
   for (const brand of BRANDS) {
-    const record = await prisma.brand.upsert({ where: { slug: brand.slug }, update: {}, create: brand });
+    const record = await prisma.brand.upsert({
+      where: { slug: brand.slug },
+      update: {},
+      create: brand,
+    });
     ids.set(brand.slug, record.id);
   }
   console.log(`✔ ${ids.size} brands`);
@@ -236,7 +274,8 @@ async function seedCategories(
       const assignments = (node.attributes ?? []).map((entry, sortOrder) => {
         const config = typeof entry === 'string' ? { code: entry } : entry;
         const attribute = attributes.get(config.code);
-        if (!attribute) throw new Error(`Unknown attribute ${config.code} on category ${node.slug}`);
+        if (!attribute)
+          throw new Error(`Unknown attribute ${config.code} on category ${node.slug}`);
         return {
           categoryId: record.id,
           attributeId: attribute.id,
@@ -373,8 +412,16 @@ async function seedProducts(
     const productId = productIds.get(product.slug);
     if (!productId) continue;
     const relations = [
-      ...(product.related ?? []).map((slug, index) => ({ slug, type: 'related' as const, sortOrder: index })),
-      ...(product.accessories ?? []).map((slug, index) => ({ slug, type: 'accessory' as const, sortOrder: index })),
+      ...(product.related ?? []).map((slug, index) => ({
+        slug,
+        type: 'related' as const,
+        sortOrder: index,
+      })),
+      ...(product.accessories ?? []).map((slug, index) => ({
+        slug,
+        type: 'accessory' as const,
+        sortOrder: index,
+      })),
     ];
     const data = relations.flatMap((relation) => {
       const relatedProductId = productIds.get(relation.slug);
@@ -396,7 +443,9 @@ async function seedCommerce(prisma: PrismaClient): Promise<void> {
       create: {
         ...method,
         baseCost: BigInt(method.baseCost),
-        freeShippingThreshold: method.freeShippingThreshold ? BigInt(method.freeShippingThreshold) : null,
+        freeShippingThreshold: method.freeShippingThreshold
+          ? BigInt(method.freeShippingThreshold)
+          : null,
       },
     });
   }
@@ -435,17 +484,66 @@ async function seedDemoOrders(prisma: PrismaClient, customerId: string): Promise
   if ((await prisma.order.count({ where: { userId: customerId } })) > 0) return;
 
   const address = await prisma.address.findFirstOrThrow({ where: { userId: customerId } });
-  const shipping = await prisma.shippingMethod.findUniqueOrThrow({ where: { code: 'post_pishtaz' } });
+  const shipping = await prisma.shippingMethod.findUniqueOrThrow({
+    where: { code: 'post_pishtaz' },
+  });
   const main = await prisma.warehouse.findUniqueOrThrow({ where: { code: 'MAIN' } });
-  const plans: { daysAgo: number; status: 'delivered' | 'shipped' | 'processing' | 'paid'; skus: [string, number][] }[] = [
-    { daysAgo: 12, status: 'delivered', skus: [['VLT-VCD18-K2', 1], ['STM-SB-08', 3]] },
-    { daysAgo: 9, status: 'delivered', skus: [['KVT-KAG750', 2], ['VLT-CD-115', 2]] },
+  const plans: {
+    daysAgo: number;
+    status: 'delivered' | 'shipped' | 'processing' | 'paid';
+    skus: [string, number][];
+  }[] = [
+    {
+      daysAgo: 12,
+      status: 'delivered',
+      skus: [
+        ['VLT-VCD18-K2', 1],
+        ['STM-SB-08', 3],
+      ],
+    },
+    {
+      daysAgo: 9,
+      status: 'delivered',
+      skus: [
+        ['KVT-KAG750', 2],
+        ['VLT-CD-115', 2],
+      ],
+    },
     { daysAgo: 6, status: 'delivered', skus: [['STM-SRH26', 1]] },
-    { daysAgo: 4, status: 'shipped', skus: [['TLN-TWS12', 1], ['TLN-TCP8', 2]] },
-    { daysAgo: 1, status: 'processing', skus: [['VLT-VAG1200', 1], ['VLT-CD-115', 1]] },
-    { daysAgo: 0, status: 'paid', skus: [['VLT-VCD18-K2', 1], ['VLT-VB1840', 1]] },
+    {
+      daysAgo: 4,
+      status: 'shipped',
+      skus: [
+        ['TLN-TWS12', 1],
+        ['TLN-TCP8', 2],
+      ],
+    },
+    {
+      daysAgo: 1,
+      status: 'processing',
+      skus: [
+        ['VLT-VAG1200', 1],
+        ['VLT-CD-115', 1],
+      ],
+    },
+    {
+      daysAgo: 0,
+      status: 'paid',
+      skus: [
+        ['VLT-VCD18-K2', 1],
+        ['VLT-VB1840', 1],
+      ],
+    },
   ];
-  const lifecycle = ['pending', 'awaiting_payment', 'paid', 'processing', 'packed', 'shipped', 'delivered'] as const;
+  const lifecycle = [
+    'pending',
+    'awaiting_payment',
+    'paid',
+    'processing',
+    'packed',
+    'shipped',
+    'delivered',
+  ] as const;
 
   for (const plan of plans) {
     const createdAt = new Date(Date.now() - plan.daysAgo * 86_400_000 - 3_600_000);
@@ -460,7 +558,9 @@ async function seedDemoOrders(prisma: PrismaClient, customerId: string): Promise
     );
     const subtotal = lines.reduce((sum, line) => sum + line.total, 0n);
     const shippingCost =
-      shipping.freeShippingThreshold && subtotal >= shipping.freeShippingThreshold ? 0n : shipping.baseCost;
+      shipping.freeShippingThreshold && subtotal >= shipping.freeShippingThreshold
+        ? 0n
+        : shipping.baseCost;
     const total = subtotal + shippingCost;
     const taxTotal = (subtotal * 10n) / 110n;
     const statusIndex = lifecycle.indexOf(plan.status);
@@ -488,9 +588,16 @@ async function seedDemoOrders(prisma: PrismaClient, customerId: string): Promise
             postalCode: address.postalCode,
           },
           paidAt: new Date(createdAt.getTime() + 120_000),
-          shippedAt: statusIndex >= lifecycle.indexOf('shipped') ? new Date(createdAt.getTime() + 86_400_000) : null,
-          deliveredAt: plan.status === 'delivered' ? new Date(createdAt.getTime() + 2 * 86_400_000) : null,
-          trackingCode: statusIndex >= lifecycle.indexOf('shipped') ? `PST${createdAt.getTime().toString().slice(-8)}` : null,
+          shippedAt:
+            statusIndex >= lifecycle.indexOf('shipped')
+              ? new Date(createdAt.getTime() + 86_400_000)
+              : null,
+          deliveredAt:
+            plan.status === 'delivered' ? new Date(createdAt.getTime() + 2 * 86_400_000) : null,
+          trackingCode:
+            statusIndex >= lifecycle.indexOf('shipped')
+              ? `PST${createdAt.getTime().toString().slice(-8)}`
+              : null,
           createdAt,
           items: {
             create: lines.map((line) => ({
@@ -555,14 +662,37 @@ async function seedDemoOrders(prisma: PrismaClient, customerId: string): Promise
   }
 
   const reviewTargets: [string, number, string, string][] = [
-    ['volter-vcd-18-cordless-drill', 5, 'عالی برای کارهای نصب', 'قدرت خوبی دارد و باتری‌ها برای یک روز کاری کافی هستند. کلاچ دقیقی دارد.'],
-    ['kaveh-kag-750-angle-grinder', 4, 'سبک و خوش‌دست', 'برای کارهای سبک فلزکاری خیلی خوب است، فقط کمی صدای زیادی دارد.'],
-    ['steelmax-srh-26-rotary-hammer', 5, 'بتن‌کن مطمئن', 'روی بتن مسلح هم بدون مشکل کار کرد. ضربه قوی و لرزش کم.'],
+    [
+      'volter-vcd-18-cordless-drill',
+      5,
+      'عالی برای کارهای نصب',
+      'قدرت خوبی دارد و باتری‌ها برای یک روز کاری کافی هستند. کلاچ دقیقی دارد.',
+    ],
+    [
+      'kaveh-kag-750-angle-grinder',
+      4,
+      'سبک و خوش‌دست',
+      'برای کارهای سبک فلزکاری خیلی خوب است، فقط کمی صدای زیادی دارد.',
+    ],
+    [
+      'steelmax-srh-26-rotary-hammer',
+      5,
+      'بتن‌کن مطمئن',
+      'روی بتن مسلح هم بدون مشکل کار کرد. ضربه قوی و لرزش کم.',
+    ],
   ];
   for (const [slug, rating, title, body] of reviewTargets) {
     const product = await prisma.product.findUniqueOrThrow({ where: { slug } });
     await prisma.review.create({
-      data: { productId: product.id, userId: customerId, rating, title, body, status: 'approved', isVerifiedBuyer: true },
+      data: {
+        productId: product.id,
+        userId: customerId,
+        rating,
+        title,
+        body,
+        status: 'approved',
+        isVerifiedBuyer: true,
+      },
     });
     const aggregate = await prisma.review.aggregate({
       where: { productId: product.id, status: 'approved' },
@@ -575,7 +705,9 @@ async function seedDemoOrders(prisma: PrismaClient, customerId: string): Promise
     });
   }
 
-  const drill = await prisma.product.findUniqueOrThrow({ where: { slug: 'volter-vcd-18-cordless-drill' } });
+  const drill = await prisma.product.findUniqueOrThrow({
+    where: { slug: 'volter-vcd-18-cordless-drill' },
+  });
   await prisma.productQuestion.create({
     data: {
       productId: drill.id,
@@ -613,7 +745,13 @@ async function main(): Promise<void> {
     const attributes = await seedAttributes(prisma);
     const brands = await seedBrands(prisma);
     const categories = await seedCategories(prisma, attributes);
-    await seedProducts(prisma, { categories, brands, attributes, warehouses, adminId: admin?.id ?? null });
+    await seedProducts(prisma, {
+      categories,
+      brands,
+      attributes,
+      warehouses,
+      adminId: admin?.id ?? null,
+    });
     await seedCommerce(prisma);
     await seedContent(prisma);
     if (!isProduction) await seedDemoOrders(prisma, customerId);

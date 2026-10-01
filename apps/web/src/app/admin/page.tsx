@@ -13,14 +13,28 @@ import { OrderStatusBadge } from '@/components/common/status-badges';
 import { api } from '@/lib/api/client';
 import { dateTime, faNumber, price } from '@/lib/format';
 
-function StatTile({ label, value, icon: Icon, href, tone }: { label: string; value: string; icon: ComponentType<{ className?: string }>; href?: string; tone?: 'warning' }) {
+function StatTile({
+  label,
+  value,
+  icon: Icon,
+  href,
+  tone,
+}: {
+  label: string;
+  value: string;
+  icon: ComponentType<{ className?: string }>;
+  href?: string;
+  tone?: 'warning';
+}) {
   const body = (
-    <Card className="flex items-center gap-4 p-4 transition-colors hover:border-primary/40">
-      <span className={`flex size-11 shrink-0 items-center justify-center rounded-md ${tone === 'warning' ? 'bg-warning-soft text-warning' : 'bg-secondary text-primary'}`}>
+    <Card className="hover:border-primary/40 flex items-center gap-4 p-4 transition-colors">
+      <span
+        className={`flex size-11 shrink-0 items-center justify-center rounded-md ${tone === 'warning' ? 'bg-warning-soft text-warning' : 'bg-secondary text-primary'}`}
+      >
         <Icon className="size-5" />
       </span>
       <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-muted-foreground text-xs">{label}</p>
         <p className="truncate text-lg font-extrabold">{value}</p>
       </div>
     </Card>
@@ -29,11 +43,18 @@ function StatTile({ label, value, icon: Icon, href, tone }: { label: string; val
 }
 
 export default function DashboardPage() {
-  const { data, isLoading } = useQuery({ queryKey: ['admin', 'dashboard'], queryFn: () => api.get<DashboardStats>('/admin/dashboard'), refetchInterval: 60_000 });
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin', 'dashboard'],
+    queryFn: () => api.get<DashboardStats>('/admin/dashboard'),
+    refetchInterval: 60_000,
+  });
 
   return (
     <>
-      <PageHeader title="داشبورد" description="خلاصه فروش و وضعیت عملیات فروشگاه (روز و ماه بر اساس تقویم شمسی و ساعت تهران)" />
+      <PageHeader
+        title="داشبورد"
+        description="خلاصه فروش و وضعیت عملیات فروشگاه (روز و ماه بر اساس تقویم شمسی و ساعت تهران)"
+      />
       {isLoading || !data ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -45,10 +66,31 @@ export default function DashboardPage() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <StatTile label="فروش امروز" value={price(data.salesToday)} icon={TrendingUp} />
             <StatTile label="فروش ماه جاری" value={price(data.salesMonth)} icon={TrendingUp} />
-            <StatTile label="سفارش‌های پرداخت‌شده امروز / ماه" value={`${faNumber(data.ordersToday)} / ${faNumber(data.ordersMonth)}`} icon={ClipboardList} href="/admin/orders" />
-            <StatTile label="در انتظار پردازش و ارسال" value={faNumber(data.awaitingFulfillment)} icon={Clock} href="/admin/orders?status=paid" />
-            <StatTile label="کالاهای کم‌موجودی" value={faNumber(data.lowStockCount)} icon={CircleAlert} href="/admin/inventory?lowStock=true" tone={data.lowStockCount > 0 ? 'warning' : undefined} />
-            <StatTile label="مشتریان / در انتظار پرداخت" value={`${faNumber(data.customersCount)} / ${faNumber(data.awaitingPayment)}`} icon={Users} href="/admin/customers" />
+            <StatTile
+              label="سفارش‌های پرداخت‌شده امروز / ماه"
+              value={`${faNumber(data.ordersToday)} / ${faNumber(data.ordersMonth)}`}
+              icon={ClipboardList}
+              href="/admin/orders"
+            />
+            <StatTile
+              label="در انتظار پردازش و ارسال"
+              value={faNumber(data.awaitingFulfillment)}
+              icon={Clock}
+              href="/admin/orders?status=paid"
+            />
+            <StatTile
+              label="کالاهای کم‌موجودی"
+              value={faNumber(data.lowStockCount)}
+              icon={CircleAlert}
+              href="/admin/inventory?lowStock=true"
+              tone={data.lowStockCount > 0 ? 'warning' : undefined}
+            />
+            <StatTile
+              label="مشتریان / در انتظار پرداخت"
+              value={`${faNumber(data.customersCount)} / ${faNumber(data.awaitingPayment)}`}
+              icon={Users}
+              href="/admin/customers"
+            />
           </div>
 
           <Card>
@@ -64,17 +106,34 @@ export default function DashboardPage() {
             <Card className="overflow-hidden">
               <CardHeader className="flex-row items-center justify-between">
                 <CardTitle>آخرین سفارش‌ها</CardTitle>
-                <Link href="/admin/orders" className="text-xs text-info hover:underline">همه سفارش‌ها</Link>
+                <Link href="/admin/orders" className="text-info text-xs hover:underline">
+                  همه سفارش‌ها
+                </Link>
               </CardHeader>
               <DataTable
                 rows={data.recentOrders}
                 rowKey={(o) => o.id}
                 columns={[
-                  { header: 'شماره', cell: (o) => <Link href={`/admin/orders/${o.id}`} className="font-bold text-info hover:underline">{faNumber(o.orderNumber)}</Link> },
+                  {
+                    header: 'شماره',
+                    cell: (o) => (
+                      <Link
+                        href={`/admin/orders/${o.id}`}
+                        className="text-info font-bold hover:underline"
+                      >
+                        {faNumber(o.orderNumber)}
+                      </Link>
+                    ),
+                  },
                   { header: 'مشتری', cell: (o) => o.customer.fullName },
                   { header: 'مبلغ', cell: (o) => price(o.total) },
                   { header: 'وضعیت', cell: (o) => <OrderStatusBadge status={o.status} /> },
-                  { header: 'زمان', cell: (o) => <span className="text-xs text-muted-foreground">{dateTime(o.createdAt)}</span> },
+                  {
+                    header: 'زمان',
+                    cell: (o) => (
+                      <span className="text-muted-foreground text-xs">{dateTime(o.createdAt)}</span>
+                    ),
+                  },
                 ]}
               />
             </Card>
@@ -82,15 +141,31 @@ export default function DashboardPage() {
             <Card className="overflow-hidden">
               <CardHeader className="flex-row items-center justify-between">
                 <CardTitle>کالاهای کم‌موجودی</CardTitle>
-                <Link href="/admin/inventory?lowStock=true" className="text-xs text-info hover:underline">مدیریت موجودی</Link>
+                <Link
+                  href="/admin/inventory?lowStock=true"
+                  className="text-info text-xs hover:underline"
+                >
+                  مدیریت موجودی
+                </Link>
               </CardHeader>
               <DataTable
                 rows={data.lowStockItems}
                 rowKey={(r) => r.variantId}
                 empty="همه کالاها موجودی کافی دارند"
                 columns={[
-                  { header: 'کالا', cell: (r) => <span className="line-clamp-1">{r.productTitle}{r.variantTitle ? ` – ${r.variantTitle}` : ''}</span> },
-                  { header: 'SKU', cell: (r) => <span className="ltr font-mono text-xs">{r.sku}</span> },
+                  {
+                    header: 'کالا',
+                    cell: (r) => (
+                      <span className="line-clamp-1">
+                        {r.productTitle}
+                        {r.variantTitle ? ` – ${r.variantTitle}` : ''}
+                      </span>
+                    ),
+                  },
+                  {
+                    header: 'SKU',
+                    cell: (r) => <span className="ltr font-mono text-xs">{r.sku}</span>,
+                  },
                   {
                     header: 'قابل فروش',
                     cell: (r) => (
@@ -114,7 +189,14 @@ export default function DashboardPage() {
               rowKey={(p) => p.productId}
               empty="هنوز فروشی ثبت نشده است"
               columns={[
-                { header: 'محصول', cell: (p) => <Link href={`/admin/products/${p.productId}`} className="hover:text-primary">{p.title}</Link> },
+                {
+                  header: 'محصول',
+                  cell: (p) => (
+                    <Link href={`/admin/products/${p.productId}`} className="hover:text-primary">
+                      {p.title}
+                    </Link>
+                  ),
+                },
                 { header: 'تعداد فروش', cell: (p) => faNumber(p.quantity) },
                 { header: 'مبلغ فروش', cell: (p) => price(p.revenue) },
               ]}

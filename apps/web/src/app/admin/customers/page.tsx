@@ -14,7 +14,15 @@ export default function CustomersPage() {
   return (
     <>
       <PageHeader title="مشتریان" />
-      <TableCard toolbar={<SearchInput onSearch={list.setSearch} placeholder="نام، موبایل یا ایمیل" className="w-72" />}>
+      <TableCard
+        toolbar={
+          <SearchInput
+            onSearch={list.setSearch}
+            placeholder="نام، موبایل یا ایمیل"
+            className="w-72"
+          />
+        }
+      >
         <DataTable
           rows={list.data?.items}
           loading={list.isLoading}
@@ -26,8 +34,21 @@ export default function CustomersPage() {
             { header: 'ایمیل', cell: (c) => <span className="ltr text-xs">{c.email ?? '—'}</span> },
             { header: 'سفارش‌ها', cell: (c) => faNumber(c.ordersCount) },
             { header: 'مجموع خرید', cell: (c) => price(c.totalSpent) },
-            { header: 'وضعیت', cell: (c) => (c.isActive ? <Badge variant="success">فعال</Badge> : <Badge variant="destructive">غیرفعال</Badge>) },
-            { header: 'عضویت', cell: (c) => <span className="text-xs text-muted-foreground">{date(c.createdAt)}</span> },
+            {
+              header: 'وضعیت',
+              cell: (c) =>
+                c.isActive ? (
+                  <Badge variant="success">فعال</Badge>
+                ) : (
+                  <Badge variant="destructive">غیرفعال</Badge>
+                ),
+            },
+            {
+              header: 'عضویت',
+              cell: (c) => (
+                <span className="text-muted-foreground text-xs">{date(c.createdAt)}</span>
+              ),
+            },
           ]}
         />
         <Pager data={list.data} onPage={list.setPage} />

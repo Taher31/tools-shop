@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { OrdersModule } from '../orders/orders.module';
 import { PaymentProviderRegistry } from './payment-provider.registry';
-import { AdminPaymentsController, MockGatewayController, PaymentsController } from './payments.controller';
+import {
+  AdminPaymentsController,
+  MockGatewayController,
+  PaymentsController,
+} from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { MockPaymentProvider } from './providers/mock-payment.provider';
 import { PAYMENT_PROVIDERS, type PaymentProvider } from './providers/payment-provider';

@@ -17,8 +17,14 @@ import { date, dateTime, faNumber, price } from '@/lib/format';
 export default function CustomerPage() {
   const { id } = useParams<{ id: string }>();
   const { can } = usePermissions();
-  const { data } = useQuery({ queryKey: ['admin', 'customer', id], queryFn: () => api.get<CustomerDetail>(`/admin/customers/${id}`) });
-  const toggle = useAdminMutation((isActive: boolean) => api.put(`/admin/customers/${id}/status`, { isActive }), { success: 'وضعیت مشتری تغییر کرد.' });
+  const { data } = useQuery({
+    queryKey: ['admin', 'customer', id],
+    queryFn: () => api.get<CustomerDetail>(`/admin/customers/${id}`),
+  });
+  const toggle = useAdminMutation(
+    (isActive: boolean) => api.put(`/admin/customers/${id}/status`, { isActive }),
+    { success: 'وضعیت مشتری تغییر کرد.' },
+  );
   if (!data) return <Skeleton className="h-96" />;
 
   return (
@@ -28,13 +34,21 @@ export default function CustomerPage() {
         description={`عضویت از ${date(data.createdAt)}${data.lastLoginAt ? ` · آخرین ورود ${dateTime(data.lastLoginAt)}` : ''}`}
         actions={
           <>
-            {data.isActive ? <Badge variant="success">فعال</Badge> : <Badge variant="destructive">غیرفعال</Badge>}
+            {data.isActive ? (
+              <Badge variant="success">فعال</Badge>
+            ) : (
+              <Badge variant="destructive">غیرفعال</Badge>
+            )}
             {can('customer.update') ? (
               <ConfirmButton
                 size="sm"
                 variant={data.isActive ? 'destructive' : 'default'}
                 title={data.isActive ? 'غیرفعال کردن حساب مشتری؟' : 'فعال کردن حساب مشتری؟'}
-                description={data.isActive ? 'مشتری از همه دستگاه‌ها خارج می‌شود و تا فعال‌سازی مجدد امکان ورود ندارد.' : undefined}
+                description={
+                  data.isActive
+                    ? 'مشتری از همه دستگاه‌ها خارج می‌شود و تا فعال‌سازی مجدد امکان ورود ندارد.'
+                    : undefined
+                }
                 loading={toggle.isPending}
                 onConfirm={() => toggle.mutateAsync(!data.isActive)}
               >
@@ -46,42 +60,63 @@ export default function CustomerPage() {
       />
       <div className="grid gap-5 lg:grid-cols-3">
         <Card>
-          <CardHeader><CardTitle>اطلاعات تماس</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>اطلاعات تماس</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p>موبایل: <span className="ltr">{data.mobile ?? '—'}</span></p>
-            <p>ایمیل: <span className="ltr">{data.email ?? '—'}</span></p>
-            <p>کد ملی: <span className="ltr">{data.nationalCode ?? '—'}</span></p>
+            <p>
+              موبایل: <span className="ltr">{data.mobile ?? '—'}</span>
+            </p>
+            <p>
+              ایمیل: <span className="ltr">{data.email ?? '—'}</span>
+            </p>
+            <p>
+              کد ملی: <span className="ltr">{data.nationalCode ?? '—'}</span>
+            </p>
             <p>تعداد سفارش: {faNumber(data.ordersCount)}</p>
-            <p>مجموع خرید: <b>{price(data.totalSpent)}</b></p>
+            <p>
+              مجموع خرید: <b>{price(data.totalSpent)}</b>
+            </p>
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>آخرین سفارش‌ها</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>آخرین سفارش‌ها</CardTitle>
+          </CardHeader>
           <CardContent className="p-0">
-            <ul className="divide-y divide-border">
+            <ul className="divide-border divide-y">
               {data.recentOrders.map((order) => (
                 <li key={order.id}>
-                  <Link href={`/admin/orders/${order.id}`} className="flex items-center gap-4 px-5 py-3 text-sm hover:bg-muted/40">
+                  <Link
+                    href={`/admin/orders/${order.id}`}
+                    className="hover:bg-muted/40 flex items-center gap-4 px-5 py-3 text-sm"
+                  >
                     <span className="font-bold">{faNumber(order.orderNumber)}</span>
                     <OrderStatusBadge status={order.status} />
-                    <span className="text-xs text-muted-foreground">{date(order.createdAt)}</span>
+                    <span className="text-muted-foreground text-xs">{date(order.createdAt)}</span>
                     <span className="ms-auto font-semibold">{price(order.total)}</span>
                   </Link>
                 </li>
               ))}
-              {data.recentOrders.length === 0 ? <li className="px-5 py-4 text-sm text-muted-foreground">سفارشی ثبت نشده است.</li> : null}
+              {data.recentOrders.length === 0 ? (
+                <li className="text-muted-foreground px-5 py-4 text-sm">سفارشی ثبت نشده است.</li>
+              ) : null}
             </ul>
           </CardContent>
         </Card>
         <Card className="lg:col-span-3">
-          <CardHeader><CardTitle>آدرس‌ها</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>آدرس‌ها</CardTitle>
+          </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
             {data.addresses.map((address) => (
-              <div key={address.id} className="rounded-md border border-border p-3">
+              <div key={address.id} className="border-border rounded-md border p-3">
                 <AddressText address={address} />
               </div>
             ))}
-            {data.addresses.length === 0 ? <p className="text-sm text-muted-foreground">آدرسی ثبت نشده است.</p> : null}
+            {data.addresses.length === 0 ? (
+              <p className="text-muted-foreground text-sm">آدرسی ثبت نشده است.</p>
+            ) : null}
           </CardContent>
         </Card>
       </div>

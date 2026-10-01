@@ -57,7 +57,10 @@ export class AdminContentController {
 
   @Put('pages/:slug')
   @RequirePermissions('content.manage')
-  upsertPage(@Param('slug') slug: string, @ZBody(pageSchema) input: z.infer<typeof pageSchema>): Promise<ContentPageView> {
+  upsertPage(
+    @Param('slug') slug: string,
+    @ZBody(pageSchema) input: z.infer<typeof pageSchema>,
+  ): Promise<ContentPageView> {
     if (!SLUG_PATTERN.test(slug)) throw AppException.notFound();
     return this.content.upsertPage(slug, input);
   }
@@ -76,7 +79,10 @@ export class AdminContentController {
 
   @Put('faq/:id')
   @RequirePermissions('content.manage')
-  updateFaq(@UuidParam() id: string, @ZBody(faqSchema) input: z.infer<typeof faqSchema>): Promise<FaqItemView> {
+  updateFaq(
+    @UuidParam() id: string,
+    @ZBody(faqSchema) input: z.infer<typeof faqSchema>,
+  ): Promise<FaqItemView> {
     return this.content.updateFaq(id, input);
   }
 
