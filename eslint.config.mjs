@@ -61,7 +61,9 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
+      // App Router project: there is no pages/ directory for this rule to inspect.
+      '@next/next/no-html-link-for-pages': 'off',
     },
-    settings: { next: { rootDir: 'apps/web' } },
+    settings: { next: { rootDir: `${import.meta.dirname}/apps/web` } },
   },
 );
