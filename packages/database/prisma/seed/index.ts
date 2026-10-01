@@ -45,6 +45,15 @@ function hashPassword(password: string): Promise<string> {
 }
 
 async function seedAccessControl(prisma: PrismaClient): Promise<void> {
+  const known = new Set(
+    (await prisma.permission.findMany({ select: { key: true } })).map((p) => p.key),
+  );
+  // Permissions introduced by a new release: roles that already exist receive them
+  // according to their system definition, without undoing admin customizations of
+  // permissions that existed before.
+  const introduced = new Set(
+    PERMISSION_DEFINITIONS.map((p) => p.key).filter((key) => !known.has(key)),
+  );
   for (const permission of PERMISSION_DEFINITIONS) {
     await prisma.permission.upsert({
       where: { key: permission.key },
@@ -75,6 +84,14 @@ async function seedAccessControl(prisma: PrismaClient): Promise<void> {
         data: definition.permissions.map((permissionKey) => ({ roleId: role.id, permissionKey })),
         skipDuplicates: true,
       });
+    } else if (known.size > 0) {
+      const granted = definition.permissions.filter((key) => introduced.has(key));
+      if (granted.length > 0) {
+        await prisma.rolePermission.createMany({
+          data: granted.map((permissionKey) => ({ roleId: role.id, permissionKey })),
+          skipDuplicates: true,
+        });
+      }
     }
   }
   console.log(`✔ ${PERMISSION_DEFINITIONS.length} permissions, ${SYSTEM_ROLES.length} roles`);
@@ -728,6 +745,76 @@ async function seedDemoOrders(prisma: PrismaClient, customerId: string): Promise
   console.log(`✔ ${plans.length} demo orders, reviews and questions`);
 }
 
+async function seedDemoTickets(prisma: PrismaClient, customerId: string): Promise<void> {
+  if ((await prisma.ticket.count({ where: { userId: customerId } })) > 0) return;
+  const support = await prisma.user.findUnique({ where: { email: 'support@example.com' } });
+  const order = await prisma.order.findFirst({
+    where: { userId: customerId, status: 'shipped' },
+    orderBy: { createdAt: 'desc' },
+  });
+  const now = Date.now();
+  const at = (hoursAgo: number) => new Date(now - hoursAgo * 3_600_000);
+
+  await prisma.ticket.create({
+    data: {
+      userId: customerId,
+      orderId: order?.id ?? null,
+      subject: 'زمان رسیدن مرسوله',
+      category: 'shipping',
+      status: 'answered',
+      assigneeId: support?.id ?? null,
+      customerUnread: true,
+      staffUnread: false,
+      lastMessageAt: at(2),
+      createdAt: at(26),
+      messages: {
+        create: [
+          {
+            authorId: customerId,
+            authorType: 'customer',
+            body: 'سلام، سفارشم ارسال شده ولی هنوز به دستم نرسیده. کی تحویل می‌شود؟',
+            createdAt: at(26),
+          },
+          {
+            authorId: support?.id ?? null,
+            authorType: 'staff',
+            isInternal: true,
+            body: 'با پست پیگیری شد؛ مرسوله در مرکز مبادلات است.',
+            createdAt: at(3),
+          },
+          {
+            authorId: support?.id ?? null,
+            authorType: 'staff',
+            body: 'سلام، مرسوله شما در مسیر است و طی یک تا دو روز کاری تحویل می‌شود. کد رهگیری در صفحه سفارش قابل مشاهده است.',
+            createdAt: at(2),
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.ticket.create({
+    data: {
+      userId: customerId,
+      subject: 'سازگاری باتری با دریل ۱۸ ولت',
+      category: 'product',
+      status: 'open',
+      staffUnread: true,
+      lastMessageAt: at(1),
+      createdAt: at(1),
+      messages: {
+        create: {
+          authorId: customerId,
+          authorType: 'customer',
+          body: 'آیا باتری ۴ آمپر ولتر با دریل شارژی ۱۸ ولت همین برند سازگار است؟',
+          createdAt: at(1),
+        },
+      },
+    },
+  });
+  console.log('✔ 2 demo support tickets');
+}
+
 async function main(): Promise<void> {
   const url = process.env['DATABASE_URL'];
   if (!url) throw new Error('DATABASE_URL is required');
@@ -753,7 +840,10 @@ async function main(): Promise<void> {
     });
     await seedCommerce(prisma);
     await seedContent(prisma);
-    if (!isProduction) await seedDemoOrders(prisma, customerId);
+    if (!isProduction) {
+      await seedDemoOrders(prisma, customerId);
+      await seedDemoTickets(prisma, customerId);
+    }
     console.log('Seed completed.');
   } finally {
     await prisma.$disconnect();

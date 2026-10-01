@@ -15,6 +15,8 @@ export interface DomainEventMap {
   'order.paid': { orderId: string };
   'order.status_changed': { orderId: string; from: string; to: string };
   'payment.orphaned': { paymentId: string; orderId: string };
+  'ticket.created': { ticketId: string };
+  'ticket.replied': { ticketId: string; by: 'customer' | 'staff' };
 }
 
 export type DomainEventType = keyof DomainEventMap;

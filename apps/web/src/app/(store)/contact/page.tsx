@@ -63,7 +63,11 @@ export default async function ContactPage() {
         <Link href="/faq" className="text-info font-bold hover:underline">
           سوالات متداول
         </Link>{' '}
-        آمده است.
+        آمده است. برای سوال فنی، گارانتی یا مشکل پرداخت می‌توانید از{' '}
+        <Link href="/account/tickets/new" className="text-info font-bold hover:underline">
+          ثبت درخواست پشتیبانی
+        </Link>{' '}
+        استفاده کنید تا پاسخ کارشناسان در حساب کاربری شما ثبت شود.
       </p>
     </div>
   );

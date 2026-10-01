@@ -36,6 +36,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { SearchModule } from './modules/search/search.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { ShippingModule } from './modules/shipping/shipping.module';
+import { SupportModule } from './modules/support/support.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { ShippingModule } from './modules/shipping/shipping.module';
     AccountModule,
     CustomersModule,
     ReviewsModule,
+    SupportModule,
     ContentModule,
     DashboardModule,
     HealthModule,

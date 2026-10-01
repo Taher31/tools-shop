@@ -1,15 +1,19 @@
 'use client';
 
-import { Skeleton, cn } from '@toolshop/ui';
-import { Heart, KeyRound, LogOut, MapPin, Package, UserRound } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Badge, Skeleton, cn } from '@toolshop/ui';
+import { Heart, KeyRound, LifeBuoy, LogOut, MapPin, Package, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { type ReactNode, useEffect } from 'react';
 import { useAuth, useLogout } from '@/hooks/use-auth';
+import { api } from '@/lib/api/client';
+import { faNumber } from '@/lib/format';
 
 const NAV = [
   { href: '/account', label: 'اطلاعات حساب', icon: UserRound, exact: true },
   { href: '/account/orders', label: 'سفارش‌های من', icon: Package },
+  { href: '/account/tickets', label: 'پشتیبانی', icon: LifeBuoy },
   { href: '/account/addresses', label: 'آدرس‌ها', icon: MapPin },
   { href: '/wishlist', label: 'علاقه‌مندی‌ها', icon: Heart },
   { href: '/account/security', label: 'تغییر رمز عبور', icon: KeyRound },
@@ -20,14 +24,20 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const logout = useLogout();
+  const unread = useQuery({
+    queryKey: ['tickets', 'unread-count'],
+    queryFn: () => api.get<{ count: number }>('/account/tickets/unread-count'),
+    enabled: Boolean(user),
+    refetchInterval: 120_000,
+  });
 
   useEffect(() => {
     if (!isLoading && !user) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
   }, [isLoading, user, router, pathname]);
 
   return (
-    <div className="container-page grid items-start gap-6 py-6 lg:grid-cols-[16rem_1fr]">
-      <aside className="border-border bg-card rounded-lg border">
+    <div className="container-page grid grid-cols-[minmax(0,1fr)] items-start gap-6 py-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+      <aside className="border-border bg-card min-w-0 rounded-lg border">
         <div className="border-border border-b p-4">
           {user ? (
             <>
@@ -53,6 +63,15 @@ export function AccountShell({ children }: { children: ReactNode }) {
                 )}
               >
                 <item.icon className="size-4" /> {item.label}
+                {item.href === '/account/tickets' && unread.data && unread.data.count > 0 ? (
+                  <Badge
+                    variant="info"
+                    className="ms-auto px-1.5"
+                    aria-label="پاسخ‌های خوانده‌نشده"
+                  >
+                    {faNumber(unread.data.count)}
+                  </Badge>
+                ) : null}
               </Link>
             );
           })}

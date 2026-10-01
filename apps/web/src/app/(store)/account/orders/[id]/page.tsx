@@ -116,6 +116,9 @@ export default function OrderDetailPage() {
                 لغو سفارش
               </Button>
             ) : null}
+            <Button size="sm" variant="ghost" asChild>
+              <Link href={`/account/tickets/new?order=${order.id}`}>پیگیری با پشتیبانی</Link>
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">

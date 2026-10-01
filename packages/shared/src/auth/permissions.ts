@@ -117,6 +117,14 @@ export const PERMISSION_CATALOG = {
       'user.manage': 'مدیریت کاربران',
     },
   },
+  ticket: {
+    label: 'پشتیبانی',
+    permissions: {
+      'ticket.read': 'مشاهده تیکت‌ها',
+      'ticket.reply': 'پاسخ به تیکت‌ها',
+      'ticket.manage': 'ارجاع، اولویت و بستن تیکت',
+    },
+  },
   role: {
     label: 'نقش‌ها و دسترسی‌ها',
     permissions: {
@@ -224,6 +232,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'customer.read',
       'coupon.read',
       'coupon.manage',
+      'ticket.read',
+      'ticket.reply',
     ],
   },
   {
@@ -253,6 +263,9 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'customer.read',
       'review.moderate',
       'question.answer',
+      'ticket.read',
+      'ticket.reply',
+      'ticket.manage',
     ],
   },
   {

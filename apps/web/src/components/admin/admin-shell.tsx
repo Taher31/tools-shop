@@ -5,14 +5,24 @@ import { ExternalLink, LogOut, Menu, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth, useLogout } from '@/hooks/use-auth';
 import { usePermissions } from '@/hooks/use-permissions';
+import { api } from '@/lib/api/client';
+import { faNumber } from '@/lib/format';
 import { ADMIN_NAV } from './nav';
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { can } = usePermissions();
   const phaseLabel = { 2: 'فاز ۲', 3: 'فاز ۳', 4: 'فاز ۴' } as const;
+  const tickets = useQuery({
+    queryKey: ['admin', 'tickets', 'counters'],
+    queryFn: () => api.get<{ unread: number }>('/admin/tickets/counters'),
+    enabled: can('ticket.read'),
+    refetchInterval: 60_000,
+  });
+  const counters = { tickets: tickets.data?.unread ?? 0 };
   return (
     <nav className="space-y-5 p-3 text-sm" aria-label="منوی مدیریت">
       {ADMIN_NAV.map((group) => {
@@ -62,6 +72,11 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                     >
                       <item.icon className="size-4" />
                       {item.label}
+                      {item.counter && counters[item.counter] > 0 ? (
+                        <Badge variant="info" className="ms-auto px-1.5 text-[10px]">
+                          {faNumber(counters[item.counter])}
+                        </Badge>
+                      ) : null}
                     </Link>
                   </li>
                 );

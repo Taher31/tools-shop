@@ -3,6 +3,10 @@ import {
   type OrderStatus,
   PAYMENT_STATUS_LABELS,
   type PaymentStatus,
+  TICKET_PRIORITY_LABELS,
+  TICKET_STATUS_LABELS,
+  type TicketPriority,
+  type TicketStatus,
 } from '@toolshop/shared';
 import { Badge, type BadgeProps } from '@toolshop/ui';
 
@@ -34,4 +38,26 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   return <Badge variant={PAYMENT_VARIANTS[status]}>{PAYMENT_STATUS_LABELS[status]}</Badge>;
+}
+
+const TICKET_VARIANTS: Record<TicketStatus, BadgeProps['variant']> = {
+  open: 'warning',
+  answered: 'success',
+  closed: 'secondary',
+};
+
+const PRIORITY_VARIANTS: Record<TicketPriority, BadgeProps['variant']> = {
+  low: 'secondary',
+  normal: 'outline',
+  high: 'warning',
+  urgent: 'destructive',
+};
+
+/** Customers see "answered" as their turn; staff see "open" as theirs. */
+export function TicketStatusBadge({ status }: { status: TicketStatus }) {
+  return <Badge variant={TICKET_VARIANTS[status]}>{TICKET_STATUS_LABELS[status]}</Badge>;
+}
+
+export function TicketPriorityBadge({ priority }: { priority: TicketPriority }) {
+  return <Badge variant={PRIORITY_VARIANTS[priority]}>{TICKET_PRIORITY_LABELS[priority]}</Badge>;
 }

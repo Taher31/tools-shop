@@ -55,6 +55,9 @@ model User {
   orderStatusChanges OrderStatusHistory[]
   couponRedemptions  CouponRedemption[]
   mediaAssets        MediaAsset[]
+  tickets            Ticket[]
+  assignedTickets    Ticket[]             @relation("TicketAssignee")
+  ticketMessages     TicketMessage[]
 
   @@index([type, createdAt])
 }
@@ -703,6 +706,7 @@ model Order {
   reservations     StockReservation[]
   stockMovements   StockMovement[]
   couponRedemption CouponRedemption?
+  tickets          Ticket[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -843,6 +847,85 @@ model ProductQuestion {
 
   @@index([productId, status, createdAt])
   @@index([status, createdAt])
+}
+
+// ============================================================================
+// Support
+// ============================================================================
+
+enum TicketStatus {
+  /// Waiting for staff.
+  open
+  /// Staff replied; waiting for the customer.
+  answered
+  closed
+}
+
+enum TicketPriority {
+  low
+  normal
+  high
+  urgent
+}
+
+enum TicketCategory {
+  order
+  product
+  payment
+  shipping
+  warranty
+  other
+}
+
+model Ticket {
+  id            String         @id @default(uuid(7)) @db.Uuid
+  /// Human friendly number shown to customers (sequence starts at 10001).
+  ticketNumber  Int            @unique @default(autoincrement())
+  userId        String         @db.Uuid
+  orderId       String?        @db.Uuid
+  assigneeId    String?        @db.Uuid
+  subject       String
+  category      TicketCategory @default(other)
+  priority      TicketPriority @default(normal)
+  status        TicketStatus   @default(open)
+  /// Unread flags drive the badges in the account and the admin panel.
+  customerUnread Boolean       @default(false)
+  staffUnread    Boolean       @default(true)
+  lastMessageAt DateTime       @default(now())
+  closedAt      DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  order    Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  assignee User?           @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  messages TicketMessage[]
+
+  @@index([userId, lastMessageAt])
+  @@index([status, priority, lastMessageAt])
+  @@index([assigneeId, status])
+}
+
+enum TicketAuthorType {
+  customer
+  staff
+  system
+}
+
+model TicketMessage {
+  id         String           @id @default(uuid(7)) @db.Uuid
+  ticketId   String           @db.Uuid
+  authorId   String?          @db.Uuid
+  authorType TicketAuthorType
+  body       String
+  /// Internal staff notes are never shown to the customer.
+  isInternal Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId, createdAt])
 }
 
 // ============================================================================

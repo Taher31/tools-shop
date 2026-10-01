@@ -11,6 +11,9 @@ import type {
   QuestionStatus,
   ReviewStatus,
   StockMovementType,
+  TicketCategory,
+  TicketPriority,
+  TicketStatus,
   UsageType,
   UserType,
 } from '../commerce/enums';
@@ -724,4 +727,55 @@ export interface HomePageData {
   onSale: ProductCard[];
   categories: CategorySummary[];
   brands: BrandSummary[];
+}
+
+/* --------------------------------------------------------------- support */
+
+export interface TicketMessageView {
+  id: string;
+  authorType: 'customer' | 'staff' | 'system';
+  /** Staff are shown by first name only to customers. */
+  authorName: string;
+  body: string;
+  isInternal: boolean;
+  createdAt: string;
+}
+
+export interface TicketSummary {
+  id: string;
+  ticketNumber: number;
+  subject: string;
+  category: TicketCategory;
+  status: TicketStatus;
+  orderNumber: number | null;
+  unread: boolean;
+  lastMessageAt: string;
+  createdAt: string;
+}
+
+export interface TicketDetail extends TicketSummary {
+  orderId: string | null;
+  messages: TicketMessageView[];
+  canReply: boolean;
+}
+
+export interface AdminTicketSummary extends Omit<TicketSummary, 'unread'> {
+  priority: TicketPriority;
+  unread: boolean;
+  customer: { id: string; fullName: string; mobile: string | null };
+  assignee: { id: string; fullName: string } | null;
+  messagesCount: number;
+}
+
+export interface AdminTicketDetail extends AdminTicketSummary {
+  orderId: string | null;
+  customerEmail: string | null;
+  messages: TicketMessageView[];
+  /** Recent orders of the customer, for context while answering. */
+  recentOrders: OrderSummary[];
+}
+
+export interface StaffOption {
+  id: string;
+  fullName: string;
 }

@@ -33,6 +33,8 @@ export interface AdminNavItem {
   label: string;
   icon: ComponentType<{ className?: string }>;
   permission?: Permission;
+  /** Live badge shown next to the label. */
+  counter?: 'tickets';
   /** Planned module (shown disabled until its phase is delivered). */
   phase?: 2 | 3 | 4;
 }
@@ -111,7 +113,13 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: FileText,
         permission: 'content.manage',
       },
-      { href: '/admin/support', label: 'پشتیبانی', icon: Ticket, phase: 2 },
+      {
+        href: '/admin/tickets',
+        label: 'پشتیبانی',
+        icon: Ticket,
+        permission: 'ticket.read',
+        counter: 'tickets',
+      },
     ],
   },
   {

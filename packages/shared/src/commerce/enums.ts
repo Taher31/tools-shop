@@ -103,3 +103,38 @@ export type MarketplaceSyncStatus = (typeof MARKETPLACE_SYNC_STATUSES)[number];
 
 export const AUDIT_ACTOR_TYPES = ['user', 'system', 'ai'] as const;
 export type AuditActorType = (typeof AUDIT_ACTOR_TYPES)[number];
+
+export const TICKET_STATUSES = ['open', 'answered', 'closed'] as const;
+export type TicketStatus = (typeof TICKET_STATUSES)[number];
+export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
+  open: 'در انتظار پاسخ پشتیبانی',
+  answered: 'پاسخ داده شده',
+  closed: 'بسته‌شده',
+};
+
+export const TICKET_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
+export type TicketPriority = (typeof TICKET_PRIORITIES)[number];
+export const TICKET_PRIORITY_LABELS: Record<TicketPriority, string> = {
+  low: 'کم',
+  normal: 'عادی',
+  high: 'زیاد',
+  urgent: 'فوری',
+};
+
+export const TICKET_CATEGORIES = [
+  'order',
+  'product',
+  'payment',
+  'shipping',
+  'warranty',
+  'other',
+] as const;
+export type TicketCategory = (typeof TICKET_CATEGORIES)[number];
+export const TICKET_CATEGORY_LABELS: Record<TicketCategory, string> = {
+  order: 'پیگیری سفارش',
+  product: 'مشاوره و سوال درباره کالا',
+  payment: 'پرداخت و بازپرداخت',
+  shipping: 'ارسال و تحویل',
+  warranty: 'گارانتی و خدمات پس از فروش',
+  other: 'سایر',
+};
