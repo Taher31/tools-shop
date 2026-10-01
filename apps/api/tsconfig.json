@@ -1,0 +1,11 @@
+{
+  "extends": "@toolshop/config/tsconfig.nest.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "types": ["node", "multer"]
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}
