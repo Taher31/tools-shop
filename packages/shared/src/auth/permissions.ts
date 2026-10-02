@@ -125,6 +125,13 @@ export const PERMISSION_CATALOG = {
       'ai.manage': 'تنظیمات، کلید API و بودجه هوش مصنوعی',
     },
   },
+  data: {
+    label: 'ورود و خروج داده',
+    permissions: {
+      'data.import': 'ورود گروهی داده از فایل Excel/CSV',
+      'data.export': 'خروجی گرفتن Excel/CSV از فهرست‌ها',
+    },
+  },
   integration: {
     label: 'مرکز اتصال‌ها',
     permissions: {
@@ -259,6 +266,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'invoice.read',
       'invoice.issue',
       'ai.use',
+      'data.export',
     ],
   },
   {
@@ -274,6 +282,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'warehouse.manage',
       'order.read',
       'order.update',
+      'data.import',
+      'data.export',
     ],
   },
   {
@@ -315,6 +325,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'review.moderate',
       'question.answer',
       'ai.use',
+      'data.import',
+      'data.export',
     ],
   },
 ];

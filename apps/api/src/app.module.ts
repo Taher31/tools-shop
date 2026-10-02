@@ -27,6 +27,7 @@ import { CheckoutModule } from './modules/checkout/checkout.module';
 import { ContentModule } from './modules/content/content.module';
 import { CouponsModule } from './modules/coupons/coupons.module';
 import { CustomersModule } from './modules/customers/customers.module';
+import { DataExchangeModule } from './modules/data-exchange/data-exchange.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { HealthModule } from './modules/health/health.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
@@ -88,6 +89,7 @@ import { SupportModule } from './modules/support/support.module';
     CheckoutModule,
     AccountModule,
     CustomersModule,
+    DataExchangeModule,
     ReviewsModule,
     SupportModule,
     ContentModule,

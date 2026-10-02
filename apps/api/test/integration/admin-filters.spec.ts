@@ -53,7 +53,6 @@ describe('admin list filters', () => {
           discountTotal: template.discountTotal,
           taxTotal: template.taxTotal,
           total: 5_000_000n * BigInt(index + 1),
-          currency: template.currency,
           shippingMethodId: template.shippingMethodId,
           shippingMethodName: template.shippingMethodName,
           shippingAddress: template.shippingAddress as object,

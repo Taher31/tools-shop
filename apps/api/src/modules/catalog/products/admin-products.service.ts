@@ -167,6 +167,20 @@ export class AdminProductsService {
     return this.toDetail(product, await this.taxonomyService.get());
   }
 
+  /** Full details for many products in one query (used by bulk export). */
+  async getMany(ids: string[]): Promise<AdminProductDetail[]> {
+    if (ids.length === 0) return [];
+    const taxonomy = await this.taxonomyService.get();
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: ids }, deletedAt: null },
+      include: ADMIN_PRODUCT_INCLUDE,
+    });
+    const order = new Map(ids.map((id, index) => [id, index]));
+    return products
+      .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
+      .map((product) => this.toDetail(product, taxonomy));
+  }
+
   async create(input: ProductUpsertInput): Promise<AdminProductDetail> {
     const taxonomy = await this.taxonomyService.get();
     const prepared = await this.prepare(input, taxonomy, null);

@@ -9,6 +9,7 @@ import { useUrlList } from '@/components/admin/query';
 import { date, faNumber, price } from '@/lib/format';
 import { FilterBar } from '@/components/admin/filter-bar';
 import { Suspense } from 'react';
+import { ExportButton } from '@/components/admin/export-button';
 
 function CustomersPageContent() {
   const router = useRouter();
@@ -19,6 +20,7 @@ function CustomersPageContent() {
       <TableCard
         toolbar={
           <FilterBar
+            actions={<ExportButton entity="customers" params={list.params} />}
             list={list}
             searchPlaceholder="نام، موبایل یا ایمیل"
             dateLabel="تاریخ عضویت"

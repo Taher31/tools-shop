@@ -29,6 +29,12 @@ import { TaxonomyService } from './taxonomy.service';
     AdminProductsService,
     ProductQueryService,
   ],
-  exports: [TaxonomyService, ProductQueryService, CategoriesService],
+  exports: [
+    TaxonomyService,
+    ProductQueryService,
+    CategoriesService,
+    BrandsService,
+    AdminProductsService,
+  ],
 })
 export class CatalogModule {}

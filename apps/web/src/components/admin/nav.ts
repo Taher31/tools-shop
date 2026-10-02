@@ -4,6 +4,7 @@ import {
   Boxes,
   ClipboardList,
   CreditCard,
+  FileSpreadsheet,
   FileText,
   History,
   KeyRound,
@@ -144,6 +145,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         label: 'فاکتورها و اسناد',
         icon: Receipt,
         permission: 'invoice.read',
+      },
+      {
+        href: '/admin/data',
+        label: 'ورود و خروج داده',
+        icon: FileSpreadsheet,
+        permission: 'data.export',
       },
       {
         href: '/admin/integrations',

@@ -987,3 +987,62 @@ export interface MessengerChannelView {
   lastActivityAt: string | null;
   lastError: string | null;
 }
+
+/* ------------------------------------------------------------ data exchange */
+
+export const DATA_ENTITY_KEYS = [
+  'products',
+  'categories',
+  'brands',
+  'coupons',
+  'inventory',
+  'orders',
+  'customers',
+] as const;
+export type DataEntityKey = (typeof DATA_ENTITY_KEYS)[number];
+
+export interface DataColumnView {
+  header: string;
+  required: boolean;
+  description: string;
+  example: string;
+}
+
+export interface DataEntityView {
+  key: DataEntityKey;
+  label: string;
+  description: string;
+  canImport: boolean;
+  canExport: boolean;
+  columns: DataColumnView[];
+  /** Extra free-form columns accepted (e.g. one column per product attribute). */
+  dynamicColumns: string | null;
+}
+
+export type ImportRowStatus = 'create' | 'update' | 'unchanged' | 'error';
+
+export interface ImportRowResult {
+  /** First spreadsheet row (1-based, header = 1) this result refers to. */
+  row: number;
+  status: ImportRowStatus;
+  label: string;
+  messages: string[];
+}
+
+export interface ImportReport {
+  entity: DataEntityKey;
+  /** True when nothing was written (validation preview). */
+  dryRun: boolean;
+  fileName: string;
+  totalRows: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  failed: number;
+  /** Recognised, ignored and missing columns, to catch header typos early. */
+  unknownColumns: string[];
+  missingColumns: string[];
+  results: ImportRowResult[];
+  /** True when `results` was cut to keep the response small. */
+  truncated: boolean;
+}

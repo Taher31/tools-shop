@@ -18,6 +18,7 @@ import { useUrlList } from '@/components/admin/query';
 import { api } from '@/lib/api/client';
 import { OrderStatusBadge } from '@/components/common/status-badges';
 import { dateTime, faNumber, price } from '@/lib/format';
+import { ExportButton } from '@/components/admin/export-button';
 
 function OrdersList() {
   const router = useRouter();
@@ -32,6 +33,7 @@ function OrdersList() {
     <TableCard
       toolbar={
         <FilterBar
+          actions={<ExportButton entity="orders" params={list.params} />}
           list={list}
           searchPlaceholder="شماره سفارش، موبایل، نام یا کد رهگیری"
           dateLabel="تاریخ ثبت"

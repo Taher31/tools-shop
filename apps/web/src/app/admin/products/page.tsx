@@ -22,6 +22,7 @@ import { api } from '@/lib/api/client';
 import { faNumber, price } from '@/lib/format';
 import { FilterBar } from '@/components/admin/filter-bar';
 import { Suspense } from 'react';
+import { ExportButton } from '@/components/admin/export-button';
 
 const STATUS_VARIANT = { active: 'success', draft: 'secondary', archived: 'outline' } as const;
 
@@ -63,6 +64,7 @@ function ProductsPageContent() {
       <TableCard
         toolbar={
           <FilterBar
+            actions={<ExportButton entity="products" params={list.params} />}
             list={list}
             searchPlaceholder="نام، مدل، SKU یا بارکد"
             dateLabel="تاریخ ایجاد"

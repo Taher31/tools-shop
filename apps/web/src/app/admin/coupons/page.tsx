@@ -21,6 +21,7 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { api } from '@/lib/api/client';
 import { date, faNumber, price } from '@/lib/format';
 import { FilterBar } from '@/components/admin/filter-bar';
+import { ExportButton } from '@/components/admin/export-button';
 
 interface CouponForm {
   code: string;
@@ -84,6 +85,7 @@ function CouponsContent() {
       <TableCard
         toolbar={
           <FilterBar
+            actions={<ExportButton entity="coupons" params={list.params} />}
             list={list}
             searchPlaceholder="جستجوی کد"
             inline={[
