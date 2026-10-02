@@ -5,6 +5,13 @@ name: Release
 on:
   push:
     tags: ['v*.*.*']
+  # Manual run: creates the tag (on the selected branch's latest commit) and the release.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to create, e.g. v1.0.0'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -15,11 +22,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.v.outputs.tag }}
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - id: v
+        env:
+          INPUT: ${{ inputs.version }}
+        run: |
+          tag="${INPUT:-$GITHUB_REF_NAME}"
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "Invalid version tag: $tag"; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
   verify:
+    needs: meta
     uses: ./.github/workflows/ci.yml
 
   images:
-    needs: verify
+    needs: [meta, verify]
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -46,8 +69,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}-${{ matrix.name }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ needs.meta.outputs.version }}
             type=raw,value=latest
       - uses: docker/build-push-action@v6
         with:
@@ -61,7 +83,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
   release:
-    needs: images
+    needs: [meta, images]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,7 +91,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "$GITHUB_REF_NAME" \
-            --generate-notes \
-            --verify-tag
+          # Creates the tag at this commit when it does not exist yet (manual runs).
+          gh release create "${{ needs.meta.outputs.tag }}" \
+            --target "$GITHUB_SHA" \
+            --title "${{ needs.meta.outputs.tag }}" \
+            --generate-notes
