@@ -57,7 +57,15 @@ function toQuestion(question: QuestionRecord): QuestionView {
     body: question.body,
     authorName: authorName(question.user),
     answer: question.answer,
-    answeredBy: question.answer ? (question.answeredBy ? 'کارشناس فروشگاه' : 'فروشگاه') : null,
+    answeredBy: question.answer
+      ? question.answeredByAi
+        ? 'دستیار هوشمند فروشگاه'
+        : question.answeredBy
+          ? 'کارشناس فروشگاه'
+          : 'فروشگاه'
+      : null,
+    answeredByAi: question.answer !== null && question.answeredByAi,
+    expertNotice: question.status === 'pending' ? question.expertNotice : null,
     answeredAt: question.answeredAt?.toISOString() ?? null,
     createdAt: question.createdAt.toISOString(),
   };
@@ -94,7 +102,11 @@ export class ReviewsService {
     productId: string,
     query: PaginationQuery,
   ): Promise<Paginated<QuestionView>> {
-    const where: Prisma.ProductQuestionWhereInput = { productId, status: 'answered' };
+    // Answered questions, plus pending ones where the AI left an "expert will answer" note.
+    const where: Prisma.ProductQuestionWhereInput = {
+      productId,
+      OR: [{ status: 'answered' }, { status: 'pending', expertNotice: { not: null } }],
+    };
     const [questions, total] = await Promise.all([
       this.prisma.productQuestion.findMany({
         where,
@@ -124,9 +136,21 @@ export class ReviewsService {
         order: { userId, status: { in: ['paid', 'processing', 'packed', 'shipped', 'delivered'] } },
       },
     });
-    await this.prisma.review.create({
-      data: { ...input, productId, userId, isVerifiedBuyer: purchased > 0, status: 'pending' },
+    await this.prisma.$transaction(async (tx) => {
+      const review = await tx.review.create({
+        data: { ...input, productId, userId, isVerifiedBuyer: purchased > 0, status: 'pending' },
+      });
+      // Lets the AI center check the review right away (approve clean ones, reject abuse).
+      await this.outbox.record(tx, [
+        {
+          type: 'review.created',
+          aggregateType: 'review',
+          aggregateId: review.id,
+          payload: { reviewId: review.id },
+        },
+      ]);
     });
+    this.outbox.flush();
     return { status: 'pending' };
   }
 
@@ -191,6 +215,12 @@ export class ReviewsService {
         ...toReview(review),
         status: review.status,
         product: review.product,
+        ai: review.aiVerdict
+          ? {
+              verdict: review.aiVerdict as 'approve' | 'reject' | 'needs_human',
+              note: review.aiNote,
+            }
+          : null,
       })),
       total,
       query,
@@ -285,6 +315,8 @@ export class ReviewsService {
               answer: input.answer,
               answeredById: actorId,
               answeredAt: new Date(),
+              answeredByAi: false,
+              expertNotice: null,
             },
     });
     await this.audit.record({
@@ -297,6 +329,53 @@ export class ReviewsService {
         answer: input.status === 'rejected' ? question.answer : input.answer,
       },
     });
+  }
+
+  /**
+   * Applies the AI's decision to a review that is still pending (a person's decision is
+   * never overwritten). `needs_human` leaves it pending with the note for staff.
+   */
+  async applyAiModeration(
+    id: string,
+    verdict: 'approve' | 'reject' | 'needs_human',
+    note: string | null,
+  ): Promise<ReviewStatus | null> {
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review || review.status !== 'pending') return null;
+    const status: ReviewStatus =
+      verdict === 'approve' ? 'approved' : verdict === 'reject' ? 'rejected' : 'pending';
+    await this.prisma.$transaction(async (tx) => {
+      await tx.review.update({
+        where: { id },
+        data: { status, aiVerdict: verdict, aiNote: note?.slice(0, 300) ?? null },
+      });
+      if (status !== 'pending') {
+        await this.refreshRating(tx, review.productId);
+        await this.outbox.record(tx, [
+          {
+            type: 'product.changed',
+            aggregateType: 'product',
+            aggregateId: review.productId,
+            payload: { productIds: [review.productId] },
+          },
+        ]);
+      }
+      await this.audit.record(
+        {
+          action: 'review.ai_moderate',
+          entityType: 'review',
+          entityId: id,
+          summary: `بررسی خودکار نظر: ${verdict === 'approve' ? 'تأیید' : verdict === 'reject' ? 'رد' : 'ارجاع به کارشناس'}`,
+          actorType: 'ai',
+          actorId: null,
+          before: { status: review.status },
+          after: { status, note },
+        },
+        tx,
+      );
+    });
+    this.outbox.flush();
+    return status;
   }
 
   private async refreshRating(tx: Tx, productId: string): Promise<void> {

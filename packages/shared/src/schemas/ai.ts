@@ -9,7 +9,14 @@ export const AI_MODEL_LABELS: Record<AiModel, string> = {
   'claude-sonnet-5-5': 'Claude Sonnet 5.5 – سریع‌تر و کم‌هزینه‌تر',
 };
 
-export const AI_FEATURES = ['assistant', 'messenger', 'qa', 'support', 'content'] as const;
+export const AI_FEATURES = [
+  'assistant',
+  'messenger',
+  'qa',
+  'support',
+  'content',
+  'moderation',
+] as const;
 export type AiFeature = (typeof AI_FEATURES)[number];
 export const AI_FEATURE_LABELS: Record<AiFeature, string> = {
   assistant: 'دستیار هوشمند فروشگاه',
@@ -17,6 +24,7 @@ export const AI_FEATURE_LABELS: Record<AiFeature, string> = {
   qa: 'پیشنهاد پاسخ پرسش محصولات',
   support: 'پیش‌نویس و دسته‌بندی تیکت‌ها',
   content: 'تولید محتوا و سئو محصول',
+  moderation: 'بررسی خودکار نظرات کاربران',
 };
 
 /**
@@ -152,17 +160,33 @@ export const aiSettingsSchema = z.object({
       qa: z.boolean().default(true),
       support: z.boolean().default(true),
       content: z.boolean().default(true),
+      moderation: z.boolean().default(true),
     })
-    .default({ assistant: true, messenger: false, qa: true, support: true, content: true }),
+    .default({
+      assistant: true,
+      messenger: false,
+      qa: true,
+      support: true,
+      content: true,
+      moderation: true,
+    }),
   assistantName: textSchema({ max: 40 }).default('دستیار هوشمند'),
   assistantGreeting: textSchema({ max: 300 }).default(
     'سلام! برای انتخاب ابزار مناسب، مقایسه مدل‌ها یا پیگیری سفارش کمکتان می‌کنم.',
   ),
   /** Extra guidance about the store's voice and policies, appended to the assistant prompt. */
   storeVoice: optionalTextSchema(1500),
-  /** Publish AI answers to product questions without review when confidence is high. Off by default. */
-  qaAutoPublish: z.boolean().default(false),
-  qaAutoPublishMinConfidence: z.coerce.number().min(0.6).max(1).default(0.9),
+  /**
+   * AI-first Q&A: the assistant answers product questions itself whenever the store's data
+   * supports a helpful answer (confidence at or above the threshold); staff can still edit.
+   */
+  qaAutoPublish: z.boolean().default(true),
+  qaAutoPublishMinConfidence: z.coerce.number().min(0.2).max(1).default(0.5),
+  /** When the AI cannot answer, show "an expert will answer within N hours" under the question. */
+  qaHoldingNotice: z.boolean().default(true),
+  qaExpertHours: z.coerce.number().int().min(1).max(72).default(6),
+  /** Approve clean customer reviews automatically and reject abusive ones (unsure → staff). */
+  reviewAutoModeration: z.boolean().default(true),
   /** Assistant messages allowed per visitor per hour. */
   assistantHourlyLimit: z.coerce.number().int().min(5).max(500).default(30),
 });

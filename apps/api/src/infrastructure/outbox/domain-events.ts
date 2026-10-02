@@ -17,6 +17,7 @@ export interface DomainEventMap {
   'payment.orphaned': { paymentId: string; orderId: string };
   'ticket.created': { ticketId: string };
   'question.created': { questionId: string };
+  'review.created': { reviewId: string };
   'ticket.replied': { ticketId: string; by: 'customer' | 'staff' };
 }
 

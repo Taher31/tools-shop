@@ -185,7 +185,17 @@ export function QuestionsSection({ productId }: { productId: string }) {
                   <div className="border-accent mt-3 border-s-2 ps-3 text-sm leading-7">
                     <span className="text-primary font-bold">پاسخ {question.answeredBy}: </span>
                     {question.answer}
+                    {question.answeredByAi ? (
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        این پاسخ را دستیار هوشمند بر اساس مشخصات کالا نوشته است؛ در صورت تردید با
+                        پشتیبانی تماس بگیرید.
+                      </p>
+                    ) : null}
                   </div>
+                ) : question.expertNotice ? (
+                  <p className="bg-muted text-muted-foreground mt-3 rounded-md px-3 py-2 text-xs leading-6">
+                    {question.expertNotice}
+                  </p>
                 ) : null}
               </li>
             ))}

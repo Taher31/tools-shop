@@ -476,28 +476,63 @@ export function AiSettingsForm({ view, canManage }: { view: AiSettingsView; canM
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>انتشار خودکار پاسخ پرسش‌ها</CardTitle>
+            <CardTitle>نظرات و پرسش‌ها (هوش مصنوعی اول)</CardTitle>
+            <p className="text-muted-foreground text-xs leading-6">
+              بدون انتظار برای کارشناس؛ کارشناس همیشه می‌تواند نتیجه را ویرایش یا لغو کند و همه
+              اقدام‌های خودکار در گزارش رویدادها ثبت می‌شوند.
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
             <ToggleRow
-              label="انتشار بدون بازبینی"
-              hint="فقط وقتی مدل مطمئن است و پرسش نیاز به بررسی انسانی ندارد. همه موارد در گزارش فعالیت ثبت می‌شوند."
+              label="تأیید خودکار نظرات"
+              hint="نظر صادقانه (حتی منفی) بلافاصله منتشر می‌شود؛ توهین، تبلیغ و لینک رد یا به کارشناس ارجاع می‌شود."
+              checked={form.reviewAutoModeration}
+              disabled={disabled}
+              onChange={(v) => set('reviewAutoModeration', v)}
+            />
+            <ToggleRow
+              label="پاسخ خودکار به پرسش‌ها"
+              hint="هر جا مشخصات کالا اجازه پاسخ مفید بدهد، دستیار مستقیم پاسخ می‌دهد (با برچسب «دستیار هوشمند»)."
               checked={form.qaAutoPublish}
               disabled={disabled}
               onChange={(v) => set('qaAutoPublish', v)}
             />
-            <Field label="حداقل اطمینان (۰٫۶ تا ۱)" htmlFor="ai-conf">
+            <Field
+              label="حداقل اطمینان برای پاسخ (۰٫۲ تا ۱)"
+              htmlFor="ai-conf"
+              hint="عدد کمتر = پاسخ بیشتر توسط AI، با احتمال خطای بیشتر. پیشنهاد: ۰٫۵"
+            >
               <Input
                 id="ai-conf"
                 type="number"
                 step={0.05}
-                min={0.6}
+                min={0.2}
                 max={1}
                 dir="ltr"
                 className="text-left"
                 value={form.qaAutoPublishMinConfidence}
                 disabled={disabled || !form.qaAutoPublish}
                 onChange={(e) => set('qaAutoPublishMinConfidence', Number(e.target.value))}
+              />
+            </Field>
+            <ToggleRow
+              label="پیام «کارشناس پاسخ می‌دهد»"
+              hint="اگر AI نتوانست پاسخ دهد، زیر پرسش نوشته می‌شود که کارشناس چند ساعت دیگر پاسخ می‌دهد."
+              checked={form.qaHoldingNotice}
+              disabled={disabled}
+              onChange={(v) => set('qaHoldingNotice', v)}
+            />
+            <Field label="مهلت اعلام‌شده به مشتری (ساعت)" htmlFor="ai-hours">
+              <Input
+                id="ai-hours"
+                type="number"
+                min={1}
+                max={72}
+                dir="ltr"
+                className="text-left"
+                value={form.qaExpertHours}
+                disabled={disabled || !form.qaHoldingNotice}
+                onChange={(e) => set('qaExpertHours', Number(e.target.value))}
               />
             </Field>
           </CardContent>

@@ -37,8 +37,8 @@ export class CustomersService {
       ...(query.hasOrders === undefined
         ? {}
         : query.hasOrders
-          ? { orders: { some: {} } }
-          : { orders: { none: {} } }),
+          ? { orders: { some: { status: { in: [...REVENUE_STATUSES] } } } }
+          : { orders: { none: { status: { in: [...REVENUE_STATUSES] } } } }),
       ...(query.q
         ? {
             OR: [

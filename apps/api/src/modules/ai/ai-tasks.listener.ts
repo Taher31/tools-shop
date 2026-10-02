@@ -12,6 +12,11 @@ export class AiTasksListener {
     await this.staff.enqueue(AI_JOBS.QA_SUGGEST, payload.questionId);
   }
 
+  @OnEvent('review.created', { suppressErrors: false })
+  async onReview(payload: DomainEventMap['review.created']): Promise<void> {
+    await this.staff.enqueue(AI_JOBS.REVIEW_MODERATE, payload.reviewId);
+  }
+
   @OnEvent('ticket.created', { suppressErrors: false })
   async onTicket(payload: DomainEventMap['ticket.created']): Promise<void> {
     await this.staff.enqueue(AI_JOBS.TICKET_TRIAGE, payload.ticketId);

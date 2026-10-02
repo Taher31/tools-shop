@@ -3,6 +3,7 @@ import { Module, type Provider } from '@nestjs/common';
 import { QUEUES, workerProviders } from '../../infrastructure/queue/queue.constants';
 import { CatalogModule } from '../catalog/catalog.module';
 import { ContentModule } from '../content/content.module';
+import { ReviewsModule } from '../reviews/reviews.module';
 import { SearchModule } from '../search/search.module';
 import { ShippingModule } from '../shipping/shipping.module';
 import { AgentService } from './agent.service';
@@ -28,6 +29,7 @@ import { AssistantToolsService } from './tools/assistant-tools.service';
     CatalogModule,
     SearchModule,
     ContentModule,
+    ReviewsModule,
     ShippingModule,
     BullModule.registerQueue({ name: QUEUES.AI_TASKS }, { name: QUEUES.MESSENGER }),
   ],

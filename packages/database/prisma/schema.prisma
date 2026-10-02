@@ -811,6 +811,9 @@ model Review {
   body            String
   status          ReviewStatus @default(pending)
   isVerifiedBuyer Boolean      @default(false)
+  /// Outcome of the automatic AI check ("approve" | "reject" | "needs_human") and its reason.
+  aiVerdict       String?
+  aiNote          String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -840,6 +843,10 @@ model ProductQuestion {
   /// Draft produced by the AI assistant (Phase 3) and its confidence (0-1).
   aiSuggestedAnswer String?
   aiConfidence      Float?
+  /// The published answer was written by the AI assistant (shown with an AI label).
+  answeredByAi      Boolean        @default(false)
+  /// Public "an expert will answer within a few hours" note, set when the AI could not answer.
+  expertNotice      String?
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 

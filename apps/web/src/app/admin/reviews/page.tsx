@@ -104,7 +104,23 @@ function ReviewsPageContent() {
             {
               header: 'وضعیت',
               cell: (r) => (
-                <Badge variant={VARIANT[r.status]}>{REVIEW_STATUS_LABELS[r.status]}</Badge>
+                <div className="space-y-1">
+                  <Badge variant={VARIANT[r.status]}>{REVIEW_STATUS_LABELS[r.status]}</Badge>
+                  {r.ai ? (
+                    <p
+                      className="text-xs text-violet-700 dark:text-violet-300"
+                      title={r.ai.note ?? undefined}
+                    >
+                      ✦{' '}
+                      {r.ai.verdict === 'approve'
+                        ? 'تأیید خودکار AI'
+                        : r.ai.verdict === 'reject'
+                          ? 'رد خودکار AI'
+                          : 'نیازمند بررسی (AI)'}
+                      {r.ai.note ? `: ${r.ai.note}` : ''}
+                    </p>
+                  ) : null}
+                </div>
               ),
             },
             {

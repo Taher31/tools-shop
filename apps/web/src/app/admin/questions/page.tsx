@@ -110,7 +110,10 @@ function QuestionsContent() {
                 <div className="max-w-md">
                   <p className="text-sm">{q.body}</p>
                   {q.answer ? (
-                    <p className="text-success mt-1 text-xs">پاسخ: {q.answer}</p>
+                    <p className="text-success mt-1 text-xs">
+                      {q.answeredByAi ? '✦ پاسخ خودکار AI: ' : 'پاسخ: '}
+                      {q.answer}
+                    </p>
                   ) : q.aiSuggestion ? (
                     <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-violet-700 dark:text-violet-300">
                       <span className="line-clamp-1 max-w-72">

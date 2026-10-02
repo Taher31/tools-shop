@@ -426,6 +426,10 @@ export interface QuestionView {
   authorName: string;
   answer: string | null;
   answeredBy: string | null;
+  /** The answer was written by the AI assistant (the storefront labels it as such). */
+  answeredByAi: boolean;
+  /** Shown instead of an answer while a human expert is still to reply; null otherwise. */
+  expertNotice: string | null;
   answeredAt: string | null;
   createdAt: string;
 }
@@ -433,6 +437,8 @@ export interface QuestionView {
 export interface AdminReviewView extends ReviewView {
   status: ReviewStatus;
   product: { id: string; title: string; slug: string };
+  /** Result of the automatic AI check, when it ran. */
+  ai: { verdict: 'approve' | 'reject' | 'needs_human'; note: string | null } | null;
 }
 
 export interface AdminQuestionView extends QuestionView {

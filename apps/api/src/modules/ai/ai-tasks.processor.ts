@@ -21,7 +21,8 @@ export class AiTasksProcessor extends WorkerHost {
   async process(job: Job<{ id: string }>): Promise<unknown> {
     try {
       if (job.name === AI_JOBS.QA_SUGGEST)
-        return await this.staff.suggestQuestionAnswer(job.data.id);
+        return await this.staff.suggestQuestionAnswer(job.data.id, true);
+      if (job.name === AI_JOBS.REVIEW_MODERATE) return await this.staff.moderateReview(job.data.id);
       if (job.name === AI_JOBS.TICKET_TRIAGE) return await this.staff.triageTicket(job.data.id);
       return null;
     } catch (error) {
@@ -37,5 +38,9 @@ export class AiTasksProcessor extends WorkerHost {
   async onFailed(job: Job | undefined, error: Error): Promise<void> {
     this.logger.warn({ jobId: job?.id, name: job?.name, err: error }, 'AI task failed');
     await this.deadLetters.captureIfExhausted(job, error);
+    // Out of retries: the customer should still see that a person will answer.
+    if (job?.name === AI_JOBS.QA_SUGGEST && job.attemptsMade >= (job.opts.attempts ?? 1)) {
+      await this.staff.markAwaitingExpert((job.data as { id: string }).id).catch(() => undefined);
+    }
   }
 }
