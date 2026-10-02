@@ -20,7 +20,7 @@ const CSV_DELIMITERS = [',', ';', '\t'] as const;
 
 /** RFC 4180 parser with BOM removal, quoted fields/newlines and delimiter detection. */
 export function parseCsv(input: string): string[][] {
-  const text = input.replace(/^﻿/, '');
+  const text = input.replace(/^\uFEFF/, '');
   const firstLine = text.split(/\r?\n/, 1)[0] ?? '';
   const delimiter =
     CSV_DELIMITERS.map((d) => ({ d, count: firstLine.split(d).length }))
@@ -155,7 +155,7 @@ export async function writeTable(
     };
     const lines = [main.headers, ...main.rows].map((row) => row.map(quote).join(','));
     return {
-      buffer: Buffer.from(`﻿${lines.join('\r\n')}\r\n`, 'utf8'),
+      buffer: Buffer.from(`\uFEFF${lines.join('\r\n')}\r\n`, 'utf8'),
       contentType: 'text/csv; charset=utf-8',
       extension: 'csv',
     };
