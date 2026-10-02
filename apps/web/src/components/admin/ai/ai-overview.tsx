@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   AI_FEATURE_LABELS,
   AI_MODEL_LABELS,
+  AI_PROVIDER_LABELS,
   type AiSettingsView,
   type AiUsageSummary,
 } from '@toolshop/shared';
@@ -150,13 +151,27 @@ export function AiOverview({ view }: { view: AiSettingsView }) {
           پاسخ واقعی، کلید API را ثبت و ارائه‌دهنده را روی Anthropic بگذارید.
         </Alert>
       ) : !view.ready ? (
-        <Alert variant="destructive">کلید API ثبت نشده است؛ قابلیت‌ها در دسترس نیستند.</Alert>
+        <Alert variant="destructive">
+          {settings.provider === 'openai_compatible'
+            ? 'نشانی سرور یا نام مدل ثبت نشده است؛ قابلیت‌ها در دسترس نیستند.'
+            : 'کلید API ثبت نشده است؛ قابلیت‌ها در دسترس نیستند.'}
+        </Alert>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
           label="مدل"
-          value={settings.model === 'claude-opus-5-5' ? 'Opus 5.5' : 'Sonnet 5.5'}
-          hint={AI_MODEL_LABELS[settings.model]}
+          value={
+            settings.provider === 'openai_compatible'
+              ? settings.compatModel || '—'
+              : settings.model === 'claude-opus-5-5'
+                ? 'Opus 5.5'
+                : 'Sonnet 5.5'
+          }
+          hint={
+            settings.provider === 'openai_compatible'
+              ? AI_PROVIDER_LABELS.openai_compatible
+              : AI_MODEL_LABELS[settings.model]
+          }
         />
         <Stat
           label="درخواست‌های این ماه"

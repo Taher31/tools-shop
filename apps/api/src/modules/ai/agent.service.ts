@@ -58,7 +58,7 @@ export class AgentService {
     conversationId: string | null,
     events: AgentEvents = {},
   ): Promise<AgentTurn> {
-    const { llm, settings, model } = await this.aiSettings.clientFor(feature);
+    const { llm, settings, model, pricing } = await this.aiSettings.clientFor(feature);
     await this.usage.assertWithinBudget(settings);
     const system = await this.systemPrompt(settings, context);
     const toolNames =
@@ -107,7 +107,7 @@ export class AgentService {
         turn.stopReason = 'error';
         return turn;
       }
-      await this.usage.record(feature, model, message, conversationId);
+      await this.usage.record(feature, model, message, conversationId, pricing);
       turn.stopReason = message.stop_reason;
 
       if (message.stop_reason === 'refusal') {

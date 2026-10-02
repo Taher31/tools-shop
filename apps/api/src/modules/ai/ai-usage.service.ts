@@ -4,7 +4,7 @@ import type { AiFeature, AiSettings, AiUsageSummary } from '@toolshop/shared';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { startOfJalaliMonth, tehranDateKey } from '../dashboard/tehran-time';
 import { AiUnavailableError } from './ai-errors';
-import { costMicros, tokenUsage } from './pricing';
+import { costMicros, type PriceOverride, tokenUsage } from './pricing';
 
 /** Token accounting and the monthly budget (Jalali month, Tehran time). */
 @Injectable()
@@ -16,6 +16,7 @@ export class AiUsageService {
     model: string,
     message: Pick<Anthropic.Beta.BetaMessage, 'usage' | 'stop_reason'>,
     conversationId: string | null = null,
+    pricing: PriceOverride | null = null,
   ): Promise<void> {
     const usage = tokenUsage(message.usage);
     await this.prisma.aiUsage.create({
@@ -23,7 +24,7 @@ export class AiUsageService {
         feature,
         model,
         ...usage,
-        costMicros: BigInt(costMicros(model, usage)),
+        costMicros: BigInt(costMicros(model, usage, pricing)),
         stopReason: message.stop_reason,
         conversationId,
       },

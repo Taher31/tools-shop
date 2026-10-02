@@ -881,11 +881,28 @@ export interface IntegrationLogView {
 
 /* -------------------------------------------------------------------- AI */
 
+export interface AiKeyInfo {
+  source: 'settings' | 'environment' | 'none';
+  preview: string | null;
+}
+
 export interface AiSettingsView {
   settings: AiSettings;
-  key: { source: 'settings' | 'environment' | 'none'; preview: string | null };
-  /** True when the configured provider can actually answer (key present or mock). */
+  /** Anthropic key. */
+  key: AiKeyInfo;
+  /** Key of the OpenAI-compatible server (optional for local servers). */
+  compatKey: AiKeyInfo;
+  /** True when the configured provider can actually answer (key/address present or mock). */
   ready: boolean;
+}
+
+export interface AiConnectionTest {
+  ok: boolean;
+  provider: string;
+  model: string;
+  latencyMs: number;
+  /** Short model reply on success, or the reason for the failure (never a secret). */
+  message: string;
 }
 
 export interface AiUsageSummary {

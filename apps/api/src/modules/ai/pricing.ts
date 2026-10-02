@@ -28,8 +28,25 @@ export function tokenUsage(usage: Anthropic.Beta.BetaUsage): TokenUsage {
 }
 
 /** Estimated cost in micro-dollars (1e-6 USD), rounded up so budgets are never under-counted. */
-export function costMicros(model: string, usage: TokenUsage): number {
-  const price = PRICES[model] ?? FALLBACK_PRICE;
+export interface PriceOverride {
+  /** USD per million tokens, as entered by the administrator. */
+  inputUsd: number;
+  outputUsd: number;
+}
+
+export function costMicros(
+  model: string,
+  usage: TokenUsage,
+  override?: PriceOverride | null,
+): number {
+  const price = override
+    ? {
+        input: override.inputUsd,
+        output: override.outputUsd,
+        cacheRead: override.inputUsd * 0.5,
+        cacheWrite: override.inputUsd,
+      }
+    : (PRICES[model] ?? FALLBACK_PRICE);
   const usd =
     (usage.inputTokens * price.input +
       usage.outputTokens * price.output +

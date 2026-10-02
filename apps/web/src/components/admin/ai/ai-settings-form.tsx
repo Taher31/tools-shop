@@ -5,6 +5,15 @@ import {
   AI_FEATURES,
   AI_MODEL_LABELS,
   AI_MODELS,
+  AI_PROVIDER_LABELS,
+  AI_PROVIDERS,
+  type AiConnectionTest,
+  type AiKeyInfo,
+  COMPAT_PRESETS,
+  COMPAT_STRUCTURED_LABELS,
+  COMPAT_STRUCTURED_MODES,
+  type CompatStructuredMode,
+  validateCompatBaseUrl,
   type AiSettings,
   type AiSettingsView,
 } from '@toolshop/shared';
@@ -23,7 +32,7 @@ import {
   Switch,
   Textarea,
 } from '@toolshop/ui';
-import { KeyRound, Save } from 'lucide-react';
+import { KeyRound, PlugZap, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useAdminMutation } from '@/components/admin/query';
 import { api } from '@/lib/api/client';
@@ -60,10 +69,24 @@ function ToggleRow({
   );
 }
 
-function ApiKeyCard({ view, canManage }: { view: AiSettingsView; canManage: boolean }) {
+function ApiKeyCard({
+  title,
+  field,
+  info,
+  placeholder,
+  note,
+  canManage,
+}: {
+  title: string;
+  field: 'anthropicApiKey' | 'compatApiKey';
+  info: AiKeyInfo;
+  placeholder: string;
+  note: string;
+  canManage: boolean;
+}) {
   const [key, setKey] = useState('');
   const save = useAdminMutation(
-    (anthropicApiKey: string) => api.put<AiSettingsView>('/admin/ai/secrets', { anthropicApiKey }),
+    (value: string) => api.put<AiSettingsView>('/admin/ai/secrets', { [field]: value }),
     {
       success: 'کلید API به‌روز شد.',
       invalidate: [['admin', 'ai']],
@@ -74,20 +97,17 @@ function ApiKeyCard({ view, canManage }: { view: AiSettingsView; canManage: bool
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <KeyRound className="size-4" /> کلید API (Anthropic)
+          <KeyRound className="size-4" /> {title}
         </CardTitle>
-        <p className="text-muted-foreground text-xs leading-6">
-          کلید فقط در سرور و به‌صورت رمزنگاری‌شده (AES-256-GCM) نگهداری می‌شود و هرگز به مرورگر
-          ارسال نمی‌شود.
-        </p>
+        <p className="text-muted-foreground text-xs leading-6">{note}</p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <Badge variant={view.key.source === 'none' ? 'secondary' : 'success'}>
-            {KEY_SOURCE[view.key.source]}
+          <Badge variant={info.source === 'none' ? 'secondary' : 'success'}>
+            {KEY_SOURCE[info.source]}
           </Badge>
-          {view.key.preview ? (
-            <span className="ltr text-muted-foreground font-mono text-xs">{view.key.preview}</span>
+          {info.preview ? (
+            <span className="ltr text-muted-foreground font-mono text-xs">{info.preview}</span>
           ) : null}
         </div>
         {canManage ? (
@@ -98,7 +118,7 @@ function ApiKeyCard({ view, canManage }: { view: AiSettingsView; canManage: bool
               autoComplete="off"
               dir="ltr"
               className="min-w-0 flex-1 text-left"
-              placeholder="sk-ant-…"
+              placeholder={placeholder}
               value={key}
               onChange={(e) => setKey(e.target.value)}
               onKeyDown={(e) => {
@@ -106,7 +126,7 @@ function ApiKeyCard({ view, canManage }: { view: AiSettingsView; canManage: bool
                 e.preventDefault();
                 if (key.trim()) save.mutate(key.trim());
               }}
-              aria-label="کلید API جدید"
+              aria-label={`${title} جدید`}
             />
             <Button
               type="button"
@@ -116,7 +136,7 @@ function ApiKeyCard({ view, canManage }: { view: AiSettingsView; canManage: bool
               {save.isPending ? <Spinner /> : null}
               ثبت کلید
             </Button>
-            {view.key.source === 'settings' ? (
+            {info.source === 'settings' ? (
               <Button
                 type="button"
                 variant="ghost"
@@ -131,6 +151,44 @@ function ApiKeyCard({ view, canManage }: { view: AiSettingsView; canManage: bool
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+/** Sends one tiny request with the SAVED settings, so save first, then test. */
+function ConnectionTest({ canManage, dirty }: { canManage: boolean; dirty: boolean }) {
+  const [result, setResult] = useState<AiConnectionTest | null>(null);
+  const test = useAdminMutation(() => api.post<AiConnectionTest>('/admin/ai/test'), {
+    invalidate: [],
+    onSuccess: setResult,
+  });
+  if (!canManage) return null;
+  return (
+    <div className="space-y-2">
+      <Button
+        type="button"
+        variant="outline"
+        disabled={test.isPending}
+        onClick={() => test.mutate()}
+      >
+        {test.isPending ? <Spinner /> : <PlugZap />}
+        تست اتصال با تنظیمات ذخیره‌شده
+      </Button>
+      {dirty ? (
+        <p className="text-warning text-xs">
+          تغییرات ذخیره‌نشده در تست اعمال نمی‌شود؛ ابتدا ذخیره کنید.
+        </p>
+      ) : null}
+      {result ? (
+        <Alert variant={result.ok ? 'success' : 'destructive'}>
+          <span className="ltr block text-start text-xs">
+            {result.model} · {result.latencyMs}ms
+          </span>
+          {result.ok
+            ? `اتصال برقرار است؛ پاسخ مدل: «${result.message}»`
+            : `ناموفق: ${result.message}`}
+        </Alert>
+      ) : null}
+    </div>
   );
 }
 
@@ -178,24 +236,149 @@ export function AiSettingsForm({ view, canManage }: { view: AiSettingsView; canM
                 disabled={disabled}
                 onChange={(e) => set('provider', e.target.value as AiSettings['provider'])}
               >
-                <option value="anthropic">Anthropic (Claude)</option>
-                <option value="mock">آزمایشی (بدون اتصال، برای توسعه و دمو)</option>
-              </NativeSelect>
-            </Field>
-            <Field label="مدل" htmlFor="ai-model">
-              <NativeSelect
-                id="ai-model"
-                value={form.model}
-                disabled={disabled}
-                onChange={(e) => set('model', e.target.value as AiSettings['model'])}
-              >
-                {AI_MODELS.map((m) => (
-                  <option key={m} value={m}>
-                    {AI_MODEL_LABELS[m]}
+                {AI_PROVIDERS.map((p) => (
+                  <option key={p} value={p}>
+                    {AI_PROVIDER_LABELS[p]}
                   </option>
                 ))}
               </NativeSelect>
             </Field>
+            {form.provider === 'anthropic' ? (
+              <Field label="مدل" htmlFor="ai-model">
+                <NativeSelect
+                  id="ai-model"
+                  value={form.model}
+                  disabled={disabled}
+                  onChange={(e) => set('model', e.target.value as AiSettings['model'])}
+                >
+                  {AI_MODELS.map((m) => (
+                    <option key={m} value={m}>
+                      {AI_MODEL_LABELS[m]}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </Field>
+            ) : null}
+            {form.provider === 'openai_compatible' ? (
+              <div className="bg-muted/40 grid gap-4 rounded-lg p-4 md:col-span-2 md:grid-cols-2">
+                <p className="text-muted-foreground text-xs leading-6 md:col-span-2">
+                  هر سرویسی که پروتکل OpenAI (Chat Completions) را بفهمد کار می‌کند: OpenRouter،
+                  OpenAI، Groq، DeepSeek، Together، Ollama یا سرور شخصی. نشانی و نام مدل را همان‌طور
+                  که سرویس می‌خواهد وارد کنید. قابلیت فراخوانی ابزار (tool calling) برای دستیار فروش
+                  لازم است؛ بیشتر مدل‌های جدید آن را دارند.
+                </p>
+                <Field label="الگوی سرویس" htmlFor="ai-preset">
+                  <NativeSelect
+                    id="ai-preset"
+                    disabled={disabled}
+                    value={
+                      COMPAT_PRESETS.find((p) => p.baseUrl && p.baseUrl === form.compatBaseUrl)
+                        ?.id ?? 'custom'
+                    }
+                    onChange={(e) => {
+                      const preset = COMPAT_PRESETS.find((p) => p.id === e.target.value);
+                      if (!preset) return;
+                      setForm((current) => ({
+                        ...current,
+                        compatBaseUrl: preset.baseUrl || current.compatBaseUrl,
+                        compatStructuredMode: preset.structured as CompatStructuredMode,
+                      }));
+                    }}
+                  >
+                    {COMPAT_PRESETS.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Field
+                  label="نشانی سرور (Base URL)"
+                  htmlFor="ai-base-url"
+                  error={validateCompatBaseUrl(form.compatBaseUrl) ?? undefined}
+                  hint="تا …/v1؛ فقط https (http فقط برای localhost)"
+                >
+                  <Input
+                    id="ai-base-url"
+                    dir="ltr"
+                    className="text-left"
+                    placeholder="https://openrouter.ai/api/v1"
+                    value={form.compatBaseUrl}
+                    disabled={disabled}
+                    onChange={(e) => set('compatBaseUrl', e.target.value.trim())}
+                  />
+                </Field>
+                <Field
+                  label="نام مدل"
+                  htmlFor="ai-compat-model"
+                  hint={
+                    (COMPAT_PRESETS.find((p) => p.baseUrl === form.compatBaseUrl)?.modelHint ?? '')
+                      ? `مثلاً ${COMPAT_PRESETS.find((p) => p.baseUrl === form.compatBaseUrl)?.modelHint}`
+                      : 'دقیقاً مطابق نام در سرویس'
+                  }
+                >
+                  <Input
+                    id="ai-compat-model"
+                    dir="ltr"
+                    className="text-left"
+                    placeholder="provider/model-name"
+                    value={form.compatModel}
+                    disabled={disabled}
+                    onChange={(e) => set('compatModel', e.target.value)}
+                  />
+                </Field>
+                <Field
+                  label="روش خروجی ساخت‌یافته"
+                  htmlFor="ai-structured"
+                  hint="برای پیش‌نویس تیکت، تولید محتوا و …"
+                >
+                  <NativeSelect
+                    id="ai-structured"
+                    value={form.compatStructuredMode}
+                    disabled={disabled}
+                    onChange={(e) =>
+                      set('compatStructuredMode', e.target.value as CompatStructuredMode)
+                    }
+                  >
+                    {COMPAT_STRUCTURED_MODES.map((m) => (
+                      <option key={m} value={m}>
+                        {COMPAT_STRUCTURED_LABELS[m]}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Field
+                  label="قیمت ورودی (دلار برای هر میلیون توکن)"
+                  htmlFor="ai-price-in"
+                  hint="برای محاسبه هزینه و بودجه؛ ۰ = نامشخص"
+                >
+                  <Input
+                    id="ai-price-in"
+                    type="number"
+                    min={0}
+                    step="any"
+                    dir="ltr"
+                    className="text-left"
+                    value={form.compatInputPriceUsd}
+                    disabled={disabled}
+                    onChange={(e) => set('compatInputPriceUsd', Number(e.target.value))}
+                  />
+                </Field>
+                <Field label="قیمت خروجی (دلار برای هر میلیون توکن)" htmlFor="ai-price-out">
+                  <Input
+                    id="ai-price-out"
+                    type="number"
+                    min={0}
+                    step="any"
+                    dir="ltr"
+                    className="text-left"
+                    value={form.compatOutputPriceUsd}
+                    disabled={disabled}
+                    onChange={(e) => set('compatOutputPriceUsd', Number(e.target.value))}
+                  />
+                </Field>
+              </div>
+            ) : null}
             <Field
               label="سقف هزینه ماهانه (دلار)"
               htmlFor="ai-budget"
@@ -319,7 +502,36 @@ export function AiSettingsForm({ view, canManage }: { view: AiSettingsView; canM
             </Field>
           </CardContent>
         </Card>
-        <ApiKeyCard view={view} canManage={canManage} />
+        {form.provider === 'anthropic' ? (
+          <ApiKeyCard
+            title="کلید API (Anthropic)"
+            field="anthropicApiKey"
+            info={view.key}
+            placeholder="sk-ant-…"
+            note="کلید فقط در سرور و به‌صورت رمزنگاری‌شده (AES-256-GCM) نگهداری می‌شود و هرگز به مرورگر ارسال نمی‌شود."
+            canManage={canManage}
+          />
+        ) : null}
+        {form.provider === 'openai_compatible' ? (
+          <ApiKeyCard
+            title="کلید API سرویس"
+            field="compatApiKey"
+            info={view.compatKey}
+            placeholder="sk-or-… / sk-…"
+            note="برای سرورهای محلی (Ollama) لازم نیست. کلید رمزنگاری‌شده در سرور نگهداری می‌شود و به مرورگر نمی‌رسد."
+            canManage={canManage}
+          />
+        ) : null}
+        {form.provider !== 'mock' ? (
+          <Card>
+            <CardContent className="pt-5">
+              <ConnectionTest
+                canManage={canManage}
+                dirty={JSON.stringify(form) !== JSON.stringify(view.settings)}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
         {canManage ? (
           <Button type="submit" size="lg" className="w-full" disabled={save.isPending}>
             {save.isPending ? <Spinner /> : <Save />}

@@ -6,6 +6,7 @@ import { AppException } from '../../common/errors/app-exception';
 import { AiUnavailableError } from './ai-errors';
 import { AiSettingsService } from './ai-settings.service';
 import { AiUsageService } from './ai-usage.service';
+import { extractJson } from './llm/openai-compatible-llm.client';
 
 export interface StructuredRequest<T> {
   feature: Exclude<AiFeature, 'assistant' | 'messenger'>;
@@ -33,7 +34,7 @@ export class StructuredAiService {
   ) {}
 
   async generate<T>(request: StructuredRequest<T>): Promise<T> {
-    const { llm, settings, model } = await this.aiSettings.clientFor(request.feature);
+    const { llm, settings, model, pricing } = await this.aiSettings.clientFor(request.feature);
     await this.usage.assertWithinBudget(settings);
     let message: Anthropic.Beta.BetaMessage;
     try {
@@ -56,7 +57,7 @@ export class StructuredAiService {
         'سرویس هوش مصنوعی در دسترس نیست؛ کمی بعد دوباره تلاش کنید.',
       );
     }
-    await this.usage.record(request.feature, model, message);
+    await this.usage.record(request.feature, model, message, null, pricing);
     if (message.stop_reason === 'refusal') {
       throw new AppException('BAD_REQUEST', 'هوش مصنوعی برای این درخواست پاسخی تولید نکرد.');
     }
@@ -69,7 +70,7 @@ export class StructuredAiService {
       .trim();
     let raw: unknown;
     try {
-      raw = JSON.parse(text);
+      raw = JSON.parse(extractJson(text));
     } catch {
       throw new AiUnavailableError('provider', 'پاسخ هوش مصنوعی قابل پردازش نبود.');
     }

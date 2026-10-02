@@ -1,5 +1,6 @@
 import { Get, HttpCode, HttpStatus, Param, ParseEnumPipe, Post, Put } from '@nestjs/common';
 import {
+  type AiConnectionTest,
   type AiConversationDetail,
   type AiConversationSummary,
   type AiDraft,
@@ -88,6 +89,13 @@ export class AdminAiController {
     @ZBody(aiSecretsUpdateSchema) input: AiSecretsUpdateInput,
   ): Promise<AiSettingsView> {
     return this.settings.updateSecrets(input);
+  }
+
+  @Post('test')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('ai.manage')
+  testConnection(): Promise<AiConnectionTest> {
+    return this.settings.testConnection();
   }
 
   @Get('usage')

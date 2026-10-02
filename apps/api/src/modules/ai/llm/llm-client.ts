@@ -8,7 +8,7 @@ export type LlmRequest = Anthropic.Beta.MessageCreateParamsNonStreaming;
  * returns the same shapes for development and tests.
  */
 export interface LlmClient {
-  readonly provider: 'anthropic' | 'mock';
+  readonly provider: 'anthropic' | 'openai_compatible' | 'mock';
   /** Streams a response, reporting text deltas, and resolves with the final message. */
   stream(
     request: LlmRequest,
