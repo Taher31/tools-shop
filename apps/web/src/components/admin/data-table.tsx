@@ -16,7 +16,7 @@ import {
   cn,
 } from '@toolshop/ui';
 import { Inbox, Search } from 'lucide-react';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { faNumber } from '@/lib/format';
 
 export interface Column<T> {
@@ -122,25 +122,34 @@ export function Pager({
   );
 }
 
-/** Debounced search input for list pages. */
+/** Debounced search input for list pages (only fires when the text actually changes). */
 export function SearchInput({
   onSearch,
   placeholder = 'جستجو…',
   className,
+  defaultValue = '',
 }: {
   onSearch: (q: string) => void;
   placeholder?: string;
   className?: string;
+  defaultValue?: string;
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(defaultValue);
+  const emitted = useRef(defaultValue.trim());
   useEffect(() => {
-    const timer = setTimeout(() => onSearch(value.trim()), 300);
+    const next = value.trim();
+    if (next === emitted.current) return;
+    const timer = setTimeout(() => {
+      emitted.current = next;
+      onSearch(next);
+    }, 300);
     return () => clearTimeout(timer);
   }, [value, onSearch]);
   return (
     <div className={cn('relative', className)}>
       <Search className="text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2" />
       <Input
+        type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}

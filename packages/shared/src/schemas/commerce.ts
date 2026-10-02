@@ -1,10 +1,12 @@
 import { z } from 'zod';
-import { COUPON_TYPES } from '../commerce/enums';
+import { COUPON_TYPES, PAYMENT_STATUSES } from '../commerce/enums';
 import { ORDER_STATUSES } from '../commerce/order-status';
 import { IRAN_PROVINCE_NAMES } from '../iran/provinces';
 import {
   idSchema,
+  adminListQuerySchema,
   listQuerySchema,
+  tomanQuerySchema,
   mobileSchema,
   optionalTextSchema,
   postalCodeSchema,
@@ -148,11 +150,14 @@ export const cancelOrderSchema = z.object({
 });
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>;
 
-export const adminOrderListQuerySchema = listQuerySchema.extend({
+export const ORDER_SORTS = ['newest', 'oldest', 'total_desc', 'total_asc'] as const;
+export const adminOrderListQuerySchema = adminListQuerySchema.extend({
   status: z.enum(ORDER_STATUSES).optional(),
   customerId: idSchema.optional(),
-  from: z.coerce.date().optional(),
-  to: z.coerce.date().optional(),
+  shippingMethodId: idSchema.optional(),
+  minTotal: tomanQuerySchema,
+  maxTotal: tomanQuerySchema,
+  sort: z.enum(ORDER_SORTS).optional(),
 });
 export type AdminOrderListQuery = z.infer<typeof adminOrderListQuerySchema>;
 
@@ -161,3 +166,16 @@ export const refundSchema = z.object({
   reason: optionalTextSchema(500),
 });
 export type RefundInput = z.infer<typeof refundSchema>;
+
+export const adminPaymentListQuerySchema = adminListQuerySchema.extend({
+  status: z.enum(PAYMENT_STATUSES).optional(),
+  provider: z.string().trim().max(40).optional(),
+  minAmount: tomanQuerySchema,
+  maxAmount: tomanQuerySchema,
+});
+export type AdminPaymentListQuery = z.infer<typeof adminPaymentListQuerySchema>;
+
+export const adminCouponListQuerySchema = listQuerySchema.extend({
+  state: z.enum(['active', 'inactive', 'expired', 'scheduled']).optional(),
+});
+export type AdminCouponListQuery = z.infer<typeof adminCouponListQuerySchema>;

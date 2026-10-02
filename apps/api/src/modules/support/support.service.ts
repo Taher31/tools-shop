@@ -18,6 +18,7 @@ import {
   type TicketUpdateInput,
   toEnglishDigits,
 } from '@toolshop/shared';
+import { dayRange } from '../../common/utils/filters';
 import { AppException } from '../../common/errors/app-exception';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
 import { OutboxService } from '../../infrastructure/outbox/outbox.service';
@@ -217,6 +218,7 @@ export class SupportService {
       priority: query.priority,
       category: query.category,
       staffUnread: query.unread,
+      createdAt: dayRange(query),
     };
     if (query.assignee === 'me') where.assigneeId = actor.userId;
     else if (query.assignee === 'none') where.assigneeId = null;

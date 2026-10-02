@@ -1,8 +1,8 @@
 import { All, Controller, Get, Param, Post, Query, Req, Res } from '@nestjs/common';
 import {
   type AdminPaymentView,
-  type ListQuery,
-  listQuerySchema,
+  type AdminPaymentListQuery,
+  adminPaymentListQuerySchema,
   type MockPaymentSession,
   type Paginated,
   type PaymentResultView,
@@ -100,7 +100,9 @@ export class AdminPaymentsController {
 
   @Get()
   @RequirePermissions('payment.read')
-  list(@ZQuery(listQuerySchema) query: ListQuery): Promise<Paginated<AdminPaymentView>> {
+  list(
+    @ZQuery(adminPaymentListQuerySchema) query: AdminPaymentListQuery,
+  ): Promise<Paginated<AdminPaymentView>> {
     return this.payments.adminList(query);
   }
 

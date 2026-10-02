@@ -2,8 +2,8 @@ import { Get, Put } from '@nestjs/common';
 import {
   type CustomerDetail,
   type CustomerListItem,
-  type ListQuery,
-  listQuerySchema,
+  type CustomerListQuery,
+  customerListQuerySchema,
   type Paginated,
 } from '@toolshop/shared';
 import { z } from 'zod';
@@ -19,7 +19,9 @@ export class AdminCustomersController {
 
   @Get()
   @RequirePermissions('customer.read')
-  list(@ZQuery(listQuerySchema) query: ListQuery): Promise<Paginated<CustomerListItem>> {
+  list(
+    @ZQuery(customerListQuerySchema) query: CustomerListQuery,
+  ): Promise<Paginated<CustomerListItem>> {
     return this.customers.list(query);
   }
 

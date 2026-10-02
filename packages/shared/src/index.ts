@@ -20,3 +20,4 @@ export * from './schemas/support';
 export * from './schemas/ai';
 export * from './contracts';
 export * from './zod-locale';
+export * from './calendar/jalali';

@@ -2,23 +2,26 @@
 
 import { useQuery } from '@tanstack/react-query';
 import {
+  type AdminBrandView,
   type AdminCategoryView,
   type AdminProductListItem,
   PRODUCT_STATUS_LABELS,
   PRODUCT_STATUSES,
   type ProductStatus,
 } from '@toolshop/shared';
-import { Badge, Button, NativeSelect, Switch } from '@toolshop/ui';
+import { Badge, Button } from '@toolshop/ui';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { DataTable, Pager, SearchInput, TableCard } from '@/components/admin/data-table';
+import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList } from '@/components/admin/query';
+import { useUrlList } from '@/components/admin/query';
 import { ProductImage } from '@/components/product/product-image';
 import { usePermissions } from '@/hooks/use-permissions';
 import { api } from '@/lib/api/client';
 import { faNumber, price } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
+import { Suspense } from 'react';
 
 const STATUS_VARIANT = { active: 'success', draft: 'secondary', archived: 'outline' } as const;
 
@@ -29,13 +32,17 @@ function flatten(nodes: AdminCategoryView[], depth = 0): { id: string; label: st
   ]);
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const router = useRouter();
   const { can } = usePermissions();
-  const list = useAdminList<AdminProductListItem>('/admin/products');
+  const list = useUrlList<AdminProductListItem>('/admin/products');
   const categories = useQuery({
     queryKey: ['admin', 'categories'],
     queryFn: () => api.get<AdminCategoryView[]>('/admin/categories'),
+  });
+  const brands = useQuery({
+    queryKey: ['admin', 'brands'],
+    queryFn: () => api.get<AdminBrandView[]>('/admin/brands'),
   });
 
   return (
@@ -55,46 +62,70 @@ export default function ProductsPage() {
       />
       <TableCard
         toolbar={
-          <>
-            <SearchInput
-              onSearch={list.setSearch}
-              placeholder="نام، مدل، SKU یا بارکد"
-              className="w-64"
-            />
-            <NativeSelect
-              className="h-9 w-40"
-              value={(list.params.status as string) ?? ''}
-              onChange={(e) => list.update({ status: e.target.value || undefined })}
-              aria-label="وضعیت"
-            >
-              <option value="">همه وضعیت‌ها</option>
-              {PRODUCT_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {PRODUCT_STATUS_LABELS[s as ProductStatus]}
-                </option>
-              ))}
-            </NativeSelect>
-            <NativeSelect
-              className="h-9 w-52"
-              value={(list.params.categoryId as string) ?? ''}
-              onChange={(e) => list.update({ categoryId: e.target.value || undefined })}
-              aria-label="دسته‌بندی"
-            >
-              <option value="">همه دسته‌ها</option>
-              {flatten(categories.data ?? []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </NativeSelect>
-            <label className="flex items-center gap-2 text-sm">
-              <Switch
-                checked={list.params.lowStock === 'true'}
-                onCheckedChange={(v) => list.update({ lowStock: v ? 'true' : undefined })}
-              />
-              فقط کم‌موجود
-            </label>
-          </>
+          <FilterBar
+            list={list}
+            searchPlaceholder="نام، مدل، SKU یا بارکد"
+            dateLabel="تاریخ ایجاد"
+            inline={[
+              {
+                type: 'select',
+                key: 'status',
+                label: 'وضعیت',
+                options: PRODUCT_STATUSES.map((s) => ({
+                  value: s,
+                  label: PRODUCT_STATUS_LABELS[s as ProductStatus],
+                })),
+              },
+              {
+                type: 'select',
+                key: 'categoryId',
+                label: 'دسته‌بندی',
+                options: flatten(categories.data ?? []).map((c) => ({
+                  value: c.id,
+                  label: c.label,
+                })),
+              },
+            ]}
+            more={[
+              {
+                type: 'select',
+                key: 'brandId',
+                label: 'برند',
+                options: (brands.data ?? []).map((b) => ({ value: b.id, label: b.name })),
+              },
+              {
+                type: 'select',
+                key: 'lowStock',
+                label: 'موجودی',
+                options: [{ value: 'true', label: 'فقط کم‌موجود' }],
+              },
+              {
+                type: 'select',
+                key: 'outOfStock',
+                label: 'ناموجود',
+                options: [
+                  { value: 'true', label: 'فقط ناموجود' },
+                  { value: 'false', label: 'فقط موجود' },
+                ],
+              },
+              {
+                type: 'select',
+                key: 'featured',
+                label: 'ویژه',
+                options: [
+                  { value: 'true', label: 'فقط ویژه' },
+                  { value: 'false', label: 'غیر ویژه' },
+                ],
+              },
+            ]}
+            sorts={[
+              { value: '', label: 'آخرین ویرایش' },
+              { value: 'newest', label: 'جدیدترین' },
+              { value: 'oldest', label: 'قدیمی‌ترین' },
+              { value: 'title', label: 'عنوان' },
+              { value: 'best_selling', label: 'پرفروش‌ترین' },
+            ]}
+          />
         }
       >
         <DataTable
@@ -167,5 +198,13 @@ export default function ProductsPage() {
         <Pager data={list.data} onPage={list.setPage} />
       </TableCard>
     </>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense>
+      <ProductsPageContent />
+    </Suspense>
   );
 }

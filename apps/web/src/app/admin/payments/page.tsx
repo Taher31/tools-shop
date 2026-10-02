@@ -1,18 +1,20 @@
 'use client';
 
-import type { AdminPaymentView } from '@toolshop/shared';
+import { type AdminPaymentView, PAYMENT_STATUS_LABELS, PAYMENT_STATUSES } from '@toolshop/shared';
 import Link from 'next/link';
 import { ConfirmButton } from '@/components/admin/confirm-button';
-import { DataTable, Pager, SearchInput, TableCard } from '@/components/admin/data-table';
+import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList, useAdminMutation } from '@/components/admin/query';
+import { useUrlList, useAdminMutation } from '@/components/admin/query';
 import { PaymentStatusBadge } from '@/components/common/status-badges';
 import { usePermissions } from '@/hooks/use-permissions';
 import { api } from '@/lib/api/client';
 import { dateTime, faNumber, price } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
+import { Suspense } from 'react';
 
-export default function PaymentsPage() {
-  const list = useAdminList<AdminPaymentView>('/admin/payments');
+function PaymentsPageContent() {
+  const list = useUrlList<AdminPaymentView>('/admin/payments');
   const { can } = usePermissions();
   const refund = useAdminMutation((id: string) => api.post(`/admin/payments/${id}/refund`, {}), {
     success: 'بازپرداخت انجام شد.',
@@ -26,10 +28,30 @@ export default function PaymentsPage() {
       />
       <TableCard
         toolbar={
-          <SearchInput
-            onSearch={list.setSearch}
-            placeholder="شماره سفارش، کد پیگیری یا شناسه درگاه"
-            className="w-80"
+          <FilterBar
+            list={list}
+            searchPlaceholder="شماره سفارش، کد پیگیری یا شناسه درگاه"
+            dateLabel="تاریخ پرداخت"
+            inline={[
+              {
+                type: 'select',
+                key: 'status',
+                label: 'وضعیت',
+                options: PAYMENT_STATUSES.map((s) => ({
+                  value: s,
+                  label: PAYMENT_STATUS_LABELS[s],
+                })),
+              },
+            ]}
+            more={[
+              {
+                type: 'range',
+                label: 'مبلغ',
+                minKey: 'minAmount',
+                maxKey: 'maxAmount',
+                unit: 'تومان',
+              },
+            ]}
           />
         }
       >
@@ -83,5 +105,13 @@ export default function PaymentsPage() {
         <Pager data={list.data} onPage={list.setPage} />
       </TableCard>
     </>
+  );
+}
+
+export default function PaymentsPage() {
+  return (
+    <Suspense>
+      <PaymentsPageContent />
+    </Suspense>
   );
 }

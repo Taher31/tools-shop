@@ -9,17 +9,18 @@ import {
 } from '@toolshop/shared';
 import { Badge, Button, Field, Input, NativeSelect, Switch } from '@toolshop/ui';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { ConfirmButton } from '@/components/admin/confirm-button';
-import { DataTable, Pager, SearchInput, TableCard } from '@/components/admin/data-table';
+import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { FormDialog } from '@/components/admin/form-dialog';
 import { MoneyInput } from '@/components/admin/money-input';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList, useAdminMutation } from '@/components/admin/query';
+import { useUrlList, useAdminMutation } from '@/components/admin/query';
 import { usePermissions } from '@/hooks/use-permissions';
 import { api } from '@/lib/api/client';
 import { date, faNumber, price } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
 
 interface CouponForm {
   code: string;
@@ -38,9 +39,9 @@ interface CouponForm {
 
 const toDateInput = (iso: string | null) => (iso ? iso.slice(0, 10) : '');
 
-export default function CouponsPage() {
+function CouponsContent() {
   const { can } = usePermissions();
-  const list = useAdminList<CouponView>('/admin/coupons');
+  const list = useUrlList<CouponView>('/admin/coupons');
   const [editing, setEditing] = useState<CouponView | null | undefined>(undefined);
   const form = useForm<CouponForm>({
     values: {
@@ -81,7 +82,25 @@ export default function CouponsPage() {
         }
       />
       <TableCard
-        toolbar={<SearchInput onSearch={list.setSearch} placeholder="جستجوی کد" className="w-56" />}
+        toolbar={
+          <FilterBar
+            list={list}
+            searchPlaceholder="جستجوی کد"
+            inline={[
+              {
+                type: 'select',
+                key: 'state',
+                label: 'وضعیت',
+                options: [
+                  { value: 'active', label: 'فعال' },
+                  { value: 'scheduled', label: 'زمان‌بندی‌شده' },
+                  { value: 'expired', label: 'منقضی' },
+                  { value: 'inactive', label: 'غیرفعال' },
+                ],
+              },
+            ]}
+          />
+        }
       >
         <DataTable
           rows={list.data?.items}
@@ -247,5 +266,13 @@ export default function CouponsPage() {
         </div>
       </FormDialog>
     </>
+  );
+}
+
+export default function CouponsPage() {
+  return (
+    <Suspense>
+      <CouponsContent />
+    </Suspense>
   );
 }

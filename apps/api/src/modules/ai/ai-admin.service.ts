@@ -3,9 +3,10 @@ import type { Prisma } from '@toolshop/database';
 import type {
   AiConversationDetail,
   AiConversationSummary,
-  ListQuery,
+  AdminListQuery,
   Paginated,
 } from '@toolshop/shared';
+import { dayRange } from '../../common/utils/filters';
 import { AppException } from '../../common/errors/app-exception';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -35,9 +36,10 @@ export class AiAdminService {
   constructor(private readonly prisma: PrismaService) {}
 
   async conversations(
-    query: ListQuery & { channel?: string },
+    query: AdminListQuery & { channel?: string },
   ): Promise<Paginated<AiConversationSummary>> {
     const where: Prisma.AiConversationWhereInput = {
+      createdAt: dayRange(query),
       ...(query.channel ? { channel: query.channel as Row['channel'] } : {}),
       ...(query.q
         ? { messages: { some: { text: { contains: query.q, mode: 'insensitive' } } } }

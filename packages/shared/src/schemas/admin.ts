@@ -2,7 +2,8 @@ import { z } from 'zod';
 import {
   emailSchema,
   idSchema,
-  listQuerySchema,
+  adminListQuerySchema,
+  queryFlag,
   mobileSchema,
   textSchema,
   optionalTextSchema,
@@ -41,13 +42,35 @@ export const roleUpsertSchema = z.object({
 });
 export type RoleUpsertInput = z.infer<typeof roleUpsertSchema>;
 
-export const customerListQuerySchema = listQuerySchema;
+export const CUSTOMER_SORTS = ['newest', 'oldest', 'name'] as const;
+export const customerListQuerySchema = adminListQuerySchema.extend({
+  hasOrders: queryFlag,
+  active: queryFlag,
+  sort: z.enum(CUSTOMER_SORTS).optional(),
+});
+export type CustomerListQuery = z.infer<typeof customerListQuerySchema>;
 
-export const auditLogQuerySchema = listQuerySchema.extend({
+export const adminReviewListQuerySchema = adminListQuerySchema.extend({
+  status: z.enum(REVIEW_STATUSES).optional(),
+  rating: z.coerce.number().int().min(1).max(5).optional(),
+  productId: idSchema.optional(),
+});
+export type AdminReviewListQuery = z.infer<typeof adminReviewListQuerySchema>;
+
+export const adminQuestionListQuerySchema = adminListQuerySchema.extend({
+  status: z.enum(QUESTION_STATUSES).optional(),
+  productId: idSchema.optional(),
+  /** Who answered: the AI, a staff member, or nobody yet. */
+  answeredBy: z.enum(['ai', 'staff', 'none']).optional(),
+});
+export type AdminQuestionListQuery = z.infer<typeof adminQuestionListQuerySchema>;
+
+export const auditLogQuerySchema = adminListQuerySchema.extend({
   entityType: z.string().max(60).optional(),
   entityId: z.string().max(80).optional(),
   actorId: idSchema.optional(),
   action: z.string().max(80).optional(),
+  actorType: z.enum(['user', 'system', 'ai']).optional(),
 });
 export type AuditLogQuery = z.infer<typeof auditLogQuerySchema>;
 

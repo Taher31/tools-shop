@@ -2,7 +2,8 @@ import { Controller, Get, Post, Put } from '@nestjs/common';
 import {
   type AdminQuestionView,
   type AdminReviewView,
-  listQuerySchema,
+  adminQuestionListQuerySchema,
+  adminReviewListQuerySchema,
   type Paginated,
   type PaginationQuery,
   paginationQuerySchema,
@@ -10,12 +11,10 @@ import {
   questionAnswerSchema,
   type QuestionCreateInput,
   questionCreateSchema,
-  QUESTION_STATUSES,
   type QuestionView,
   type ReviewCreateInput,
   reviewCreateSchema,
   reviewModerationSchema,
-  REVIEW_STATUSES,
   type ReviewView,
 } from '@toolshop/shared';
 import { z } from 'zod';
@@ -24,8 +23,8 @@ import type { AuthContext } from '../auth/auth-context';
 import { AdminController, CurrentUser, Public, RequirePermissions } from '../auth/decorators';
 import { ReviewsService } from './reviews.service';
 
-const reviewListSchema = listQuerySchema.extend({ status: z.enum(REVIEW_STATUSES).optional() });
-const questionListSchema = listQuerySchema.extend({ status: z.enum(QUESTION_STATUSES).optional() });
+const reviewListSchema = adminReviewListQuerySchema;
+const questionListSchema = adminQuestionListQuerySchema;
 
 @Controller('products/:productId')
 export class ProductFeedbackController {

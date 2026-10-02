@@ -6,22 +6,23 @@ import {
   QUESTION_STATUS_LABELS,
   QUESTION_STATUSES,
 } from '@toolshop/shared';
-import { Badge, Button, Field, NativeSelect, Textarea } from '@toolshop/ui';
+import { Badge, Button, Field, Textarea } from '@toolshop/ui';
 import Link from 'next/link';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { AiButton, AiDraftNote, ConfidenceBadge } from '@/components/admin/ai-assist';
 import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { FormDialog } from '@/components/admin/form-dialog';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList, useAdminMutation } from '@/components/admin/query';
+import { useUrlList, useAdminMutation } from '@/components/admin/query';
 import { usePermissions } from '@/hooks/use-permissions';
 import { api } from '@/lib/api/client';
 import { date } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
 
 const VARIANT = { pending: 'warning', answered: 'success', rejected: 'destructive' } as const;
 
-export default function QuestionsPage() {
-  const list = useAdminList<AdminQuestionView>('/admin/questions', { status: 'pending' });
+function QuestionsContent() {
+  const list = useUrlList<AdminQuestionView>('/admin/questions', { status: 'pending' });
   const [answering, setAnswering] = useState<AdminQuestionView | null>(null);
   const [answer, setAnswer] = useState('');
   const [draft, setDraft] = useState<AiDraft | null>(null);
@@ -57,19 +58,32 @@ export default function QuestionsPage() {
       />
       <TableCard
         toolbar={
-          <NativeSelect
-            className="h-9 w-44"
-            value={(list.params.status as string) ?? ''}
-            onChange={(e) => list.update({ status: e.target.value || undefined })}
-            aria-label="وضعیت"
-          >
-            <option value="">همه</option>
-            {QUESTION_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {QUESTION_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </NativeSelect>
+          <FilterBar
+            list={list}
+            searchPlaceholder="متن پرسش، پاسخ یا محصول"
+            dateLabel="تاریخ ثبت"
+            inline={[
+              {
+                type: 'select',
+                key: 'status',
+                label: 'وضعیت',
+                options: QUESTION_STATUSES.map((s) => ({
+                  value: s,
+                  label: QUESTION_STATUS_LABELS[s],
+                })),
+              },
+              {
+                type: 'select',
+                key: 'answeredBy',
+                label: 'پاسخ‌دهنده',
+                options: [
+                  { value: 'ai', label: 'هوش مصنوعی' },
+                  { value: 'staff', label: 'کارشناس' },
+                  { value: 'none', label: 'بدون پاسخ' },
+                ],
+              },
+            ]}
+          />
         }
       >
         <DataTable
@@ -170,5 +184,13 @@ export default function QuestionsPage() {
         </Button>
       </FormDialog>
     </>
+  );
+}
+
+export default function QuestionsPage() {
+  return (
+    <Suspense>
+      <QuestionsContent />
+    </Suspense>
   );
 }

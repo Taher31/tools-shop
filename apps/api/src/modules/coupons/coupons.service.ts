@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { Coupon, Prisma } from '@toolshop/database';
-import type { CouponUpsertInput, CouponView, ListQuery, Paginated } from '@toolshop/shared';
+import type {
+  AdminCouponListQuery,
+  CouponUpsertInput,
+  CouponView,
+  Paginated,
+} from '@toolshop/shared';
 import { AppException } from '../../common/errors/app-exception';
 import { toRial } from '../../common/utils/money';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
@@ -112,10 +117,26 @@ export class CouponsService {
       WHERE "id" = ${redemption.couponId}::uuid`;
   }
 
-  async list(query: ListQuery): Promise<Paginated<CouponView>> {
-    const where: Prisma.CouponWhereInput = query.q
-      ? { code: { contains: query.q.toUpperCase() } }
-      : {};
+  async list(query: AdminCouponListQuery): Promise<Paginated<CouponView>> {
+    const now = new Date();
+    const where: Prisma.CouponWhereInput = {
+      ...(query.q ? { code: { contains: query.q.toUpperCase() } } : {}),
+      ...(query.state === 'inactive'
+        ? { isActive: false }
+        : query.state === 'expired'
+          ? { endsAt: { lt: now } }
+          : query.state === 'scheduled'
+            ? { isActive: true, startsAt: { gt: now } }
+            : query.state === 'active'
+              ? {
+                  isActive: true,
+                  AND: [
+                    { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+                    { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+                  ],
+                }
+              : {}),
+    };
     const [coupons, total] = await Promise.all([
       this.prisma.coupon.findMany({
         where,

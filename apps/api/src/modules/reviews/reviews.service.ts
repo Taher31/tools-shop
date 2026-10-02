@@ -3,7 +3,8 @@ import type { Prisma } from '@toolshop/database';
 import type {
   AdminQuestionView,
   AdminReviewView,
-  ListQuery,
+  AdminQuestionListQuery,
+  AdminReviewListQuery,
   Paginated,
   PaginationQuery,
   QuestionAnswerInput,
@@ -14,6 +15,7 @@ import type {
   ReviewStatus,
   ReviewView,
 } from '@toolshop/shared';
+import { dayRange } from '../../common/utils/filters';
 import { AppException } from '../../common/errors/app-exception';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
 import { OutboxService } from '../../infrastructure/outbox/outbox.service';
@@ -157,10 +159,24 @@ export class ReviewsService {
     return { status: 'pending' };
   }
 
-  async adminReviews(
-    query: ListQuery & { status?: ReviewStatus },
-  ): Promise<Paginated<AdminReviewView>> {
-    const where: Prisma.ReviewWhereInput = { status: query.status };
+  async adminReviews(query: AdminReviewListQuery): Promise<Paginated<AdminReviewView>> {
+    const q = query.q?.trim();
+    const where: Prisma.ReviewWhereInput = {
+      status: query.status,
+      rating: query.rating,
+      productId: query.productId,
+      createdAt: dayRange(query),
+      ...(q
+        ? {
+            OR: [
+              { body: { contains: q, mode: 'insensitive' } },
+              { title: { contains: q, mode: 'insensitive' } },
+              { product: { title: { contains: q, mode: 'insensitive' } } },
+              { user: { lastName: { contains: q, mode: 'insensitive' } } },
+            ],
+          }
+        : {}),
+    };
     const [reviews, total] = await Promise.all([
       this.prisma.review.findMany({
         where,
@@ -209,10 +225,29 @@ export class ReviewsService {
     this.outbox.flush();
   }
 
-  async adminQuestions(
-    query: ListQuery & { status?: QuestionStatus },
-  ): Promise<Paginated<AdminQuestionView>> {
-    const where: Prisma.ProductQuestionWhereInput = { status: query.status };
+  async adminQuestions(query: AdminQuestionListQuery): Promise<Paginated<AdminQuestionView>> {
+    const q = query.q?.trim();
+    const where: Prisma.ProductQuestionWhereInput = {
+      status: query.status,
+      productId: query.productId,
+      createdAt: dayRange(query),
+      ...(query.answeredBy === 'none'
+        ? { answer: null }
+        : query.answeredBy === 'ai'
+          ? { answer: { not: null }, answeredById: null }
+          : query.answeredBy === 'staff'
+            ? { answeredById: { not: null } }
+            : {}),
+      ...(q
+        ? {
+            OR: [
+              { body: { contains: q, mode: 'insensitive' } },
+              { answer: { contains: q, mode: 'insensitive' } },
+              { product: { title: { contains: q, mode: 'insensitive' } } },
+            ],
+          }
+        : {}),
+    };
     const [questions, total] = await Promise.all([
       this.prisma.productQuestion.findMany({
         where,

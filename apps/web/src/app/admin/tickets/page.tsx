@@ -4,20 +4,23 @@ import { useQuery } from '@tanstack/react-query';
 import {
   type AdminTicketSummary,
   TICKET_CATEGORY_LABELS,
+  TICKET_CATEGORIES,
   TICKET_PRIORITIES,
   TICKET_PRIORITY_LABELS,
   TICKET_STATUSES,
   TICKET_STATUS_LABELS,
 } from '@toolshop/shared';
-import { Badge, Button, Card, cn, NativeSelect } from '@toolshop/ui';
+import { Badge, Button, Card, cn } from '@toolshop/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { DataTable, Pager, SearchInput, TableCard } from '@/components/admin/data-table';
+import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList } from '@/components/admin/query';
+import { useUrlList } from '@/components/admin/query';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/common/status-badges';
 import { api } from '@/lib/api/client';
 import { dateTime, faNumber } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
+import { Suspense } from 'react';
 
 interface Counters {
   open: number;
@@ -41,11 +44,17 @@ const PRESETS: {
   { key: 'all', label: 'همه', params: {} },
 ];
 
-const RESET = { status: undefined, unread: undefined, assignee: undefined, priority: undefined };
+const RESET = {
+  status: undefined,
+  unread: undefined,
+  assignee: undefined,
+  priority: undefined,
+  category: undefined,
+};
 
-export default function AdminTicketsPage() {
+function AdminTicketsPageContent() {
   const router = useRouter();
-  const list = useAdminList<AdminTicketSummary>('/admin/tickets', { status: 'open' });
+  const list = useUrlList<AdminTicketSummary>('/admin/tickets', { status: 'open' });
   const counters = useQuery({
     queryKey: ['admin', 'tickets', 'counters'],
     queryFn: () => api.get<Counters>('/admin/tickets/counters'),
@@ -84,39 +93,39 @@ export default function AdminTicketsPage() {
       </Card>
       <TableCard
         toolbar={
-          <>
-            <SearchInput
-              onSearch={list.setSearch}
-              placeholder="شماره تیکت یا سفارش، موبایل، عنوان"
-              className="w-72"
-            />
-            <NativeSelect
-              className="h-9 w-44"
-              value={(list.params.status as string | undefined) ?? ''}
-              onChange={(e) => list.update({ status: e.target.value || undefined })}
-              aria-label="وضعیت"
-            >
-              <option value="">همه وضعیت‌ها</option>
-              {TICKET_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {TICKET_STATUS_LABELS[status]}
-                </option>
-              ))}
-            </NativeSelect>
-            <NativeSelect
-              className="h-9 w-36"
-              value={(list.params.priority as string | undefined) ?? ''}
-              onChange={(e) => list.update({ priority: e.target.value || undefined })}
-              aria-label="اولویت"
-            >
-              <option value="">همه اولویت‌ها</option>
-              {TICKET_PRIORITIES.map((priority) => (
-                <option key={priority} value={priority}>
-                  {TICKET_PRIORITY_LABELS[priority]}
-                </option>
-              ))}
-            </NativeSelect>
-          </>
+          <FilterBar
+            list={list}
+            searchPlaceholder="شماره تیکت یا سفارش، موبایل، عنوان"
+            dateLabel="تاریخ ثبت"
+            inline={[
+              {
+                type: 'select',
+                key: 'status',
+                label: 'وضعیت',
+                options: TICKET_STATUSES.map((s) => ({ value: s, label: TICKET_STATUS_LABELS[s] })),
+              },
+              {
+                type: 'select',
+                key: 'priority',
+                label: 'اولویت',
+                options: TICKET_PRIORITIES.map((p) => ({
+                  value: p,
+                  label: TICKET_PRIORITY_LABELS[p],
+                })),
+              },
+            ]}
+            more={[
+              {
+                type: 'select',
+                key: 'category',
+                label: 'موضوع',
+                options: TICKET_CATEGORIES.map((c) => ({
+                  value: c,
+                  label: TICKET_CATEGORY_LABELS[c],
+                })),
+              },
+            ]}
+          />
         }
       >
         <DataTable
@@ -182,5 +191,13 @@ export default function AdminTicketsPage() {
         <Pager data={list.data} onPage={list.setPage} />
       </TableCard>
     </>
+  );
+}
+
+export default function AdminTicketsPage() {
+  return (
+    <Suspense>
+      <AdminTicketsPageContent />
+    </Suspense>
   );
 }

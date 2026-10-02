@@ -3,23 +3,51 @@
 import type { CustomerListItem } from '@toolshop/shared';
 import { Badge } from '@toolshop/ui';
 import { useRouter } from 'next/navigation';
-import { DataTable, Pager, SearchInput, TableCard } from '@/components/admin/data-table';
+import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList } from '@/components/admin/query';
+import { useUrlList } from '@/components/admin/query';
 import { date, faNumber, price } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
+import { Suspense } from 'react';
 
-export default function CustomersPage() {
+function CustomersPageContent() {
   const router = useRouter();
-  const list = useAdminList<CustomerListItem>('/admin/customers');
+  const list = useUrlList<CustomerListItem>('/admin/customers');
   return (
     <>
       <PageHeader title="مشتریان" />
       <TableCard
         toolbar={
-          <SearchInput
-            onSearch={list.setSearch}
-            placeholder="نام، موبایل یا ایمیل"
-            className="w-72"
+          <FilterBar
+            list={list}
+            searchPlaceholder="نام، موبایل یا ایمیل"
+            dateLabel="تاریخ عضویت"
+            inline={[
+              {
+                type: 'select',
+                key: 'hasOrders',
+                label: 'خرید',
+                allLabel: 'همه مشتریان',
+                options: [
+                  { value: 'true', label: 'دارای سفارش' },
+                  { value: 'false', label: 'بدون سفارش' },
+                ],
+              },
+              {
+                type: 'select',
+                key: 'active',
+                label: 'وضعیت حساب',
+                options: [
+                  { value: 'true', label: 'فعال' },
+                  { value: 'false', label: 'مسدود' },
+                ],
+              },
+            ]}
+            sorts={[
+              { value: '', label: 'جدیدترین' },
+              { value: 'oldest', label: 'قدیمی‌ترین' },
+              { value: 'name', label: 'نام خانوادگی' },
+            ]}
           />
         }
       >
@@ -54,5 +82,13 @@ export default function CustomersPage() {
         <Pager data={list.data} onPage={list.setPage} />
       </TableCard>
     </>
+  );
+}
+
+export default function CustomersPage() {
+  return (
+    <Suspense>
+      <CustomersPageContent />
+    </Suspense>
   );
 }

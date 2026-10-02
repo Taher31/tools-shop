@@ -6,19 +6,21 @@ import {
   REVIEW_STATUSES,
   type ReviewStatus,
 } from '@toolshop/shared';
-import { Badge, Button, NativeSelect } from '@toolshop/ui';
+import { Badge, Button } from '@toolshop/ui';
 import Link from 'next/link';
 import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList, useAdminMutation } from '@/components/admin/query';
+import { useUrlList, useAdminMutation } from '@/components/admin/query';
 import { Stars } from '@/components/product/rating';
 import { api } from '@/lib/api/client';
 import { date } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
+import { Suspense } from 'react';
 
 const VARIANT = { pending: 'warning', approved: 'success', rejected: 'destructive' } as const;
 
-export default function ReviewsPage() {
-  const list = useAdminList<AdminReviewView>('/admin/reviews', { status: 'pending' });
+function ReviewsPageContent() {
+  const list = useUrlList<AdminReviewView>('/admin/reviews', { status: 'pending' });
   const moderate = useAdminMutation(
     ({ id, status }: { id: string; status: ReviewStatus }) =>
       api.put(`/admin/reviews/${id}/status`, { status }),
@@ -33,19 +35,28 @@ export default function ReviewsPage() {
       />
       <TableCard
         toolbar={
-          <NativeSelect
-            className="h-9 w-44"
-            value={(list.params.status as string) ?? ''}
-            onChange={(e) => list.update({ status: e.target.value || undefined })}
-            aria-label="وضعیت"
-          >
-            <option value="">همه</option>
-            {REVIEW_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {REVIEW_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </NativeSelect>
+          <FilterBar
+            list={list}
+            searchPlaceholder="متن نظر، محصول یا نام کاربر"
+            dateLabel="تاریخ ثبت"
+            inline={[
+              {
+                type: 'select',
+                key: 'status',
+                label: 'وضعیت',
+                options: REVIEW_STATUSES.map((s) => ({ value: s, label: REVIEW_STATUS_LABELS[s] })),
+              },
+              {
+                type: 'select',
+                key: 'rating',
+                label: 'امتیاز',
+                options: [5, 4, 3, 2, 1].map((r) => ({
+                  value: String(r),
+                  label: `${'★'.repeat(r)}`,
+                })),
+              },
+            ]}
+          />
         }
       >
         <DataTable
@@ -127,5 +138,13 @@ export default function ReviewsPage() {
         <Pager data={list.data} onPage={list.setPage} />
       </TableCard>
     </>
+  );
+}
+
+export default function ReviewsPage() {
+  return (
+    <Suspense>
+      <ReviewsPageContent />
+    </Suspense>
   );
 }

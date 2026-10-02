@@ -52,3 +52,10 @@ export {
 } from './components/menu';
 export { Toaster, toast } from './components/toaster';
 export { DirectionProvider } from './components/direction';
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverAnchor,
+  PopoverClose,
+  PopoverContent,
+} from './components/popover';

@@ -5,45 +5,69 @@ import {
   ORDER_STATUS_LABELS,
   ORDER_STATUSES,
   type OrderStatus,
+  type ShippingMethodView,
 } from '@toolshop/shared';
-import { NativeSelect } from '@toolshop/ui';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
-import { DataTable, Pager, SearchInput, TableCard } from '@/components/admin/data-table';
+import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
+import { FilterBar } from '@/components/admin/filter-bar';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList } from '@/components/admin/query';
+import { useUrlList } from '@/components/admin/query';
+import { api } from '@/lib/api/client';
 import { OrderStatusBadge } from '@/components/common/status-badges';
 import { dateTime, faNumber, price } from '@/lib/format';
 
 function OrdersList() {
   const router = useRouter();
-  const initialStatus = useSearchParams().get('status') ?? undefined;
-  const list = useAdminList<AdminOrderSummary>('/admin/orders', { status: initialStatus });
+  const list = useUrlList<AdminOrderSummary>('/admin/orders');
+  const shipping = useQuery({
+    queryKey: ['admin', 'shipping-methods'],
+    queryFn: () => api.get<ShippingMethodView[]>('/admin/shipping-methods'),
+    staleTime: 300_000,
+  });
 
   return (
     <TableCard
       toolbar={
-        <>
-          <SearchInput
-            onSearch={list.setSearch}
-            placeholder="شماره سفارش، موبایل یا نام خانوادگی"
-            className="w-72"
-          />
-          <NativeSelect
-            className="h-9 w-48"
-            value={(list.params.status as string | undefined) ?? ''}
-            onChange={(e) => list.update({ status: e.target.value || undefined })}
-            aria-label="وضعیت"
-          >
-            <option value="">همه وضعیت‌ها</option>
-            {ORDER_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {ORDER_STATUS_LABELS[status as OrderStatus]}
-              </option>
-            ))}
-          </NativeSelect>
-        </>
+        <FilterBar
+          list={list}
+          searchPlaceholder="شماره سفارش، موبایل، نام یا کد رهگیری"
+          dateLabel="تاریخ ثبت"
+          inline={[
+            {
+              type: 'select',
+              key: 'status',
+              label: 'وضعیت',
+              options: ORDER_STATUSES.map((s) => ({
+                value: s,
+                label: ORDER_STATUS_LABELS[s as OrderStatus],
+              })),
+            },
+          ]}
+          more={[
+            {
+              type: 'range',
+              label: 'مبلغ سفارش',
+              minKey: 'minTotal',
+              maxKey: 'maxTotal',
+              unit: 'تومان',
+            },
+            {
+              type: 'select',
+              key: 'shippingMethodId',
+              label: 'روش ارسال',
+              options: (shipping.data ?? []).map((m) => ({ value: m.id, label: m.name })),
+            },
+          ]}
+          sorts={[
+            { value: '', label: 'جدیدترین' },
+            { value: 'oldest', label: 'قدیمی‌ترین' },
+            { value: 'total_desc', label: 'بیشترین مبلغ' },
+            { value: 'total_asc', label: 'کمترین مبلغ' },
+          ]}
+        />
       }
     >
       <DataTable

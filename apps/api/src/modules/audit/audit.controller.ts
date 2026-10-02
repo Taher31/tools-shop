@@ -6,6 +6,7 @@ import {
   type Paginated,
 } from '@toolshop/shared';
 import type { Prisma } from '@toolshop/database';
+import { dayRange } from '../../common/utils/filters';
 import { ZQuery } from '../../common/decorators/validated.decorator';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -22,7 +23,9 @@ export class AuditController {
       entityType: query.entityType,
       entityId: query.entityId,
       actorId: query.actorId,
+      actorType: query.actorType,
       action: query.action ? { startsWith: query.action } : undefined,
+      createdAt: dayRange(query),
       ...(query.q ? { summary: { contains: query.q, mode: 'insensitive' } } : {}),
     };
     const [rows, total] = await Promise.all([

@@ -1,20 +1,13 @@
 'use client';
 
 import type { AuditLogView } from '@toolshop/shared';
-import {
-  Badge,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  NativeSelect,
-} from '@toolshop/ui';
-import { useState } from 'react';
-import { DataTable, Pager, SearchInput, TableCard } from '@/components/admin/data-table';
+import { Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle } from '@toolshop/ui';
+import { Suspense, useState } from 'react';
+import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList } from '@/components/admin/query';
+import { useUrlList } from '@/components/admin/query';
 import { dateTime } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
 
 const ENTITY_LABELS: Record<string, string> = {
   product: 'محصول',
@@ -45,8 +38,8 @@ function Json({ value }: { value: unknown }) {
   );
 }
 
-export default function AuditLogsPage() {
-  const list = useAdminList<AuditLogView>('/admin/audit-logs');
+function AuditLogsPageContent() {
+  const list = useUrlList<AuditLogView>('/admin/audit-logs');
   const [detail, setDetail] = useState<AuditLogView | null>(null);
 
   return (
@@ -57,26 +50,30 @@ export default function AuditLogsPage() {
       />
       <TableCard
         toolbar={
-          <>
-            <SearchInput
-              onSearch={list.setSearch}
-              placeholder="جستجو در شرح رویداد"
-              className="w-64"
-            />
-            <NativeSelect
-              className="h-9 w-44"
-              value={(list.params.entityType as string) ?? ''}
-              onChange={(e) => list.update({ entityType: e.target.value || undefined })}
-              aria-label="نوع"
-            >
-              <option value="">همه موجودیت‌ها</option>
-              {Object.entries(ENTITY_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
-          </>
+          <FilterBar
+            list={list}
+            searchPlaceholder="جستجو در شرح رویداد"
+            dateLabel="زمان"
+            inline={[
+              {
+                type: 'select',
+                key: 'entityType',
+                label: 'موجودیت',
+                allLabel: 'همه موجودیت‌ها',
+                options: Object.entries(ENTITY_LABELS).map(([value, label]) => ({ value, label })),
+              },
+              {
+                type: 'select',
+                key: 'actorType',
+                label: 'انجام‌دهنده',
+                options: [
+                  { value: 'user', label: 'کاربر' },
+                  { value: 'ai', label: 'هوش مصنوعی' },
+                  { value: 'system', label: 'سیستم' },
+                ],
+              },
+            ]}
+          />
         }
       >
         <DataTable
@@ -156,5 +153,13 @@ export default function AuditLogsPage() {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+export default function AuditLogsPage() {
+  return (
+    <Suspense>
+      <AuditLogsPageContent />
+    </Suspense>
   );
 }

@@ -5,7 +5,7 @@ import {
   TICKET_PRIORITIES,
   TICKET_STATUSES,
 } from '../commerce/enums';
-import { idSchema, listQuerySchema, textSchema } from './common';
+import { adminListQuerySchema, idSchema, textSchema } from './common';
 
 const messageBodySchema = textSchema({ min: 2, max: 5000 });
 
@@ -43,7 +43,7 @@ export const ticketUpdateSchema = z
   });
 export type TicketUpdateInput = z.infer<typeof ticketUpdateSchema>;
 
-export const adminTicketListQuerySchema = listQuerySchema.extend({
+export const adminTicketListQuerySchema = adminListQuerySchema.extend({
   status: z.enum(TICKET_STATUSES).optional(),
   priority: z.enum(TICKET_PRIORITIES).optional(),
   category: z.enum(TICKET_CATEGORIES).optional(),
@@ -56,7 +56,7 @@ export const adminTicketListQuerySchema = listQuerySchema.extend({
 });
 export type AdminTicketListQuery = z.infer<typeof adminTicketListQuerySchema>;
 
-export const adminInvoiceListQuerySchema = listQuerySchema.extend({
+export const adminInvoiceListQuerySchema = adminListQuerySchema.extend({
   type: z.enum(INVOICE_TYPES).optional(),
 });
 export type AdminInvoiceListQuery = z.infer<typeof adminInvoiceListQuerySchema>;

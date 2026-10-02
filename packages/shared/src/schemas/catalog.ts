@@ -3,7 +3,8 @@ import { ATTRIBUTE_TYPES, PRODUCT_STATUSES, USAGE_TYPES } from '../commerce/enum
 import {
   assetUrlSchema,
   idSchema,
-  listQuerySchema,
+  adminListQuerySchema,
+  queryFlag,
   longTextSchema,
   optionalTextSchema,
   rialSchema,
@@ -230,7 +231,14 @@ export const variantPriceUpdateSchema = z
   });
 export type VariantPriceUpdateInput = z.infer<typeof variantPriceUpdateSchema>;
 
-export const adminProductListQuerySchema = listQuerySchema.extend({
+export const ADMIN_PRODUCT_SORTS = [
+  'updated',
+  'newest',
+  'oldest',
+  'title',
+  'best_selling',
+] as const;
+export const adminProductListQuerySchema = adminListQuerySchema.extend({
   status: z.enum(PRODUCT_STATUSES).optional(),
   categoryId: idSchema.optional(),
   brandId: idSchema.optional(),
@@ -238,5 +246,9 @@ export const adminProductListQuerySchema = listQuerySchema.extend({
     .enum(['true', 'false'])
     .optional()
     .transform((value) => value === 'true'),
+  /** Has no sellable stock in any warehouse. */
+  outOfStock: queryFlag,
+  featured: queryFlag,
+  sort: z.enum(ADMIN_PRODUCT_SORTS).optional(),
 });
 export type AdminProductListQuery = z.infer<typeof adminProductListQuerySchema>;

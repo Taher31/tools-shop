@@ -1,15 +1,17 @@
 'use client';
 
 import { INVOICE_TYPE_LABELS, INVOICE_TYPES, type InvoiceSummary } from '@toolshop/shared';
-import { Badge, NativeSelect } from '@toolshop/ui';
+import { Badge } from '@toolshop/ui';
 import Link from 'next/link';
-import { DataTable, Pager, SearchInput, TableCard } from '@/components/admin/data-table';
+import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { PageHeader } from '@/components/admin/page-header';
-import { useAdminList } from '@/components/admin/query';
+import { useUrlList } from '@/components/admin/query';
 import { date, faNumber, price } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
+import { Suspense } from 'react';
 
-export default function AdminInvoicesPage() {
-  const list = useAdminList<InvoiceSummary>('/admin/invoices');
+function AdminInvoicesPageContent() {
+  const list = useUrlList<InvoiceSummary>('/admin/invoices');
   const open = (invoice: InvoiceSummary) =>
     window.open(`/print/invoice/${invoice.id}?scope=admin`, '_blank', 'noopener');
 
@@ -21,26 +23,20 @@ export default function AdminInvoicesPage() {
       />
       <TableCard
         toolbar={
-          <>
-            <SearchInput
-              onSearch={list.setSearch}
-              placeholder="شماره فاکتور یا سفارش، نام خانوادگی"
-              className="w-72"
-            />
-            <NativeSelect
-              className="h-9 w-48"
-              value={(list.params.type as string | undefined) ?? ''}
-              onChange={(e) => list.update({ type: e.target.value || undefined })}
-              aria-label="نوع سند"
-            >
-              <option value="">همه اسناد</option>
-              {INVOICE_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {INVOICE_TYPE_LABELS[type]}
-                </option>
-              ))}
-            </NativeSelect>
-          </>
+          <FilterBar
+            list={list}
+            searchPlaceholder="شماره فاکتور یا سفارش، نام خانوادگی"
+            dateLabel="تاریخ صدور"
+            inline={[
+              {
+                type: 'select',
+                key: 'type',
+                label: 'نوع سند',
+                allLabel: 'همه اسناد',
+                options: INVOICE_TYPES.map((t) => ({ value: t, label: INVOICE_TYPE_LABELS[t] })),
+              },
+            ]}
+          />
         }
       >
         <DataTable
@@ -90,5 +86,13 @@ export default function AdminInvoicesPage() {
         <Pager data={list.data} onPage={list.setPage} />
       </TableCard>
     </>
+  );
+}
+
+export default function AdminInvoicesPage() {
+  return (
+    <Suspense>
+      <AdminInvoicesPageContent />
+    </Suspense>
   );
 }

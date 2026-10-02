@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   type InventoryRow,
   STOCK_MOVEMENT_LABELS,
+  STOCK_MOVEMENT_TYPES,
   type StockMovementView,
   type WarehouseView,
 } from '@toolshop/shared';
@@ -30,6 +31,7 @@ import { useAdminList, useAdminMutation } from '@/components/admin/query';
 import { usePermissions } from '@/hooks/use-permissions';
 import { api } from '@/lib/api/client';
 import { dateTime, faNumber } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
 
 type OperationType = 'purchase' | 'return' | 'adjustment' | 'set';
 const OPERATION_LABELS: Record<OperationType, string> = {
@@ -357,7 +359,22 @@ function MovementsTab() {
   return (
     <TableCard
       toolbar={
-        <SearchInput onSearch={list.setSearch} placeholder="SKU یا شماره سند" className="w-64" />
+        <FilterBar
+          list={list}
+          searchPlaceholder="SKU یا شماره سند"
+          dateLabel="تاریخ"
+          inline={[
+            {
+              type: 'select',
+              key: 'type',
+              label: 'نوع حرکت',
+              options: STOCK_MOVEMENT_TYPES.map((t) => ({
+                value: t,
+                label: STOCK_MOVEMENT_LABELS[t],
+              })),
+            },
+          ]}
+        />
       }
     >
       <DataTable

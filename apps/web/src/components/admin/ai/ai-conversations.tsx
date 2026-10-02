@@ -13,7 +13,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  NativeSelect,
   Skeleton,
 } from '@toolshop/ui';
 import { Wrench } from 'lucide-react';
@@ -23,6 +22,7 @@ import { DataTable, Pager, TableCard } from '@/components/admin/data-table';
 import { useAdminList } from '@/components/admin/query';
 import { api } from '@/lib/api/client';
 import { dateTime, faNumber, price } from '@/lib/format';
+import { FilterBar } from '@/components/admin/filter-bar';
 
 const CHANNEL_LABELS: Record<string, string> = { web: 'وب‌سایت', ...MESSENGER_LABELS };
 
@@ -105,19 +105,20 @@ export function AiConversations() {
     <>
       <TableCard
         toolbar={
-          <NativeSelect
-            className="h-9 w-44"
-            value={(list.params.channel as string) ?? ''}
-            onChange={(e) => list.update({ channel: e.target.value || undefined })}
-            aria-label="کانال"
-          >
-            <option value="">همه کانال‌ها</option>
-            {Object.entries(CHANNEL_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </NativeSelect>
+          <FilterBar
+            list={list}
+            searchPlaceholder="جستجو در متن گفت‌وگو"
+            dateLabel="تاریخ"
+            inline={[
+              {
+                type: 'select',
+                key: 'channel',
+                label: 'کانال',
+                allLabel: 'همه کانال‌ها',
+                options: Object.entries(CHANNEL_LABELS).map(([value, label]) => ({ value, label })),
+              },
+            ]}
+          />
         }
       >
         <DataTable

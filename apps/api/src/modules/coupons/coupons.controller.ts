@@ -3,8 +3,8 @@ import {
   type CouponUpsertInput,
   couponUpsertSchema,
   type CouponView,
-  type ListQuery,
-  listQuerySchema,
+  type AdminCouponListQuery,
+  adminCouponListQuerySchema,
   type Paginated,
 } from '@toolshop/shared';
 import { UuidParam, ZBody, ZQuery } from '../../common/decorators/validated.decorator';
@@ -17,7 +17,9 @@ export class AdminCouponsController {
 
   @Get()
   @RequirePermissions('coupon.read')
-  list(@ZQuery(listQuerySchema) query: ListQuery): Promise<Paginated<CouponView>> {
+  list(
+    @ZQuery(adminCouponListQuerySchema) query: AdminCouponListQuery,
+  ): Promise<Paginated<CouponView>> {
     return this.coupons.list(query);
   }
 

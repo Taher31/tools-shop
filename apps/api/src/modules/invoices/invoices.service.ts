@@ -13,6 +13,7 @@ import {
   STOCK_COMMITTED_STATUSES,
   toEnglishDigits,
 } from '@toolshop/shared';
+import { dayRange } from '../../common/utils/filters';
 import { AppException } from '../../common/errors/app-exception';
 import { toRial } from '../../common/utils/money';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
@@ -183,7 +184,7 @@ export class InvoicesService {
   /* --------------------------------------------------------------- staff */
 
   async list(query: AdminInvoiceListQuery): Promise<Paginated<InvoiceSummary>> {
-    const where: Prisma.InvoiceWhereInput = { type: query.type };
+    const where: Prisma.InvoiceWhereInput = { type: query.type, issuedAt: dayRange(query) };
     const digits = query.q ? toEnglishDigits(query.q.trim()) : '';
     if (/^\d{1,9}$/.test(digits)) {
       where.OR = [{ invoiceNumber: Number(digits) }, { order: { orderNumber: Number(digits) } }];

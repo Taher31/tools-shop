@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isDateKey } from '../calendar/jalali';
 import { normalizeIranianMobile, isValidPostalCode } from '../iran/validators';
 import { normalizePersian, toEnglishDigits } from '../text/persian';
 
@@ -108,3 +109,24 @@ export const listQuerySchema = paginationQuerySchema.extend({
   q: z.string().trim().max(200).optional(),
 });
 export type ListQuery = z.infer<typeof listQuerySchema>;
+
+/** Gregorian "YYYY-MM-DD" naming a calendar day in Tehran (see `tehranDayRange`). */
+export const dateKeySchema = z.string().trim().refine(isDateKey, 'تاریخ معتبر نیست.');
+
+/** Inclusive date-range filter shared by admin lists. */
+export const dateRangeQueryFields = {
+  from: dateKeySchema.optional(),
+  to: dateKeySchema.optional(),
+};
+
+/** Amount filter entered in Toman (the API converts to Rial). */
+export const tomanQuerySchema = z.coerce.number().int().min(0).max(1_000_000_000_000).optional();
+
+export const queryFlag = z
+  .enum(['true', 'false'])
+  .optional()
+  .transform((value) => (value === undefined ? undefined : value === 'true'));
+
+/** Searchable, paginated admin list with a date range. */
+export const adminListQuerySchema = listQuerySchema.extend(dateRangeQueryFields);
+export type AdminListQuery = z.infer<typeof adminListQuerySchema>;

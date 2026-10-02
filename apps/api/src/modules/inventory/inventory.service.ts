@@ -9,6 +9,7 @@ import {
   type StockOperationInput,
   type StockTransferInput,
 } from '@toolshop/shared';
+import { dayRange } from '../../common/utils/filters';
 import { AppException } from '../../common/errors/app-exception';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
 import { OutboxService } from '../../infrastructure/outbox/outbox.service';
@@ -388,6 +389,7 @@ export class InventoryService {
       variantId: query.variantId,
       warehouseId: query.warehouseId,
       type: query.type,
+      createdAt: dayRange(query),
       ...(query.q
         ? {
             OR: [

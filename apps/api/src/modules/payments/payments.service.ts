@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { Prisma } from '@toolshop/database';
 import {
+  type AdminPaymentListQuery,
   type AdminPaymentView,
-  type ListQuery,
+  toEnglishDigits,
   type Paginated,
   type PaymentResultView,
   type RefundInput,
 } from '@toolshop/shared';
+import { dayRange, rialRange } from '../../common/utils/filters';
 import { AppException } from '../../common/errors/app-exception';
 import { toRial } from '../../common/utils/money';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
@@ -304,18 +306,24 @@ export class PaymentsService {
     return this.adminOne(paymentId);
   }
 
-  async adminList(query: ListQuery): Promise<Paginated<AdminPaymentView>> {
-    const term = query.q?.trim();
+  async adminList(query: AdminPaymentListQuery): Promise<Paginated<AdminPaymentView>> {
+    const term = query.q ? toEnglishDigits(query.q.trim()) : '';
     const orderNumber = term ? Number(term.replace(/^#/, '')) : NaN;
-    const where: Prisma.PaymentWhereInput = term
-      ? {
-          OR: [
-            { referenceId: { contains: term } },
-            { authority: { contains: term } },
-            ...(Number.isInteger(orderNumber) ? [{ order: { orderNumber } }] : []),
-          ],
-        }
-      : {};
+    const where: Prisma.PaymentWhereInput = {
+      status: query.status,
+      provider: query.provider,
+      createdAt: dayRange(query),
+      amount: rialRange(query.minAmount, query.maxAmount),
+      ...(term
+        ? {
+            OR: [
+              { referenceId: { contains: term } },
+              { authority: { contains: term } },
+              ...(Number.isInteger(orderNumber) ? [{ order: { orderNumber } }] : []),
+            ],
+          }
+        : {}),
+    };
     const [payments, total] = await Promise.all([
       this.prisma.payment.findMany({
         where,

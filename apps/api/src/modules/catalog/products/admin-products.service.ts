@@ -10,6 +10,7 @@ import {
   type ProductUpsertInput,
   type VariantPriceUpdateInput,
 } from '@toolshop/shared';
+import { dayRange } from '../../../common/utils/filters';
 import { AppException } from '../../../common/errors/app-exception';
 import { sanitizeRichText } from '../../../common/utils/html';
 import { toRial } from '../../../common/utils/money';
@@ -97,12 +98,31 @@ export class AdminProductsService {
       ];
     }
     if (query.lowStock) where.id = { in: await this.lowStockProductIds() };
+    if (query.outOfStock !== undefined) {
+      // Approximation: any stock on hand (reservations are not subtracted here).
+      const available = {
+        variants: { some: { deletedAt: null, inventoryLevels: { some: { onHand: { gt: 0 } } } } },
+      };
+      where.AND = [query.outOfStock ? { NOT: available } : available];
+    }
+    if (query.featured !== undefined) where.isFeatured = query.featured;
+    where.createdAt = dayRange(query);
+    const orderBy: Prisma.ProductOrderByWithRelationInput[] =
+      query.sort === 'newest'
+        ? [{ createdAt: 'desc' }]
+        : query.sort === 'oldest'
+          ? [{ createdAt: 'asc' }]
+          : query.sort === 'title'
+            ? [{ title: 'asc' }]
+            : query.sort === 'best_selling'
+              ? [{ soldCount: 'desc' }, { updatedAt: 'desc' }]
+              : [{ updatedAt: 'desc' }];
 
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
         where,
         include: LIST_INCLUDE,
-        orderBy: { updatedAt: 'desc' },
+        orderBy,
         ...paginationArgs(query),
       }),
       this.prisma.product.count({ where }),

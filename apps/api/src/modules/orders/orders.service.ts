@@ -18,6 +18,7 @@ import {
   hasPermission,
 } from '@toolshop/shared';
 import type { Queue } from 'bullmq';
+import { dayRange, rialRange } from '../../common/utils/filters';
 import { AppException } from '../../common/errors/app-exception';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
 import { OutboxService } from '../../infrastructure/outbox/outbox.service';
@@ -353,7 +354,9 @@ export class OrdersService {
     const where: Prisma.OrderWhereInput = {
       status: query.status,
       userId: query.customerId,
-      createdAt: query.from || query.to ? { gte: query.from, lte: query.to } : undefined,
+      shippingMethodId: query.shippingMethodId,
+      createdAt: dayRange(query),
+      total: rialRange(query.minTotal, query.maxTotal),
     };
     if (query.q) {
       const term = query.q.trim();
@@ -362,13 +365,22 @@ export class OrdersService {
         ...(Number.isInteger(number) && number > 0 ? [{ orderNumber: number }] : []),
         { user: { mobile: { contains: term } } },
         { user: { lastName: { contains: term, mode: 'insensitive' } } },
+        { user: { firstName: { contains: term, mode: 'insensitive' } } },
         { trackingCode: { contains: term } },
       ];
     }
+    const orderBy: Prisma.OrderOrderByWithRelationInput =
+      query.sort === 'oldest'
+        ? { createdAt: 'asc' }
+        : query.sort === 'total_desc'
+          ? { total: 'desc' }
+          : query.sort === 'total_asc'
+            ? { total: 'asc' }
+            : { createdAt: 'desc' };
     const [orders, total] = await Promise.all([
       this.prisma.order.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         include: {
           items: { select: { quantity: true } },
           user: { select: { id: true, firstName: true, lastName: true, mobile: true } },

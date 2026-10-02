@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@toolshop/database';
-import type { CustomerDetail, CustomerListItem, ListQuery, Paginated } from '@toolshop/shared';
+import type {
+  CustomerDetail,
+  CustomerListItem,
+  CustomerListQuery,
+  Paginated,
+} from '@toolshop/shared';
+import { dayRange } from '../../common/utils/filters';
 import { AppException } from '../../common/errors/app-exception';
 import { toRial } from '../../common/utils/money';
 import { paginate, paginationArgs } from '../../common/utils/pagination';
@@ -23,9 +29,16 @@ export class CustomersService {
     private readonly sessions: SessionService,
   ) {}
 
-  async list(query: ListQuery): Promise<Paginated<CustomerListItem>> {
+  async list(query: CustomerListQuery): Promise<Paginated<CustomerListItem>> {
     const where: Prisma.UserWhereInput = {
       type: 'customer',
+      createdAt: dayRange(query),
+      isActive: query.active,
+      ...(query.hasOrders === undefined
+        ? {}
+        : query.hasOrders
+          ? { orders: { some: {} } }
+          : { orders: { none: {} } }),
       ...(query.q
         ? {
             OR: [
@@ -40,7 +53,12 @@ export class CustomersService {
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy:
+          query.sort === 'oldest'
+            ? { createdAt: 'asc' }
+            : query.sort === 'name'
+              ? [{ lastName: 'asc' }, { firstName: 'asc' }]
+              : { createdAt: 'desc' },
         ...paginationArgs(query),
       }),
       this.prisma.user.count({ where }),

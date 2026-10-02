@@ -9,7 +9,7 @@ import {
   aiSettingsSchema,
   type AiSettingsView,
   type AiUsageSummary,
-  listQuerySchema,
+  adminListQuerySchema,
   MESSENGER_CHANNELS,
   type MessengerChannel,
   type MessengerChannelView,
@@ -32,7 +32,7 @@ import { MessengerConfigService } from './messengers/messenger-config.service';
 
 const channelPipe = new ParseEnumPipe(Object.fromEntries(MESSENGER_CHANNELS.map((c) => [c, c])));
 
-const conversationListSchema = listQuerySchema.extend({
+const conversationListSchema = adminListQuerySchema.extend({
   channel: z.enum(['web', 'telegram', 'bale', 'eitaa']).optional(),
 });
 

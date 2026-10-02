@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { idSchema, listQuerySchema, optionalTextSchema, textSchema } from './common';
+import {
+  adminListQuerySchema,
+  idSchema,
+  listQuerySchema,
+  optionalTextSchema,
+  textSchema,
+} from './common';
 import { IRAN_PROVINCE_NAMES } from '../iran/provinces';
 
 export const warehouseUpsertSchema = z.object({
@@ -82,7 +88,7 @@ export const inventoryListQuerySchema = listQuerySchema.extend({
 });
 export type InventoryListQuery = z.infer<typeof inventoryListQuerySchema>;
 
-export const stockMovementListQuerySchema = listQuerySchema.extend({
+export const stockMovementListQuerySchema = adminListQuerySchema.extend({
   variantId: idSchema.optional(),
   warehouseId: idSchema.optional(),
   type: z
