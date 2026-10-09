@@ -25,7 +25,7 @@
     "@nestjs/core": "^11.1.6",
     "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^11.0.0",
-    "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/platform-express": "^12.1.2",
     "@nestjs/throttler": "^6.4.0",
     "@toolshop/database": "workspace:*",
     "@toolshop/shared": "workspace:*",
