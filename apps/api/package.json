@@ -46,7 +46,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.10",
+    "@nestjs/cli": "^12.0.8",
     "@nestjs/testing": "^11.1.6",
     "@swc/core": "^1.13.5",
     "@toolshop/config": "workspace:*",
