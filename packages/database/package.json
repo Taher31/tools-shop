@@ -36,7 +36,7 @@
     "@toolshop/shared": "workspace:*",
     "@types/node": "^22.18.0",
     "@types/pg": "^8.15.5",
-    "argon2": "^0.44.0",
+    "argon2": "^0.45.1",
     "dotenv": "^17.2.3",
     "prisma": "7.10.0",
     "tsx": "^4.20.6",
