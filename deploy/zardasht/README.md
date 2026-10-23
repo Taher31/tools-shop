@@ -30,23 +30,25 @@ host. Add Meilisearch later only after measuring free memory.
 
 ## First deployment
 
-### 1. Build a release
+### 1. Use a release
 
-The images must be built on a machine with enough memory. Build them with the
-`Release` workflow in GitHub Actions:
+`v1.0.0` is already published. For a later version, build it with the `Release`
+workflow in GitHub Actions:
 
 ```bash
 gh workflow run release.yml \
   --ref main \
-  -f version=v1.0.0 \
+  -f version=v1.0.1 \
   -f site_url=https://shop.155.117.234.45.sslip.io
 ```
 
 The workflow runs the full CI suite, builds `linux/amd64` images, boots them
 against real PostgreSQL and Redis, publishes them to GHCR, and attaches
-`toolshop-*.tar.gz` plus `SHA256SUMS` to the GitHub Release.
+`toolshop-*.tar.gz` plus `SHA256SUMS` to the GitHub Release. The GHCR packages
+are public, so the host can pull them without a registry login.
 
-Download the tested tarballs:
+The tarballs are the offline fallback. Download them only if the host cannot
+reach GHCR:
 
 ```bash
 mkdir -p images
@@ -87,21 +89,28 @@ Fill in `.env`:
 - `APP_DOMAIN`, `APP_PUBLIC_URL` and `CORS_ORIGINS` can be changed by editing
   `.env` and restarting the web container.
 
-### 3. Load the images
+### 3. Pull the images
 
-Copy the tarballs to the host (this host does not allow `scp`; stream a tar):
+The public GHCR images are pinned in `.env`:
+
+```bash
+cd /srv/apps/toolshop
+sudo docker compose pull
+```
+
+**Offline fallback.** If the host cannot reach GHCR, copy the tarballs and load
+them, then tag them under the GHCR names used by `.env`:
 
 ```bash
 ssh -p 9011 darius@155.117.234.45 'mkdir -p /tmp/toolshop-images'
 tar -C images -cf - . | ssh -p 9011 darius@155.117.234.45 'tar -xf - -C /tmp/toolshop-images'
-```
 
-Then load them as root and remove the temporary files:
-
-```bash
 sudo docker load -i /tmp/toolshop-images/toolshop-api-1.0.0.tar.gz
 sudo docker load -i /tmp/toolshop-images/toolshop-web-1.0.0.tar.gz
 sudo docker load -i /tmp/toolshop-images/toolshop-api-tools-1.0.0.tar.gz
+sudo docker tag toolshop-api:1.0.0 ghcr.io/taher31/tools-shop-api:1.0.0
+sudo docker tag toolshop-web:1.0.0 ghcr.io/taher31/tools-shop-web:1.0.0
+sudo docker tag toolshop-api-tools:1.0.0 ghcr.io/taher31/tools-shop-api-tools:1.0.0
 rm -rf /tmp/toolshop-images /tmp/toolshop-images.tar
 ```
 
@@ -164,12 +173,12 @@ the host and change `APP_DOMAIN`, `APP_PUBLIC_URL`, `CORS_ORIGINS` and
 ## Updating
 
 1. Build and publish a new version (`v1.0.1`).
-2. Load the new image tarballs with `docker load`.
-3. Update the three `APP_*_IMAGE` tags in `/srv/apps/toolshop/.env`.
-4. Run migrations, then recreate the app containers:
+2. Update the three `APP_*_IMAGE` tags in `/srv/apps/toolshop/.env`.
+3. Pull the new images and run migrations, then recreate the app containers:
 
 ```bash
 cd /srv/apps/toolshop
+sudo docker compose pull
 sudo docker compose --profile tools run --rm migrate
 sudo docker compose up -d --no-deps api web
 ```
@@ -182,6 +191,7 @@ Database migrations are forward-only; take a database dump before upgrading.
 ```bash
 cd /srv/apps/toolshop
 # Set APP_API_IMAGE / APP_WEB_IMAGE back to the previous tags.
+sudo docker compose pull
 sudo docker compose up -d --no-deps api web
 ```
 
