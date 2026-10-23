@@ -4,15 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { type LoginInput, loginSchema } from '@toolshop/shared';
 import { Button, Field, Input } from '@toolshop/ui';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useLogin } from '@/hooks/use-auth';
-import { applyApiError, safeNext } from '@/lib/forms';
+import { applyApiError } from '@/lib/forms';
 
-export function LoginForm() {
+export function LoginForm({ next }: { next: string }) {
   const router = useRouter();
-  const params = useSearchParams();
-  const next = safeNext(params.get('next'));
   const login = useLogin();
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema) as never,

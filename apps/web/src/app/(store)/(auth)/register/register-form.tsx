@@ -4,17 +4,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { type RegisterInput, registerSchema } from '@toolshop/shared';
 import { Button, Field, Input } from '@toolshop/ui';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { useRegister } from '@/hooks/use-auth';
-import { applyApiError, safeNext } from '@/lib/forms';
+import { applyApiError } from '@/lib/forms';
 
 type RegisterForm = z.input<typeof registerSchema>;
 
-export function RegisterForm() {
+export function RegisterForm({ next }: { next: string }) {
   const router = useRouter();
-  const next = safeNext(useSearchParams().get('next'));
   const register = useRegister();
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema) as never,
