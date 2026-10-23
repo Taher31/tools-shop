@@ -32,14 +32,14 @@ host. Add Meilisearch later only after measuring free memory.
 
 ### 1. Use a release
 
-`v1.0.1` is already published. For a later version, build it with the `Release`
+`v1.0.2` is already published. For a later version, build it with the `Release`
 workflow in GitHub Actions:
 
 ```bash
 gh workflow run release.yml \
   --ref main \
-  -f version=v1.0.1 \
-  -f site_url=https://shop-tools.zardasht-co.com
+  -f version=v1.0.2 \
+  -f site_url=https://tools-shop.zardasht-co.com
 ```
 
 The workflow runs the full CI suite, builds `linux/amd64` images, boots them
@@ -52,8 +52,8 @@ reach GHCR:
 
 ```bash
 mkdir -p images
-gh release download v1.0.1 --pattern '*.tar.gz' --dir images
-gh release download v1.0.1 --pattern 'SHA256SUMS' --dir images
+gh release download v1.0.2 --pattern '*.tar.gz' --dir images
+gh release download v1.0.2 --pattern 'SHA256SUMS' --dir images
 (cd images && sha256sum -c SHA256SUMS)
 ```
 
@@ -105,12 +105,12 @@ them, then tag them under the GHCR names used by `.env`:
 ssh -p 9011 darius@155.117.234.45 'mkdir -p /tmp/tools-shop-images'
 tar -C images -cf - . | ssh -p 9011 darius@155.117.234.45 'tar -xf - -C /tmp/tools-shop-images'
 
-sudo docker load -i /tmp/tools-shop-images/toolshop-api-1.0.1.tar.gz
-sudo docker load -i /tmp/tools-shop-images/toolshop-web-1.0.1.tar.gz
-sudo docker load -i /tmp/tools-shop-images/toolshop-api-tools-1.0.1.tar.gz
-sudo docker tag toolshop-api:1.0.1 ghcr.io/taher31/tools-shop-api:1.0.1
-sudo docker tag toolshop-web:1.0.1 ghcr.io/taher31/tools-shop-web:1.0.1
-sudo docker tag toolshop-api-tools:1.0.1 ghcr.io/taher31/tools-shop-api-tools:1.0.1
+sudo docker load -i /tmp/tools-shop-images/toolshop-api-1.0.2.tar.gz
+sudo docker load -i /tmp/tools-shop-images/toolshop-web-1.0.2.tar.gz
+sudo docker load -i /tmp/tools-shop-images/toolshop-api-tools-1.0.2.tar.gz
+sudo docker tag toolshop-api:1.0.2 ghcr.io/taher31/tools-shop-api:1.0.2
+sudo docker tag toolshop-web:1.0.2 ghcr.io/taher31/tools-shop-web:1.0.2
+sudo docker tag toolshop-api-tools:1.0.2 ghcr.io/taher31/tools-shop-api-tools:1.0.2
 rm -rf /tmp/tools-shop-images /tmp/tools-shop-images.tar
 ```
 
@@ -153,7 +153,7 @@ changed.
 ### 6. Verify
 
 ```bash
-curl -sk -H 'Host: shop-tools.zardasht-co.com' https://127.0.0.1/ -o /dev/null -w '%{http_code}\n'
+curl -sk -H 'Host: tools-shop.zardasht-co.com' https://127.0.0.1/ -o /dev/null -w '%{http_code}\n'
 ```
 
 Expected: `200` from the storefront, or `502`/`503` while the certificate is
@@ -166,14 +166,14 @@ sudo docker compose logs --tail 50 web api
 
 The domain is proxied through Cloudflare, so the router uses
 `cloudflare-only@file` plus the host's shared security headers. Traefik obtains
-the origin certificate for `shop-tools.zardasht-co.com` through its HTTP-01
+the origin certificate for `tools-shop.zardasht-co.com` through its HTTP-01
 resolver. If the app is moved to a direct (non-Cloudflare) host, set
 `TRAEFIK_MIDDLEWARES=security-headers@file` in `.env` and restart the web
 container.
 
 ## Updating
 
-1. Build and publish a new version (`v1.0.1`).
+1. Build and publish a new version (`v1.0.2`).
 2. Update the three `APP_*_IMAGE` tags in `/srv/apps/tools-shop/.env`.
 3. Pull the new images and run migrations, then recreate the app containers:
 
