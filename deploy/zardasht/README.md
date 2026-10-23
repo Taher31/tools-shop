@@ -7,12 +7,12 @@ containers, resource limits under `workloads.slice`, and no published ports.
 
 ## What gets deployed
 
-| Service   | Image                | Purpose                      | Memory |
-| --------- | -------------------- | ---------------------------- | ------ |
-| `web`     | `toolshop-web`       | Next.js storefront and admin | 320 MB |
-| `api`     | `toolshop-api`       | NestJS REST API              | 320 MB |
-| `migrate` | `toolshop-api-tools` | One-off Prisma migration job | 256 MB |
-| `seed`    | `toolshop-api-tools` | One-off demo-data seed job   | 256 MB |
+| Service   | Image                  | Purpose                      | Memory |
+| --------- | ---------------------- | ---------------------------- | ------ |
+| `web`     | `tools-shop-web`       | Next.js storefront and admin | 320 MB |
+| `api`     | `tools-shop-api`       | NestJS REST API              | 320 MB |
+| `migrate` | `tools-shop-api-tools` | One-off Prisma migration job | 256 MB |
+| `seed`    | `tools-shop-api-tools` | One-off demo-data seed job   | 256 MB |
 
 The host's shared **PostgreSQL** is used through the external `database`
 network. Each app gets its own role and database.
@@ -32,14 +32,14 @@ host. Add Meilisearch later only after measuring free memory.
 
 ### 1. Use a release
 
-`v1.0.0` is already published. For a later version, build it with the `Release`
+`v1.0.1` is already published. For a later version, build it with the `Release`
 workflow in GitHub Actions:
 
 ```bash
 gh workflow run release.yml \
   --ref main \
   -f version=v1.0.1 \
-  -f site_url=https://shop.155.117.234.45.sslip.io
+  -f site_url=https://shop-tools.zardasht-co.com
 ```
 
 The workflow runs the full CI suite, builds `linux/amd64` images, boots them
@@ -52,8 +52,8 @@ reach GHCR:
 
 ```bash
 mkdir -p images
-gh release download v1.0.0 --pattern '*.tar.gz' --dir images
-gh release download v1.0.0 --pattern 'SHA256SUMS' --dir images
+gh release download v1.0.1 --pattern '*.tar.gz' --dir images
+gh release download v1.0.1 --pattern 'SHA256SUMS' --dir images
 (cd images && sha256sum -c SHA256SUMS)
 ```
 
@@ -63,16 +63,16 @@ Run these on the host. The app directory and `.env` are root-owned; the
 containers run as their image users, so the bind mounts need matching owners.
 
 ```bash
-sudo install -d -m 0755 /srv/apps/toolshop
-sudo install -d -m 0755 /srv/data/toolshop
-sudo install -d -m 0750 -o 1000 -g 1000 /srv/data/toolshop/uploads
-sudo install -d -m 0750 -o 1000 -g 1000 /srv/data/toolshop/next-cache
+sudo install -d -m 0755 /srv/apps/tools-shop
+sudo install -d -m 0755 /srv/data/tools-shop
+sudo install -d -m 0750 -o 1000 -g 1000 /srv/data/tools-shop/uploads
+sudo install -d -m 0750 -o 1000 -g 1000 /srv/data/tools-shop/next-cache
 ```
 
-Copy this bundle to `/srv/apps/toolshop/`, then:
+Copy this bundle to `/srv/apps/tools-shop/`, then:
 
 ```bash
-cd /srv/apps/toolshop
+cd /srv/apps/tools-shop
 sudo cp .env.example .env
 sudo chmod 600 .env
 ```
@@ -94,7 +94,7 @@ Fill in `.env`:
 The public GHCR images are pinned in `.env`:
 
 ```bash
-cd /srv/apps/toolshop
+cd /srv/apps/tools-shop
 sudo docker compose pull
 ```
 
@@ -102,16 +102,16 @@ sudo docker compose pull
 them, then tag them under the GHCR names used by `.env`:
 
 ```bash
-ssh -p 9011 darius@155.117.234.45 'mkdir -p /tmp/toolshop-images'
-tar -C images -cf - . | ssh -p 9011 darius@155.117.234.45 'tar -xf - -C /tmp/toolshop-images'
+ssh -p 9011 darius@155.117.234.45 'mkdir -p /tmp/tools-shop-images'
+tar -C images -cf - . | ssh -p 9011 darius@155.117.234.45 'tar -xf - -C /tmp/tools-shop-images'
 
-sudo docker load -i /tmp/toolshop-images/toolshop-api-1.0.0.tar.gz
-sudo docker load -i /tmp/toolshop-images/toolshop-web-1.0.0.tar.gz
-sudo docker load -i /tmp/toolshop-images/toolshop-api-tools-1.0.0.tar.gz
-sudo docker tag toolshop-api:1.0.0 ghcr.io/taher31/tools-shop-api:1.0.0
-sudo docker tag toolshop-web:1.0.0 ghcr.io/taher31/tools-shop-web:1.0.0
-sudo docker tag toolshop-api-tools:1.0.0 ghcr.io/taher31/tools-shop-api-tools:1.0.0
-rm -rf /tmp/toolshop-images /tmp/toolshop-images.tar
+sudo docker load -i /tmp/tools-shop-images/toolshop-api-1.0.1.tar.gz
+sudo docker load -i /tmp/tools-shop-images/toolshop-web-1.0.1.tar.gz
+sudo docker load -i /tmp/tools-shop-images/toolshop-api-tools-1.0.1.tar.gz
+sudo docker tag toolshop-api:1.0.1 ghcr.io/taher31/tools-shop-api:1.0.1
+sudo docker tag toolshop-web:1.0.1 ghcr.io/taher31/tools-shop-web:1.0.1
+sudo docker tag toolshop-api-tools:1.0.1 ghcr.io/taher31/tools-shop-api-tools:1.0.1
+rm -rf /tmp/tools-shop-images /tmp/tools-shop-images.tar
 ```
 
 ### 4. Provision the database
@@ -120,7 +120,7 @@ Run the idempotent init script through the shared PostgreSQL container. The
 values come from `.env`; the password is not printed.
 
 ```bash
-cd /srv/apps/toolshop
+cd /srv/apps/tools-shop
 sudo sh -c '
   set -a
   . ./.env
@@ -135,7 +135,7 @@ sudo sh -c '
 ### 5. Migrate, seed, start
 
 ```bash
-cd /srv/apps/toolshop
+cd /srv/apps/tools-shop
 sudo docker compose config -q
 sudo docker compose --profile tools run --rm migrate
 sudo docker compose --profile tools run --rm seed   # demo data; optional
@@ -153,7 +153,7 @@ changed.
 ### 6. Verify
 
 ```bash
-curl -sk -H 'Host: shop.155.117.234.45.sslip.io' https://127.0.0.1/ -o /dev/null -w '%{http_code}\n'
+curl -sk -H 'Host: shop-tools.zardasht-co.com' https://127.0.0.1/ -o /dev/null -w '%{http_code}\n'
 ```
 
 Expected: `200` from the storefront, or `502`/`503` while the certificate is
@@ -164,20 +164,21 @@ sudo docker compose ps
 sudo docker compose logs --tail 50 web api
 ```
 
-On first request Traefik obtains a Let's Encrypt certificate for the sslip.io
-hostname through its HTTP-01 resolver. No DNS change is needed for
-`shop.155.117.234.45.sslip.io`. For a real domain, add a DNS record pointing to
-the host and change `APP_DOMAIN`, `APP_PUBLIC_URL`, `CORS_ORIGINS` and
-`NEXT_PUBLIC_SITE_URL`; rebuild the web image for the last one.
+The domain is proxied through Cloudflare, so the router uses
+`cloudflare-only@file` plus the host's shared security headers. Traefik obtains
+the origin certificate for `shop-tools.zardasht-co.com` through its HTTP-01
+resolver. If the app is moved to a direct (non-Cloudflare) host, set
+`TRAEFIK_MIDDLEWARES=security-headers@file` in `.env` and restart the web
+container.
 
 ## Updating
 
 1. Build and publish a new version (`v1.0.1`).
-2. Update the three `APP_*_IMAGE` tags in `/srv/apps/toolshop/.env`.
+2. Update the three `APP_*_IMAGE` tags in `/srv/apps/tools-shop/.env`.
 3. Pull the new images and run migrations, then recreate the app containers:
 
 ```bash
-cd /srv/apps/toolshop
+cd /srv/apps/tools-shop
 sudo docker compose pull
 sudo docker compose --profile tools run --rm migrate
 sudo docker compose up -d --no-deps api web
@@ -189,7 +190,7 @@ Database migrations are forward-only; take a database dump before upgrading.
 ## Rollback
 
 ```bash
-cd /srv/apps/toolshop
+cd /srv/apps/tools-shop
 # Set APP_API_IMAGE / APP_WEB_IMAGE back to the previous tags.
 sudo docker compose pull
 sudo docker compose up -d --no-deps api web
@@ -202,8 +203,8 @@ PostgreSQL dump and the previous image tags together.
 
 Toolshop state is:
 
-- PostgreSQL database `toolshop`
-- `/srv/data/toolshop/uploads`
+- PostgreSQL database `tools_shop`
+- `/srv/data/tools-shop/uploads`
 
 Redis is shared infrastructure and is not part of this app's backup set.
 
@@ -213,7 +214,7 @@ database dump is the minimum before every upgrade:
 
 ```bash
 docker exec -e PGPASSWORD="$(docker exec postgres printenv POSTGRES_PASSWORD)" postgres \
-  pg_dump -U postgres -Fc toolshop > /path/off/server/toolshop.dump
+  pg_dump -U postgres -Fc tools_shop > /path/off/server/tools_shop.dump
 ```
 
 ## Resource notes

@@ -1,4 +1,4 @@
-name: toolshop
+name: tools-shop
 
 # Deployment for the zardasht host. The host already runs a shared PostgreSQL
 # and Traefik on the external `database` and `proxy` networks.
@@ -18,7 +18,7 @@ x-logging: &logging
 services:
   api:
     image: ${APP_API_IMAGE:?set APP_API_IMAGE in .env}
-    container_name: toolshop-api
+    container_name: tools-shop-api
     init: true
     restart: unless-stopped
     cgroup_parent: workloads.slice
@@ -37,7 +37,7 @@ services:
       API_PORT: '4000'
       STORAGE_LOCAL_DIR: /app/uploads
     volumes:
-      - /srv/data/toolshop/uploads:/app/uploads
+      - /srv/data/tools-shop/uploads:/app/uploads
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m,mode=1777
     expose: ['4000']
@@ -58,7 +58,7 @@ services:
 
   web:
     image: ${APP_WEB_IMAGE:?set APP_WEB_IMAGE in .env}
-    container_name: toolshop-web
+    container_name: tools-shop-web
     init: true
     restart: unless-stopped
     cgroup_parent: workloads.slice
@@ -78,7 +78,7 @@ services:
       HOSTNAME: 0.0.0.0
       API_INTERNAL_URL: http://api:4000
     volumes:
-      - /srv/data/toolshop/next-cache:/app/apps/web/.next/cache
+      - /srv/data/tools-shop/next-cache:/app/apps/web/.next/cache
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m,mode=1777
     expose: ['3000']
@@ -101,14 +101,13 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.toolshop.rule=Host(`${APP_DOMAIN:?set APP_DOMAIN in .env}`)
-      - traefik.http.routers.toolshop.entrypoints=websecure
-      - traefik.http.routers.toolshop.tls=true
-      - traefik.http.routers.toolshop.tls.certresolver=letsencrypt
-      - traefik.http.routers.toolshop.service=toolshop
-      - traefik.http.services.toolshop.loadbalancer.server.port=3000
-      - traefik.http.routers.toolshop.middlewares=security-headers@file,toolshop-compress
-      - traefik.http.middlewares.toolshop-compress.compress=true
+      - traefik.http.routers.tools-shop.rule=Host(`${APP_DOMAIN:?set APP_DOMAIN in .env}`)
+      - traefik.http.routers.tools-shop.entrypoints=websecure
+      - traefik.http.routers.tools-shop.tls=true
+      - traefik.http.routers.tools-shop.tls.certresolver=letsencrypt
+      - traefik.http.routers.tools-shop.service=tools-shop
+      - traefik.http.services.tools-shop.loadbalancer.server.port=3000
+      - traefik.http.routers.tools-shop.middlewares=${TRAEFIK_MIDDLEWARES:-security-headers@file}
     logging: *logging
 
   # One-off jobs. Run them with:
@@ -139,10 +138,10 @@ services:
     profiles: ['tools']
     restart: 'no'
     cgroup_parent: workloads.slice
-    mem_limit: 256m
-    memswap_limit: 384m
-    mem_reservation: 32m
-    cpus: '0.5'
+    mem_limit: 512m
+    memswap_limit: 1g
+    mem_reservation: 64m
+    cpus: '0.6'
     pids_limit: 64
     read_only: true
     cap_drop: [ALL]
