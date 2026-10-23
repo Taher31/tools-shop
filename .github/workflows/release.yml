@@ -1,98 +1,360 @@
 name: Release
 
-# Push a tag such as v1.0.0 → run the full CI, publish Docker images to GHCR and create
-# a GitHub Release with generated notes.
+# Push a tag such as v1.0.0 → run CI, build and smoke-test the images, publish
+# them to GHCR, and create a GitHub Release with the tested tarballs attached.
 on:
   push:
     tags: ['v*.*.*']
-  # Manual run: creates the tag (on the selected branch's latest commit) and the release.
+  # Manual run: creates the tag on main and the release.
   workflow_dispatch:
     inputs:
       version:
         description: 'Version tag to create, e.g. v1.0.0'
         required: true
         type: string
+      site_url:
+        description: 'Public storefront URL baked into the web image (defaults to the PUBLIC_SITE_URL variable)'
+        required: false
+        type: string
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
+# Releases are never cancelled or run concurrently: a partial publication is worse
+# than a queued one.
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
   meta:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
     outputs:
-      tag: ${{ steps.v.outputs.tag }}
-      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      site_url: ${{ steps.version.outputs.site_url }}
     steps:
-      - id: v
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: version
         env:
-          INPUT: ${{ inputs.version }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_SITE_URL: ${{ inputs.site_url }}
+          REPO_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tag="${INPUT:-$GITHUB_REF_NAME}"
-          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "Invalid version tag: $tag"; exit 1; }
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            [[ "$GITHUB_REF" == "refs/heads/main" ]] || {
+              echo "Manual releases must run from main."
+              exit 1
+            }
+            tag="$INPUT_VERSION"
+          else
+            tag="$GITHUB_REF_NAME"
+          fi
+
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || {
+            echo "Invalid version tag: $tag"
+            exit 1
+          }
+
+          site_url="${INPUT_SITE_URL:-${REPO_SITE_URL:-https://shop.155.117.234.45.sslip.io}}"
+          site_url="${site_url%/}"
+          [[ "$site_url" =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?$ ]] || {
+            echo "Invalid site URL: $site_url (expected https://host, without a path)"
+            exit 1
+          }
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            if git ls-remote --tags --refs origin "refs/tags/$tag" | grep -q .; then
+              echo "Tag $tag already exists."
+              exit 1
+            fi
+          fi
+
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "The release commit must be on main."
+            exit 1
+          }
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists."
+            exit 1
+          fi
+
+          if [[ "$tag" == *-* ]]; then
+            prerelease=true
+          else
+            prerelease=false
+          fi
+
+          {
+            echo "tag=$tag"
+            echo "version=${tag#v}"
+            echo "prerelease=$prerelease"
+            echo "site_url=$site_url"
+          } >> "$GITHUB_OUTPUT"
 
   verify:
     needs: meta
+    permissions:
+      contents: read
     uses: ./.github/workflows/ci.yml
 
   images:
     needs: [meta, verify]
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: api
+            image: toolshop-api
+            asset: toolshop-api
             dockerfile: apps/api/Dockerfile
+            target: runtime
           - name: web
+            image: toolshop-web
+            asset: toolshop-web
             dockerfile: apps/web/Dockerfile
+            target: runtime
           - name: api-tools
+            image: toolshop-api-tools
+            asset: toolshop-api-tools
             dockerfile: apps/api/Dockerfile
             target: tools
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - name: Build ${{ matrix.name }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: ${{ matrix.image }}:ci
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=${{ needs.meta.outputs.site_url }}
+            API_INTERNAL_URL=http://api:4000
+            STORAGE_PUBLIC_BASE_URL=/uploads
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+      - name: Tag and save ${{ matrix.name }}
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          docker tag "${{ matrix.image }}:ci" "${{ matrix.image }}:$VERSION"
+          docker save "${{ matrix.image }}:$VERSION" | gzip -9 > "${{ matrix.asset }}-$VERSION.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ matrix.name }}
+          path: ${{ matrix.asset }}-${{ needs.meta.outputs.version }}.tar.gz
+          retention-days: 7
+
+  smoke:
+    needs: [meta, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: toolshop
+          POSTGRES_PASSWORD: toolshop
+          POSTGRES_DB: toolshop
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U toolshop" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: image-*
+          merge-multiple: true
+          path: images
+      - name: Load tested images
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          for archive in images/*.tar.gz; do
+            gzip -dc "$archive" | docker load
+          done
+      - name: Migrate, start and verify the images
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          cleanup() {
+            docker rm -f toolshop-api-smoke toolshop-web-smoke >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          database_url='postgresql://toolshop:toolshop@127.0.0.1:5432/toolshop?schema=public'
+
+          # The tools image is the migration entrypoint. Running it here proves the
+          # published tools image can actually apply migrations to a real database.
+          docker run --rm --network host \
+            -e NODE_ENV=production \
+            -e DATABASE_URL="$database_url" \
+            "toolshop-api-tools:$VERSION"
+
+          # The deployment runs this once to create the admin account and demo
+          # catalogue, so fail the release if the seed cannot run.
+          docker run --rm --network host \
+            -e NODE_ENV=production \
+            -e DATABASE_URL="$database_url" \
+            -e SEED_ADMIN_EMAIL=admin@example.com \
+            -e SEED_ADMIN_PASSWORD=smoke-only-admin-password-0123456789 \
+            "toolshop-api-tools:$VERSION" pnpm prisma db seed
+
+          docker run -d --name toolshop-api-smoke --network host \
+            -e NODE_ENV=production \
+            -e API_PORT=4100 \
+            -e LOG_LEVEL=info \
+            -e APP_PUBLIC_URL=https://example.test \
+            -e CORS_ORIGINS=https://example.test \
+            -e TRUST_PROXY_HOPS=1 \
+            -e DATABASE_URL="$database_url" \
+            -e DATABASE_POOL_SIZE=3 \
+            -e REDIS_URL=redis://127.0.0.1:6379/0 \
+            -e MEILI_HOST=http://127.0.0.1:7700 \
+            -e MEILI_MASTER_KEY=smoke_master_key_0123456789abcdef \
+            -e MEILI_INDEX_PREFIX=toolshop_smoke_ \
+            -e JWT_ACCESS_SECRET=smoke-only-secret-0123456789abcdef0123456789abcdef \
+            -e APP_ENCRYPTION_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+            -e STORAGE_DRIVER=local \
+            -e STORAGE_LOCAL_DIR=/tmp/uploads \
+            -e STORAGE_PUBLIC_BASE_URL=/uploads \
+            -e COOKIE_SECURE=true \
+            -e PAYMENT_DEFAULT_PROVIDER=mock \
+            -e PAYMENT_ALLOW_MOCK_IN_PRODUCTION=true \
+            -e QUEUE_WORKERS_ENABLED=false \
+            "toolshop-api:$VERSION"
+
+          code=000
+          for _ in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4100/api/v1/health/live || true)
+            [ "$code" = 200 ] && break
+            sleep 2
+          done
+          if [ "$code" != 200 ]; then
+            echo "API health check failed with HTTP $code"
+            docker logs toolshop-api-smoke
+            exit 1
+          fi
+
+          docker run -d --name toolshop-web-smoke --network host \
+            -e PORT=3100 \
+            -e HOSTNAME=0.0.0.0 \
+            "toolshop-web:$VERSION"
+
+          code=000
+          for _ in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/robots.txt || true)
+            [ "$code" = 200 ] && break
+            sleep 2
+          done
+          if [ "$code" != 200 ]; then
+            echo "Web health check failed with HTTP $code"
+            docker logs toolshop-web-smoke
+            exit 1
+          fi
+
+  release:
+    needs: [meta, images, smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: image-*
+          merge-multiple: true
+          path: images
+      - name: Load tested images
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          for archive in images/*.tar.gz; do
+            gzip -dc "$archive" | docker load
+          done
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}-${{ matrix.name }}
-          tags: |
-            type=raw,value=${{ needs.meta.outputs.version }}
-            type=raw,value=latest
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          target: ${{ matrix.target || 'runtime' }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+      - name: Publish the tested images
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+          PRERELEASE: ${{ needs.meta.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          remote="ghcr.io/${GITHUB_REPOSITORY,,}"
 
-  release:
-    needs: [meta, images]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create GitHub Release
+          for pair in \
+            "toolshop-api:${remote}-api" \
+            "toolshop-web:${remote}-web" \
+            "toolshop-api-tools:${remote}-api-tools"; do
+            local_image="${pair%%:*}"
+            target="${pair#*:}"
+
+            if docker manifest inspect "${target}:${VERSION}" >/dev/null 2>&1; then
+              echo "Image ${target}:${VERSION} already exists; releases are immutable."
+              exit 1
+            fi
+
+            docker tag "${local_image}:${VERSION}" "${target}:${VERSION}"
+            docker tag "${local_image}:${VERSION}" "${target}:sha-${GITHUB_SHA}"
+            docker push "${target}:${VERSION}"
+            docker push "${target}:sha-${GITHUB_SHA}"
+
+            if [ "$PRERELEASE" = "false" ]; then
+              docker tag "${local_image}:${VERSION}" "${target}:latest"
+              docker push "${target}:latest"
+            fi
+          done
+      - name: Create the GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.meta.outputs.tag }}
         run: |
-          # Creates the tag at this commit when it does not exist yet (manual runs).
-          gh release create "${{ needs.meta.outputs.tag }}" \
-            --target "$GITHUB_SHA" \
-            --title "${{ needs.meta.outputs.tag }}" \
-            --generate-notes
+          set -euo pipefail
+          (cd images && sha256sum -- *.tar.gz > SHA256SUMS)
+
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
+          else
+            gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes
+          fi
+
+          gh release upload "$TAG" images/*.tar.gz images/SHA256SUMS
