@@ -32,13 +32,13 @@ host. Add Meilisearch later only after measuring free memory.
 
 ### 1. Use a release
 
-`v1.0.2` is already published. For a later version, build it with the `Release`
+`v1.0.3` is already published. For a later version, build it with the `Release`
 workflow in GitHub Actions:
 
 ```bash
 gh workflow run release.yml \
   --ref main \
-  -f version=v1.0.2 \
+  -f version=v1.0.3 \
   -f site_url=https://tools-shop.zardasht-co.com
 ```
 
@@ -52,8 +52,8 @@ reach GHCR:
 
 ```bash
 mkdir -p images
-gh release download v1.0.2 --pattern '*.tar.gz' --dir images
-gh release download v1.0.2 --pattern 'SHA256SUMS' --dir images
+gh release download v1.0.3 --pattern '*.tar.gz' --dir images
+gh release download v1.0.3 --pattern 'SHA256SUMS' --dir images
 (cd images && sha256sum -c SHA256SUMS)
 ```
 
@@ -105,12 +105,12 @@ them, then tag them under the GHCR names used by `.env`:
 ssh -p 9011 darius@155.117.234.45 'mkdir -p /tmp/tools-shop-images'
 tar -C images -cf - . | ssh -p 9011 darius@155.117.234.45 'tar -xf - -C /tmp/tools-shop-images'
 
-sudo docker load -i /tmp/tools-shop-images/toolshop-api-1.0.2.tar.gz
-sudo docker load -i /tmp/tools-shop-images/toolshop-web-1.0.2.tar.gz
-sudo docker load -i /tmp/tools-shop-images/toolshop-api-tools-1.0.2.tar.gz
-sudo docker tag toolshop-api:1.0.2 ghcr.io/taher31/tools-shop-api:1.0.2
-sudo docker tag toolshop-web:1.0.2 ghcr.io/taher31/tools-shop-web:1.0.2
-sudo docker tag toolshop-api-tools:1.0.2 ghcr.io/taher31/tools-shop-api-tools:1.0.2
+sudo docker load -i /tmp/tools-shop-images/toolshop-api-1.0.3.tar.gz
+sudo docker load -i /tmp/tools-shop-images/toolshop-web-1.0.3.tar.gz
+sudo docker load -i /tmp/tools-shop-images/toolshop-api-tools-1.0.3.tar.gz
+sudo docker tag toolshop-api:1.0.3 ghcr.io/taher31/tools-shop-api:1.0.3
+sudo docker tag toolshop-web:1.0.3 ghcr.io/taher31/tools-shop-web:1.0.3
+sudo docker tag toolshop-api-tools:1.0.3 ghcr.io/taher31/tools-shop-api-tools:1.0.3
 rm -rf /tmp/tools-shop-images /tmp/tools-shop-images.tar
 ```
 
@@ -173,7 +173,7 @@ container.
 
 ## Updating
 
-1. Build and publish a new version (`v1.0.2`).
+1. Build and publish a new version (`v1.0.3`).
 2. Update the three `APP_*_IMAGE` tags in `/srv/apps/tools-shop/.env`.
 3. Pull the new images and run migrations, then recreate the app containers:
 
